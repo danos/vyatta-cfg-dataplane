@@ -1,4 +1,4 @@
-# Copyright (c) 2018, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2018-2019, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2014-2016 by Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -20,10 +20,13 @@ use File::Slurp;
 use JSON qw( decode_json );
 
 use lib "/opt/vyatta/share/perl5/";
+use Time::Duration;
+use Time::HiRes qw( clock_gettime CLOCK_REALTIME );
 use Vyatta::Misc;
 use Vyatta::Dataplane;
 use Vyatta::PCIid;
 use Vyatta::Interface;
+use Vyatta::InterfaceStats;
 use base 'Exporter';
 
 our @EXPORT =
@@ -156,24 +159,6 @@ sub clear_interface_for_vplane {
     close($f);
 }
 
-sub get_counter_val {
-    my ( $clear, $now ) = @_;
-
-    return $now if ( !defined($clear) || $clear == 0 );
-
-    # device is using 64 bit values assume they never wrap
-    my $value = $now - $clear;
-    return $value if ( $now >> 32 ) != 0;
-
-    # The counter has rolled.  If the counter has rolled
-    # multiple times since the clear value, then this math
-    # is meaningless.
-    $value = ( 4294967296 - $clear ) + $now
-      if ( $value < 0 );
-
-    return $value;
-}
-
 # Dataplane interface: fabric 0 pci-slot 0 port 0
 #   Interface port: 1 ifIndex: 3
 #   Mac: 01:02:03:04:05
@@ -256,6 +241,25 @@ sub eth_fmt {
     return sprintf "%02s:%02s:%02s:%02s:%02s:%02s", split /\:/, $addr;
 }
 
+sub show_interface_uptime {
+    my $intf      = shift;
+    my %clear     = get_clear_stats( $intf->{name}, () );
+    my $timestamp = $clear{'timestamp'};
+    my $transns   = $intf->opstate_changes();
+
+    if ($transns) {
+        my $opstate = $intf->operstate();
+        my $age     = $intf->opstate_age();
+        my $ts      = sprintf( "%.0f", clock_gettime(CLOCK_REALTIME) - $age );
+
+        print "   Uptime: ", duration_exact($age), "\n" if ( $opstate eq 'up' );
+        print "   Up transitions: ", $transns, "\n";
+        print "   Last up: ", get_timestr($ts), "\n";
+    }
+
+    print "   Last clear: ", get_timestr($timestamp), "\n" if $timestamp;
+}
+
 sub show_interface_non_stats {
     my $ifinfo  = shift;
     my $intf    = shift;
@@ -326,6 +330,8 @@ sub show_interface_non_stats {
           $link->{up} ? "up" : "down",
           $link->{duplex}, $ifinfo->{mtu}, $speed;
     }
+
+    show_interface_uptime($intf);
 
     print "   Addresses:\n";
     foreach my $addr ( @{ $ifinfo->{addresses} } ) {
