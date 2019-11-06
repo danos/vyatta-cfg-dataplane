@@ -1,0 +1,2 @@
+help: Clear all virtual network interface (vif) counters
+run: vplane-ifconfig.pl --action=clear --vif

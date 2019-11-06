@@ -1,0 +1,2 @@
+scripts/vyatta-show-platform-dataplane.py /opt/vyatta/bin
+yang/vyatta-op-show-platform-dataplane-v1.yang usr/share/configd/yang

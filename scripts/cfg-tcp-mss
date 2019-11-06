@@ -1,0 +1,194 @@
+#! /usr/bin/perl
+#
+# Copyright (c) 2017-2019, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+use strict;
+use warnings;
+use lib '/opt/vyatta/share/perl5';
+use Vyatta::Config;
+use Vyatta::VPlaned;
+use Data::Dumper;
+
+use vyatta::proto::TCPMSSConfig;
+
+# set below to 1 or 2 to debug to be printed out
+my $debug = 0;
+
+my $fh = *STDOUT
+  if $debug > 0;
+
+my $config = Vyatta::Config->new('interfaces');
+my $cstore = new Vyatta::VPlaned;
+
+# %mss_conf is indexed by two keys, and stores the mss command
+#   1: the interface name
+#   2: this is 0 for existing config, and 1 for new config
+
+my %mss_conf;
+
+sub read_mss_conf_intf {
+    my ( $iftype, $interface, $is_new ) = @_;
+
+    my ( $ReturnValue, $ListNodes, $Exists );
+
+    if ($is_new) {
+        $ReturnValue = 'returnValue';
+        $ListNodes   = 'listNodes';
+        $Exists      = 'exists';
+    } else {
+        $ReturnValue = 'returnOrigValue';
+        $ListNodes   = 'listOrigNodes';
+        $Exists      = 'existsOrig';
+    }
+
+    my @families = ( "ip", "ipv6" );
+    foreach my $family (@families) {
+        print $fh "Type $iftype, interface $interface, family $family\n"
+          if $debug > 1;
+
+        my $tcpmss = TCPMSSConfig->new(
+            {
+                is_enable  => 1,
+                af         => TCPMSSConfig::AddressFamily::TCP_MSS_V4(),
+                ifname     => $interface,
+                mtu_option => TCPMSSConfig::MTUType::NONE(),
+                value      => 0,
+            }
+        );
+        $tcpmss->import(":constants");
+
+        if ( $family eq "ipv6" ) {
+            $tcpmss->{af} = TCPMSSConfig::AddressFamily::TCP_MSS_V6();
+        }
+
+        my $prefix = "$iftype $interface $family tcp-mss";
+        next unless $config->$Exists("$prefix");
+        if ( $config->$Exists("$prefix mtu") ) {
+            $tcpmss->{mtu_option} = TCPMSSConfig::MTUType::MTU();
+        } elsif ( $config->$Exists("$prefix mtu-minus") ) {
+            my $value = $config->$ReturnValue("$prefix mtu-minus");
+            if ( defined($value) ) {
+                $tcpmss->{mtu_option} = TCPMSSConfig::MTUType::MTU_MINUS();
+                $tcpmss->{value}      = $value;
+            }
+        } elsif ( $config->$Exists("$prefix limit") ) {
+            my $value = $config->$ReturnValue("$prefix limit");
+            $tcpmss->{mtu_option} = TCPMSSConfig::MTUType::LIMIT();
+            $tcpmss->{value}      = $value;
+        }
+        $mss_conf{"interfaces $prefix"}{$is_new} = $tcpmss
+          if defined($tcpmss);
+
+        print $fh Dumper \$tcpmss
+          if $debug > 1;
+    }
+}
+
+# parameter passed in should be 0 for getting the existing configuration
+# and 1 for getting the new configuration.
+sub read_mss_conf {
+    my ($is_new) = @_;
+
+    my ( $ReturnValue, $ListNodes, $Exists );
+
+    if ($is_new) {
+        $ReturnValue = 'returnValue';
+        $ListNodes   = 'listNodes';
+        $Exists      = 'exists';
+        print $fh "\nNEW CONFIG:\n"
+          if $debug > 1;
+    } else {
+        $ReturnValue = 'returnOrigValue';
+        $ListNodes   = 'listOrigNodes';
+        $Exists      = 'existsOrig';
+        print $fh "EXISTING CONFIG:\n"
+          if $debug > 1;
+    }
+
+    my @iftypes = $config->$ListNodes('');
+    foreach my $iftype (@iftypes) {
+        my @interfaces = $config->$ListNodes("$iftype");
+        foreach my $interface (@interfaces) {
+            read_mss_conf_intf( $iftype, $interface, $is_new );
+            my @vifs = $config->$ListNodes("$iftype $interface vif");
+            foreach my $vif (@vifs) {
+                read_mss_conf_intf( $iftype, "$interface vif $vif", $is_new );
+            }
+        }
+    }
+}
+
+sub mss_cstore {
+    my ( $action, $cstore_config, $mss_cmd ) = @_;
+
+    my $cstore_act;
+    if ( $action eq 'enable' ) {
+        $cstore_act = 'SET';
+    } else {
+        $cstore_act = 'DELETE';
+        $mss_cmd    = TCPMSSConfig->new(
+            {
+                is_enable  => 0,
+                mtu_option => TCPMSSConfig::MTUType::NONE(),
+                value      => 0,
+            }
+        );
+        $mss_cmd->import(":constants");
+    }
+
+    my @cstore_parts = split / /, $cstore_config;
+    my $interface = $cstore_parts[2];
+
+    my $family;
+    if ( $cstore_parts[3] eq 'vif' ) {
+        $interface .= "." . $cstore_parts[4];
+        $family = $cstore_parts[5];
+    } else {
+        $family = $cstore_parts[3];
+    }
+    $mss_cmd->{af} = TCPMSSConfig::AddressFamily::TCP_MSS_V4();
+    if ( $family eq "ipv6" ) {
+        $mss_cmd->{af} = TCPMSSConfig::AddressFamily::TCP_MSS_V6();
+    }
+
+    $mss_cmd->{ifname} = $interface;
+
+    print $fh Dumper \$mss_cmd
+      if $debug > 1;
+
+    $cstore->store_pb( $cstore_config, $mss_cmd, "vyatta:tcp-mss", "ALL", $cstore_act );
+}
+
+# read in and store in %mss_conf, first the existing and then the new config
+read_mss_conf(0);
+read_mss_conf(1);
+
+print $fh Dumper \%mss_conf
+  if $debug > 1;
+
+foreach my $cstore_config ( keys %mss_conf ) {
+    print $fh "CSTORE KEY: $cstore_config\n"
+      if $debug > 0;
+
+    my $existing = $mss_conf{$cstore_config}{0};
+    print $fh "  EXISTING: $existing\n"
+      if $debug > 0 and defined($existing);
+
+    my $new = $mss_conf{$cstore_config}{1};
+    print $fh "  NEW: $new\n"
+      if $debug > 0 and defined($new);
+
+    if ( defined($new) ) {
+        if ( defined($existing) ) {
+            next if ( $new eq $existing );
+        }
+        mss_cstore( "enable", $cstore_config, $new );
+    } else {
+        if ( defined($existing) ) {
+            mss_cstore( "disable", $cstore_config );
+        }
+    }
+}

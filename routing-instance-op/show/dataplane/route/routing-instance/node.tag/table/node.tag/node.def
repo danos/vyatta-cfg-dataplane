@@ -1,0 +1,2 @@
+help: Show dataplane FIB PBR table for routing-instance
+run: vplane-route.pl --routing-instance=$5 --table=$7

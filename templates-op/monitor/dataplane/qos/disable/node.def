@@ -1,0 +1,2 @@
+help: Disable dataplane QoS debugging
+run: vplane-monitor-cmd.pl --cmd="debug -qos"

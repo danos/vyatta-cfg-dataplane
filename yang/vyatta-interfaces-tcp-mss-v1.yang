@@ -1,0 +1,193 @@
+module vyatta-interfaces-tcp-mss-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-tcp-mss-1";
+	prefix vyatta-interfaces-tcp-mss-v1;
+
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-interfaces-bridge-v1 {
+		prefix if-bridge;
+	}
+	import vyatta-interfaces-dataplane-v1 {
+		prefix if-dataplane;
+	}
+	import vyatta-interfaces-l2tpeth-v1 {
+		prefix if-l2tpeth;
+	}
+	import vyatta-interfaces-openvpn-v1 {
+		prefix if-openvpn;
+	}
+	import vyatta-interfaces-tunnel-v1 {
+		prefix if-tunnel;
+	}
+	import vyatta-interfaces-vti-v1 {
+		prefix if-vti;
+	}
+	import vyatta-interfaces-bonding-v1 {
+		prefix if-bonding;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+		         Dallas, TX 25202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2017-2018, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 YANG module and scripts for TCP MSS clamping";
+
+	revision 2018-01-15 {
+		description "Initial revision of version 1.";
+	}
+
+	grouping tcp-mss-limit-grouping {
+		container tcp-mss {
+			presence "TCP MSS configuration";
+			description "Clamp the TCP MSS value";
+			configd:help "Clamp the TCP MSS value";
+			leaf limit {
+				description "Clamp the TCP MSS to the configured value";
+				configd:help "Clamp the TCP MSS to the configured value";
+				type uint16 {
+					range 1..65535;
+					configd:help "Value that the MSS should be clamped to";
+				}
+			}
+		}
+	}
+
+	grouping tcp-mss-limit {
+		uses tcp-mss-limit-grouping {
+			refine tcp-mss {
+				must "count(limit) = 1" {
+					error-message "Must specify 'limit'";
+				}
+			}
+		}
+	}
+
+	grouping tcp-mss {
+		uses tcp-mss-limit-grouping {
+			refine tcp-mss {
+				must "count(mtu|mtu-minus|limit) = 1" {
+					error-message "Must specify just one of 'mtu', 'mtu-minus' or 'limit'";
+				}
+			}
+			augment tcp-mss {
+				leaf mtu {
+					description "Clamp the TCP MSS based on interface MTU";
+					configd:help "Clamp the TCP MSS based on interface MTU";
+					type empty;
+				}
+				leaf mtu-minus {
+					description "Clamp the TCP MSS based on interface MTU less the configured value";
+					configd:help "Clamp the TCP MSS based on interface MTU less the configured value";
+					type uint16 {
+						range 1..65535;
+						configd:help "Value to subtract from MTU for clamping";
+					}
+				}
+			}
+		}
+	}
+
+	augment /if:interfaces/if-dataplane:dataplane/if-dataplane:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-dataplane:dataplane/if-dataplane:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-dataplane:dataplane/if-dataplane:vif/if-dataplane:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-dataplane:dataplane/if-dataplane:vif/if-dataplane:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-bridge:bridge/if-bridge:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-bridge:bridge/if-bridge:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-l2tpeth:l2tpeth/if-l2tpeth:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-l2tpeth:l2tpeth/if-l2tpeth:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-l2tpeth:l2tpeth/if-l2tpeth:vif/if-l2tpeth:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-l2tpeth:l2tpeth/if-l2tpeth:vif/if-l2tpeth:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-openvpn:openvpn/if-openvpn:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-openvpn:openvpn/if-openvpn:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-tunnel:tunnel/if-tunnel:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-tunnel:tunnel/if-tunnel:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-vti:vti/if-vti:ip {
+		uses tcp-mss-limit;
+	}
+	augment /if:interfaces/if-vti:vti/if-vti:ipv6 {
+		uses tcp-mss-limit;
+	}
+	augment /if:interfaces/if-bonding:bonding/if-bonding:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-bonding:bonding/if-bonding:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-bonding:bonding/if-bonding:vif/if-bonding:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-bonding:bonding/if-bonding:vif/if-bonding:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces {
+		configd:end "cfg-tcp-mss";
+	}
+}

@@ -1,0 +1,2 @@
+help: Show dataplane IPv6 ICMP statistics
+run: vplane-statistics.pl icmp6

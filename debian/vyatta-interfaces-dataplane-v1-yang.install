@@ -1,0 +1,11 @@
+yang/vyatta-interfaces-dataplane-v1.yang usr/share/configd/yang
+yang/vyatta-deviation-dataplane-defer-v1.yang lib/vyatta-platform/yang
+tmplscripts/interfaces/dataplane/configd_create.d opt/vyatta/share/tmplscripts/interfaces/dataplane
+tmplscripts/interfaces/dataplane/configd_delete.d opt/vyatta/share/tmplscripts/interfaces/dataplane
+tmplscripts/interfaces/dataplane/mac opt/vyatta/share/tmplscripts/interfaces/dataplane
+templates-op/clear/interfaces/dataplane opt/vyatta/share/vyatta-op/templates/clear/interfaces
+templates-op/show/dataplane opt/vyatta/share/vyatta-op/templates/show
+templates-op/monitor/dataplane opt/vyatta/share/vyatta-op/templates/monitor
+templates-op/monitor/interfaces/dataplane opt/vyatta/share/vyatta-op/templates/monitor/interfaces
+platform/vyatta-breakout.platform lib/vyatta-platform/platforms
+platform/vyatta-defer-dataplane.platform lib/vyatta-platform/platforms

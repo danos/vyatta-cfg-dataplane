@@ -1,0 +1,3 @@
+help: Show dataplane MPLS label table for specified in-label
+allowed: echo -n '<NUMBER>'
+run: vplane-route.pl --label-table --in-label $6

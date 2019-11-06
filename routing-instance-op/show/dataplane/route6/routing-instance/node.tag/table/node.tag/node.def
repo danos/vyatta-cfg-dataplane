@@ -1,0 +1,2 @@
+help: Show dataplane IPv6 FIB PBR table for routing-instance
+run: vplane-route.pl -v6 --routing-instance=$5 --table=$7

@@ -1,0 +1,174 @@
+module vyatta-interfaces-backplane-v1 {
+    namespace "urn:vyatta.com:mgmt:vyatta-interfaces-backplane:1";
+    prefix "vyatta-interfaces-backplane-v1";
+
+    import configd-v1 {
+	    prefix configd;
+    }
+    import vyatta-interfaces-v1 {
+        prefix if;
+    }
+    import vyatta-interfaces-dataplane-v1 {
+        prefix dp;
+    }
+
+    organization "AT&T Inc.";
+    contact
+        "AT&T
+         Postal: 208 S. Akard Street
+         Dallas, TX 25202
+         Web: www.att.com";
+
+    description
+        "Copyright (c) 2019, AT&T Intellectual Property.
+         All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+         Backplane information for physical interfaces.";
+
+    revision 2019-03-06 {
+        description "Change the allowed names for backplane interfaces";
+    }
+    revision 2019-02-28 {
+        description "Add support for backplane state";
+    }
+    revision 2019-01-31 {
+        description "Initial version";
+    }
+
+    feature backplane {
+	    description "Backplane configuration";
+    }
+
+    typedef backplane-ifname {
+	    type string {
+		    pattern 'bp0p[0-9]';
+		    configd:pattern-help "<bp0p[0-9]>";
+	    }
+    }
+
+    augment /if:interfaces {
+	    list backplane {
+		    if-feature backplane;
+		    configd:help "Backplane configuration";
+		    description "Backplane configuration";
+		    key "name";
+		    configd:allowed "vyatta-backplane --action list_bps";
+
+		    leaf name {
+			    type backplane-ifname;
+			    configd:help "Backplane interface name";
+			    description "Backplane interface name";
+		    }
+
+		    container bind {
+			    description "Bind targets to backplane";
+			    configd:help "Bind targets to backplane";
+			    leaf-list interface {
+				    configd:help "Dataplane interface name";
+				    description "Dataplane interface name";
+				    type dp:dataplane-ifname;
+				    configd:allowed "vyatta-backplane --action list_allowed_intfs";
+				    configd:update "vyatta-backplane --action set --dev $VAR(@) --backplane $VAR(../../@)";
+				    configd:delete "vyatta-backplane --action delete --dev $VAR(@)";
+				    must "count(/if:interfaces/backplane/bind/interface[. = current()]) <= 1" {
+					    error-message "Interface can only be bound to a single backplane";
+				    }
+			    }
+		    }
+
+		    uses dp:cpu-affinity;
+
+	    }
+
+	    container backplane-state {
+		    config false;
+		    configd:get-state "vyatta-backplane-state";
+
+		    list backplanes {
+			    description "State of a backplane interface";
+			    key name;
+
+			    leaf name {
+				    type backplane-ifname;
+				    description "Name of this backplane";
+			    }
+
+			    leaf link_state {
+				    type string;
+				    description "Link state of this backplane";
+			    }
+
+			    uses if:packet-statistics;
+
+			    list port_stats {
+				    description "Stats for each port using this backplane";
+				    key name;
+
+				    leaf name {
+					    type dp:dataplane-ifname;
+					    description "Name of the port";
+				    }
+
+				    leaf rx_packets {
+					    description "Number of packets received";
+					    type uint64;
+				    }
+
+				    leaf rx_bytes {
+					    description "Number of bytes received";
+					    type uint64;
+				    }
+
+				    leaf tx_packets {
+					    description "Number of packets transmitted";
+					    type uint64;
+				    }
+
+				    leaf tx_bytes {
+					    description "Number of bytes transmitted";
+					    type uint64;
+				    }
+			    }
+		    }
+	    }
+    }
+
+    augment /if:interfaces {
+	    if-feature backplane;
+	    configd:validate "vyatta-backplane --action validate";
+    }
+
+    augment /if:interfaces {
+	    if-feature backplane;
+	    configd:end "vyatta-backplane --action set_default";
+    }
+}

@@ -1,0 +1,489 @@
+#! /usr/bin/perl
+# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+use strict;
+use warnings;
+
+use lib '/opt/vyatta/share/perl5/';
+
+use Getopt::Long;
+use Vyatta::Configd;
+use Vyatta::Config;
+use Vyatta::Dataplane;
+use Vyatta::TransceiverInfo;
+use Readonly;
+use File::Basename;
+
+my ( $action, $opt_switch, $opt_port, $opt_mac_addr, $opt_vlan );
+
+Readonly my $SCRIPT_NAME => basename($0);
+
+use constant QSFP_CHANNELS => 4;
+
+my $eeprom_id_hdr          = "EEPROM - ID\n";
+my $eeprom_diag_hdr        = "EEPROM - Diagnostics\n";
+my $eeprom_thresholds_hdr  = "  Thresholds\n";
+my $eeprom_mv_hdr          = "  Measured values\n";
+my $eeprom_alw_hdr         = "  Alarm and warning flags\n";
+my $eeprom_id_fields_fmt   = "  %-44s: %s%s\n";
+my $eeprom_id_fields_h_fmt = "  %-44s: 0x%02X\n";
+my $eeprom_diag_fields_fmt = "    %-42s: %s%s\n";
+my $channel_num_fmt        = "    Channel %s\n";
+
+
+my %id2desc_hash = (
+    'form-factor'      => { 'desc' => 'Identifier' },
+    'extended-id'      => { 'desc' => 'Extended Identifier' },
+    'connector-type'   => { 'desc' => 'Connector' },
+    'ethernet-pmd'     => { 'desc' => 'Transceiver' },
+    'encoding'         => { 'desc' => 'Encoding' },
+    'nominal-bit-rate' => { 'desc' => 'Nominal Bit Rate', 'unit' => ' Mbps' },
+    'vendor'           => { 'desc' => 'SFP vendor name' },
+    'vendor-oui'       => { 'desc' => 'Vendor OUI' },
+    'vendor-part'      => { 'desc' => 'Vendor Part Number' },
+    'vendor-rev'       => { 'desc' => 'Vendor Revision Level' },
+    'serial-no'        => { 'desc' => 'Vendor Serial Number' },
+    'date-code'        => { 'desc' => 'Vendor Manufacturing date' },
+    'diagnostic-monitoring-type' => { 'desc' => 'Diagnostic Monitoring Type' },
+    'sff-8472-compliance'        => { 'desc' => 'SFF-8472 Compliance' },
+);
+
+my %link2desc_hash = (
+    'smf-km' => { 'desc' => 'Single mode fiber link length', 'unit' => ' km' },
+    'smf' => {
+        'desc'       => 'Single mode fiber link length',
+        'unit'       => ' m',
+        'multiplier' => 100
+    },
+    'um_50' => {
+        'desc'       => '50um OM2 fiber link length',
+        'unit'       => ' m',
+        'multiplier' => 10
+    },
+    'um_625' => {
+        'desc'       => '62.5um OM1 fiber link length',
+        'unit'       => ' m',
+        'multiplier' => 10
+    },
+    'cable' => { 'desc' => 'Copper/direct attach link length', 'unit' => ' m' },
+    'om3'   => {
+        'desc'       => '50um OM3 fiber link length',
+        'unit'       => ' m',
+        'multiplier' => 10
+    },
+);
+
+my %mv2desc_temp_volt_hash = (
+    'internal-temp' => { 'desc' => 'Temperature', 'unit' => ' degrees C' },
+    'voltage'       => { 'desc' => 'Voltage',     'unit' => ' V' },
+);
+
+my %mv2desc_sfp_hash = (
+    'output-power'       => { 'desc' => 'Tx power', 'unit' => ' dBm' },
+    'input-power'        => { 'desc' => 'Rx power', 'unit' => ' dBm' },
+    'laser-bias-current' => { 'desc' => 'Laser Tx Bias', 'unit' => ' mA' },
+);
+
+my %mv2desc_qsfp_hash = (
+    'index'              => { 'desc' => 'Channel' },
+    'output-power'       => { 'desc' => '  Tx power', 'unit' => ' dBm' },
+    'input-power'        => { 'desc' => '  Rx power', 'unit' => ' dBm' },
+    'laser-bias-current' => { 'desc' => '  Laser Tx Bias', 'unit' => ' mA' },
+);
+
+my %alw2desc_alarm_hash = (
+    'temperature-high-alarm' => { 'desc' => 'High temperature alarm' },
+    'temperature-low-alarm'  => { 'desc' => 'Low  temperature alarm' },
+    'voltage-high-alarm'     => { 'desc' => 'High voltage alarm' },
+    'voltage-low-alarm'      => { 'desc' => 'Low  voltage alarm' },
+);
+
+my %alw2desc_warn_hash = (
+    'temperature-high-warning' => { 'desc' => 'High temperature warning' },
+    'temperature-low-warning'  => { 'desc' => 'Low  temperature warning' },
+    'voltage-high-warning'     => { 'desc' => 'High voltage warning' },
+    'voltage-low-warning'      => { 'desc' => 'Low  voltage warning' },
+);
+
+my %mv2desc_ch_num_hash = ( 'index' => { 'desc' => 'Channel' }, );
+
+my %alw2desc_ch_alarm_hash_sfp = (
+    'bias-current-high-alarm' => { 'desc' => 'High tx bias alarm' },
+    'bias-current-low-alarm'  => { 'desc' => 'Low  tx bias alarm' },
+    'input-power-high-alarm'  => { 'desc' => 'High rx power alarm' },
+    'input-power-low-alarm'   => { 'desc' => 'Low  rx power alarm' },
+    'output-power-high-alarm' => { 'desc' => 'High tx power alarm' },
+    'output-power-low-alarm'  => { 'desc' => 'Low  tx power alarm' },
+);
+
+my %alw2desc_ch_warn_hash_sfp = (
+    'bias-current-high-warning' => { 'desc' => 'High tx bias warning' },
+    'bias-current-low-warning'  => { 'desc' => 'Low  tx bias warning' },
+    'output-power-high-warning' => { 'desc' => 'High tx power warning' },
+    'output-power-low-warning'  => { 'desc' => 'Low  tx power warning' },
+    'input-power-high-warning'  => { 'desc' => 'High rx power warning' },
+    'input-power-low-warning'   => { 'desc' => 'Low  rx power warning' },
+);
+
+my %alw2desc_ch_alarm_hash_qsfp = (
+    'bias-current-high-alarm' => { 'desc' => '  High tx bias alarm' },
+    'bias-current-low-alarm'  => { 'desc' => '  Low  tx bias alarm' },
+    'output-power-high-alarm' => { 'desc' => '  High tx power alarm' },
+    'output-power-low-alarm'  => { 'desc' => '  Low  tx power alarm' },
+    'input-power-high-alarm'  => { 'desc' => '  High rx power alarm' },
+    'input-power-low-alarm'   => { 'desc' => '  Low  rx power alarm' },
+);
+
+my %alw2desc_ch_warn_hash_qsfp = (
+    'bias-current-high-warning' => { 'desc' => '  High tx bias warning' },
+    'bias-current-low-warning'  => { 'desc' => '  Low  tx bias warning' },
+    'output-power-high-warning' => { 'desc' => '  High tx power warning' },
+    'output-power-low-warning'  => { 'desc' => '  Low  tx power warning' },
+    'input-power-high-warning'  => { 'desc' => '  High rx power warning' },
+    'input-power-low-warning'   => { 'desc' => '  Low  rx power warning' },
+);
+
+my %temp_thresh2desc_hash = (
+    'temperature-high-alarm' =>
+      { 'desc' => 'High temperature alarm threshold', 'unit' => ' degrees C' },
+    'temperature-low-alarm' =>
+      { 'desc' => 'Low  temperature alarm threshold', 'unit' => ' degrees C' },
+    'temperature-high-warning' => {
+        'desc' => 'High temperature warning threshold',
+        'unit' => ' degrees C'
+    },
+    'temperature-low-warning' =>
+      { 'desc' => 'Low  temperature warning threshold', 'unit' => ' degrees C' },
+);
+
+my %volt_thresh2desc_hash = (
+    'voltage-high-alarm' =>
+      { 'desc' => 'High voltage alarm threshold', 'unit' => ' V' },
+    'voltage-low-alarm' =>
+      { 'desc' => 'Low  voltage alarm threshold', 'unit' => ' V' },
+    'voltage-high-warning' =>
+      { 'desc' => 'High voltage warning threshold', 'unit' => ' V' },
+    'voltage-low-warning' =>
+      { 'desc' => 'Low  voltage warning threshold', 'unit' => ' V' },
+);
+
+my %bias_thresh2desc_hash = (
+    'laser-bias-current-high-alarm' =>
+      { 'desc' => 'High laser bias alarm threshold', 'unit' => ' mA' },
+    'laser-bias-current-low-alarm' =>
+      { 'desc' => 'Low  laser bias alarm threshold', 'unit' => ' mA' },
+    'laser-bias-current-high-warning' =>
+      { 'desc' => 'High laser bias warning threshold', 'unit' => ' mA' },
+    'laser-bias-current-low-warning' =>
+      { 'desc' => 'Low  laser bias warning threshold', 'unit' => ' mA' },
+);
+
+my %op_thresh2desc_hash = (
+    'output-power-high-alarm' =>
+      { 'desc' => 'High tx power alarm threshold', 'unit' => ' dBm' },
+    'output-power-low-alarm' =>
+      { 'desc' => 'Low  tx power alarm threshold', 'unit' => ' dBm' },
+    'output-power-high-warning' =>
+      { 'desc' => 'High tx power warning threshold', 'unit' => ' dBm' },
+    'output-power-low-warning' =>
+      { 'desc' => 'Low  tx power warning threshold', 'unit' => ' dBm' },
+);
+
+my %ip_thresh2desc_hash = (
+    'input-power-high-alarm' =>
+      { 'desc' => 'High rx power alarm threshold', 'unit' => ' dBm' },
+    'input-power-low-alarm' =>
+      { 'desc' => 'Low  rx power alarm threshold', 'unit' => ' dBm' },
+    'input-power-high-warning' =>
+      { 'desc' => 'High rx power warning threshold', 'unit' => ' dBm' },
+    'input-power-low-warning' =>
+      { 'desc' => 'Low  rx power warning threshold', 'unit' => ' dBm' },
+);
+
+sub id2desc {
+    my ($id_type) = @_;
+    my $str = $id2desc_hash{$id_type}{'desc'};
+    return $str ? $str : q{-};
+}
+
+sub link2desc {
+    my ($id_type) = @_;
+    my $str = $link2desc_hash{$id_type}{'desc'};
+    return $str ? $str : q{-};
+}
+
+sub id2unit {
+    my ($id_type) = @_;
+    my $str = $id2desc_hash{$id_type}{'unit'};
+    return $str ? $str : "";
+}
+
+sub id2mult {
+    my ($id_type) = @_;
+    my $m = $id2desc_hash{$id_type}{'multiplier'};
+    return $m;
+}
+
+sub diag2desc($\%) {
+    my ( $diag_type, $hash_units ) = @_;
+    my %units = %$hash_units;
+    my $str   = $units{$diag_type}{'desc'};
+    return $str ? $str : "";
+}
+
+sub diag2unit($\%) {
+    my ( $diag_type, $hash_units ) = @_;
+    my %units = %$hash_units;
+    my $str   = $units{$diag_type}{'unit'};
+    return $str ? $str : "";
+}
+
+sub show_transceiver_id_info {
+    my ($t_info) = @_;
+
+    foreach my $key ( sort ( keys %id2desc_hash ) ) {
+        my $v = $t_info->{$key};
+        my $d = id2desc($key);
+        my $u = id2unit($key);
+        my $m = id2mult($key);
+        $v = $v * $m
+          if defined($m) && defined($v);
+        if ( $key eq 'diagnostic-monitoring-type' ) {
+            printf $eeprom_id_fields_h_fmt, $d, defined($v) ? $v : 0;
+        } else {
+            printf $eeprom_id_fields_fmt, $d, defined($v) ? $v : "",
+              defined($v) ? $u : "";
+        }
+    }
+
+    return;
+}
+
+sub show_transceiver_link_info {
+    my ($t_info) = @_;
+
+    foreach my $key ( sort ( keys %link2desc_hash ) ) {
+        my $v = $t_info->{$key};
+        my $d = link2desc($key);
+        my $u = id2unit($key);
+        my $m = id2mult($key);
+        $v = $v * $m
+          if defined($m) && defined($v);
+        printf $eeprom_id_fields_fmt, $d, defined($v) ? $v : "",
+          defined($v) ? $u : "";
+    }
+
+    return;
+}
+
+sub show_transceiver_diag_info($\%) {
+    my ( $t_info, $hash ) = @_;
+
+    my %desc = %$hash;
+    foreach my $key ( sort ( keys %desc ) ) {
+        my $v = $t_info->{$key};
+        my $d = diag2desc( $key, %$hash );
+        my $u = diag2unit( $key, %$hash );
+        if( $key eq 'index' ) {
+            printf $channel_num_fmt, defined ($v) ? $v : "";
+        } else {
+            printf $eeprom_diag_fields_fmt, $d, defined($v) ? $v : "",
+                defined($v) ? $u : "";
+        }
+    }
+
+    return;
+}
+
+sub show_transceiver_diag_bit_flags($\%) {
+    my ( $t_info, $hash ) = @_;
+
+    my %desc = %$hash;
+    foreach my $key ( sort ( keys %desc ) ) {
+        my $v = $t_info->{$key};
+        my $d = diag2desc( $key, %$hash );
+        if ( $v eq "true" ) {
+            printf $eeprom_diag_fields_fmt, $d, "ON", "";
+        } else {
+            printf $eeprom_diag_fields_fmt, $d, "OFF", "";
+        }
+    }
+
+    return;
+}
+
+sub action_show_transceiver_info {
+
+    my $usage = sub {
+        printf( "Usage for %s --action=xcvr-info\n", $SCRIPT_NAME );
+        printf( "    %s --action=xcvr-info --port=<port-name>\n",
+            $SCRIPT_NAME );
+        exit(1);
+    };
+
+    my $port;
+    GetOptions( "port=s" => \$port, )
+      or $usage->();
+    $usage->() unless defined $port;
+
+    my $if_dir = "/sys/class/net/$port";
+    if( ! ( -d $if_dir ) ) {
+        printf "Interface $port does not exist on system";
+        exit (1);
+    }
+
+    #Show interface details
+    system "/sbin/ethtool $port";
+    system "/sbin/ethtool -i $port";
+
+    my $client = Vyatta::Configd::Client->new();
+    my $t_info =
+      $client->call_rpc_hash( "vyatta-interfaces-dataplane-transceiver-v1",
+        "xcvr-info", { 'name' => $port } );
+
+    my $t_info_hash  = %$t_info{'transceiver-info'};
+    my $any_id_field = 0;
+    foreach ( keys %$t_info_hash ) {
+        if ( exists $id2desc_hash{$_} ) {
+            $any_id_field = 1;
+            last;
+        }
+    }
+
+    # Don't print anything if all the ID fields are missing
+    return if !$any_id_field;
+
+    printf $eeprom_id_hdr;
+    show_transceiver_id_info($t_info_hash);
+    my $link_info = %$t_info_hash{'link-lengths'};
+    show_transceiver_link_info($link_info);
+
+    my $any_diag_field = 0;
+
+    foreach ( keys %$t_info_hash ) {
+        if (   exists $ip_thresh2desc_hash{$_}
+            || exists $op_thresh2desc_hash{$_}
+            || exists $temp_thresh2desc_hash{$_}
+            || exists $volt_thresh2desc_hash{$_}
+            || exists $bias_thresh2desc_hash{$_}
+            || exists $mv2desc_sfp_hash{$_}
+            || exists $mv2desc_qsfp_hash{$_}
+            || exists $mv2desc_temp_volt_hash{$_}
+            || $_ eq 'alarm-status'
+            || $_ eq 'warning-status' )
+        {
+            $any_diag_field = 1;
+            last;
+        }
+    }
+
+    my $eeprom_id = $t_info_hash->{'form-factor'};
+
+    # Only print diag section if some information is present
+    if ($any_diag_field) {
+
+        #Thresholds
+        printf $eeprom_diag_hdr;
+        printf $eeprom_thresholds_hdr;
+
+        my $thresholds_hash = %$t_info_hash{'input-power-thresholds'};
+        show_transceiver_diag_info( $thresholds_hash, %ip_thresh2desc_hash );
+        $thresholds_hash = %$t_info_hash{'output-power-thresholds'};
+        show_transceiver_diag_info( $thresholds_hash, %op_thresh2desc_hash );
+        $thresholds_hash = %$t_info_hash{'temperature-thresholds'};
+        show_transceiver_diag_info( $thresholds_hash, %temp_thresh2desc_hash );
+        $thresholds_hash = %$t_info_hash{'voltage-thresholds'};
+        show_transceiver_diag_info( $thresholds_hash, %volt_thresh2desc_hash );
+        $thresholds_hash = %$t_info_hash{'laser-bias-current-thresholds'};
+        show_transceiver_diag_info( $thresholds_hash, %bias_thresh2desc_hash );
+
+
+        #Measured Values
+        printf $eeprom_mv_hdr;
+        for ( my $ch = 0 ; $ch < QSFP_CHANNELS ; $ch++ ) {
+            my $ch_hash =
+              $$t_info_hash{'physical-channels'}{'channel'}[$ch];
+            if ( $eeprom_id ne "QSFP28" && $eeprom_id ne "QSFP+" ) {
+                show_transceiver_diag_info( $ch_hash, %mv2desc_sfp_hash );
+                last;
+            }
+            show_transceiver_diag_info( $ch_hash, %mv2desc_qsfp_hash );
+        }
+        show_transceiver_diag_info( $t_info_hash, %mv2desc_temp_volt_hash );
+
+        #Alarms and Warnings
+        printf $eeprom_alw_hdr;
+        if ( $eeprom_id eq "QSFP28" ) {
+            my $alarm_hash = $$t_info_hash{'physical-channels'}{'alarm-status'};
+            show_transceiver_diag_bit_flags( $alarm_hash, %alw2desc_alarm_hash );
+            my $warn_hash =
+              $$t_info_hash{'physical-channels'}{'warning-status'};
+            show_transceiver_diag_bit_flags( $warn_hash, %alw2desc_warn_hash );
+            for ( my $ch = 0 ; $ch < QSFP_CHANNELS ; $ch++ ) {
+                #Display channel number
+                my $ch_hash =
+                  $$t_info_hash{'physical-channels'}{'channel'}[$ch];
+                show_transceiver_diag_info( $ch_hash, %mv2desc_ch_num_hash );
+
+                my $ch_alarm_hash =
+                  $$t_info_hash{'physical-channels'}{'channel'}[$ch]
+                  {'alarm-status'};
+                show_transceiver_diag_bit_flags( $ch_alarm_hash,
+                    %alw2desc_ch_alarm_hash_qsfp );
+                my $ch_warn_hash =
+                  $$t_info_hash{'physical-channels'}{'channel'}[$ch]
+                  {'warning-status'};
+                show_transceiver_diag_bit_flags( $ch_warn_hash,
+                    %alw2desc_ch_warn_hash_qsfp );
+            }
+        } else {
+            my $alarm_hash = $$t_info_hash{'physical-channels'}{'alarm-status'};
+            show_transceiver_diag_bit_flags( $alarm_hash, %alw2desc_alarm_hash );
+	    my $warn_hash =
+              $$t_info_hash{'physical-channels'}{'warning-status'};
+            show_transceiver_diag_bit_flags( $warn_hash, %alw2desc_warn_hash );
+
+            my $ch_alarm_hash =
+              $$t_info_hash{'physical-channels'}{'channel'}[0]{'alarm-status'};
+            show_transceiver_diag_bit_flags( $ch_alarm_hash,
+                    %alw2desc_ch_alarm_hash_sfp );
+            my $ch_warn_hash =
+              $$t_info_hash{'physical-channels'}{'channel'}[0]
+	        {'warning-status'};
+            show_transceiver_diag_bit_flags( $ch_warn_hash,
+                    %alw2desc_ch_warn_hash_sfp );
+        }
+
+    }
+    return;
+}
+
+sub call_action_by_name {
+    my ( $actions, $script_name, $opt_name, $usage ) = @_;
+
+    my $usagefn = sub {
+        printf( "Usage for %s %s:\n", $script_name, $usage );
+        printf( "  %s %s --%s=[%s]\n",
+            $script_name, $usage, $opt_name, join( "|", keys( %{$actions} ) ) );
+        exit(1);
+    };
+
+    my ($name);
+    GetOptions( "$opt_name=s" => \$name, )
+      or $usagefn->();
+    $usagefn->() unless defined $name;
+
+    my $action = $actions->{$name};
+    $usagefn->() unless defined $name;
+
+    return $action->();
+}
+
+my %actions = ( "xcvr-info" => \&action_show_transceiver_info, );
+
+call_action_by_name( \%actions, $SCRIPT_NAME, "action", "" );
+
+exit 0;

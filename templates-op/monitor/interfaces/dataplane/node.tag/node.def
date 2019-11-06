@@ -1,0 +1,3 @@
+help: Monitor specified dataplane interface
+allowed: ${vyatta_sbindir}/vyatta-interfaces.pl --show dataplane
+run: bmon -U -b -r 10 -p $4

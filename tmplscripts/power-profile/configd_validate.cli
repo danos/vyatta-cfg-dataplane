@@ -1,0 +1,3 @@
+#!/opt/vyatta/bin/cliexpr
+# This can be replaced by choice-case when available in configd
+commit:expression: $VAR(../custom) == "" ; "custom may not be configured with policy"

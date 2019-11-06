@@ -1,0 +1,2 @@
+help: Show dataplane IPv6 statistics
+run: vplane-statistics.pl ip6

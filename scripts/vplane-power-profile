@@ -1,0 +1,63 @@
+#! /usr/bin/perl
+# Copyright (c) 2015 Brocade Communications Systems, Inc.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use JSON qw( decode_json );
+
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::Dataplane;
+use Vyatta::VPlaned;
+
+my $fabric;
+
+sub show_profile {
+    my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
+    die "Dataplane $fabric is not connected or does not exist\n"
+      unless ( !defined($fabric) || scalar(@$dpids) > 0 );
+
+    for my $fid (@$dpids) {
+        my $sock = ${$dpsocks}[$fid];
+        die "Can not connect to dataplane $fid\n"
+          unless $sock;
+
+        my $response = $sock->execute("mode");
+        exit 1 unless defined($response);
+
+        my $decoded = decode_json($response);
+
+        my $mode = $decoded->{mode};
+        print "\nvplane $fid:\n\n"
+          unless ( $fid == 0 );
+        printf "%s (%u, %u, %u)\n", $mode->{name}, $mode->{idle_thresh},
+          $mode->{min_sleep}, $mode->{max_sleep};
+    }
+    Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );
+
+}
+
+sub set_profile {
+    my $mode    = join( ' ', @_ );
+    my $profile = shift;
+    my $ctrl    = new Vyatta::VPlaned;
+
+    $ctrl->store( "dataplane power-profile", "mode $mode" );
+}
+
+sub usage {
+    print "Usage: $0 [--fabric=N] [SETTINGS]\n";
+}
+
+GetOptions( "fabric=s" => \$fabric, )
+  or usage();
+
+if (@ARGV) {
+    set_profile(@ARGV);
+} else {
+    show_profile();
+}

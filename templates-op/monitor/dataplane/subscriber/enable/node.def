@@ -1,0 +1,2 @@
+help: Enable dataplane ZMQ subscriber debugging
+run: vplane-monitor-cmd.pl --cmd="debug subscribe"

@@ -1,0 +1,2 @@
+help: Disable dataplane MAC VLAN debugging
+run: vplane-monitor-cmd.pl --cmd="debug -macvlan"

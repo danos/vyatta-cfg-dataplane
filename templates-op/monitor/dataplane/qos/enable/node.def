@@ -1,0 +1,2 @@
+help: Enable dataplane QoS debugging
+run: vplane-monitor-cmd.pl --cmd="debug qos"

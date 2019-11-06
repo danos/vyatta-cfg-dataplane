@@ -1,0 +1,705 @@
+module vyatta-interfaces-dataplane-transceiver-v1 {
+    namespace "urn:vyatta.com:mgmt:vyatta-interfaces-dataplane-transceiver:1";
+    prefix "vyatta-interfaces-dataplane-transceiver-v1";
+
+    import configd-v1 {
+         prefix configd;
+    }
+
+    import vyatta-types-v1 {
+        prefix types;
+    }
+
+    import vyatta-optical-transport-types-v1 {
+        prefix opt-types;
+    }
+
+    organization "AT&T Inc.";
+    contact
+        "AT&T
+         Postal: 208 S. Akard Street
+         Dallas, TX 25202
+         Web: www.att.com";
+
+    description
+        "Copyright (c) 2018-2019, AT&T Intellectual Property.
+         All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+         Derived from
+         https://github.com/openconfig/public/blob/master/release/models/platform/openconfig-platform-transceiver.yang
+
+         Licensed under the Apache License, Version 2.0 (the License) which is available at
+         http://www.apache.org/licenses/LICENSE-2.0
+
+         Transceiver information for physical interfaces.
+
+         This module defines configuration and operational state data
+         for transceivers (i.e., pluggable optics).";
+    revision 2019-06-13 {
+        description "Refactored YANG model to match with Openconfig";
+    }
+
+    revision 2019-01-29 {
+        description "Add current temperature and voltages leaves";
+    }
+
+    revision 2018-10-28 {
+        description "Initial version";
+    }
+
+    typedef port-name {
+        description "The name of the port";
+        type types:alpha-numeric {
+            configd:help "Port name";
+        }
+    }
+
+    grouping optical-power-aw-state {
+        description
+            "Reusable leaves related to optical power state -- these
+             are read-only state values.";
+
+        leaf output-power {
+            type opt-types:transceiver-input-output-power;
+
+            description
+                "The output optical power of a physical channel in units
+                 of 0.01dBm, which may be associated with individual
+                 physical channels, or an aggregate of multiple physical
+                 channels (i.e., for the overall transceiver). For an
+                 aggregate, this may be a measurement from a photodetector
+                 or a calculation performed on the device by summing up
+                 all of the related individual physical channels.";
+
+        }
+
+        leaf input-power {
+            type opt-types:transceiver-input-output-power;
+
+            description
+                "The input optical power of a physical channel in units
+                 of 0.01dBm, which may be associated with individual
+                 physical channels, or an aggregate of multiple physical
+                 channels (i.e., for the overall transceiver). For an
+                 aggregate, this may be a measurement from a photodetector
+                 or a calculation performed on the device by summing up
+                 all of the related individual physical channels.";
+        }
+
+        leaf laser-bias-current {
+            type opt-types:transceiver-laser-bias-current;
+
+            description
+                "The current applied by the system to the transmit laser to
+                 achieve the output power. The current is expressed in mA
+                 with a precision of up to two decimal places.";
+        }
+
+        container alarm-status {
+            description "Diagnostic alarm flag status bits";
+
+            reference
+                    "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Table 9-12";
+            leaf bias-current-high-alarm {
+                type string;
+                description "Set when TX Bias current exceeds high alarm
+                                     level.";
+            }
+            leaf bias-current-low-alarm {
+                type string;
+                description "Set when internal temperature is below low
+                                     alarm level.";
+            }
+            leaf output-power-high-alarm {
+                type string;
+                description "Set when TX output power exceeds high alarm
+                                     level.";
+            }
+            leaf output-power-low-alarm {
+                type string;
+                description "Set when TX output power is below low alarm
+                                     level.";
+            }
+            leaf input-power-high-alarm {
+                type string;
+                description "Set when TX output power is below low alarm
+                                     level.";
+            }
+            leaf input-power-low-alarm {
+                type string;
+                description "Set when received power is below low alarm
+                                     level.";
+            }
+        }
+
+        container warning-status {
+            description "Diagnostic alarm flag status bits";
+
+            reference
+                    "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Table 9-12";
+            leaf bias-current-high-warning {
+                type string;
+                description "Set when TX Bias current exceeds high warning
+                                     level.";
+            }
+            leaf bias-current-low-warning {
+                type string;
+                description "Set when TX Bias current is below low warning
+                                     level.";
+            }
+            leaf output-power-high-warning {
+                type string;
+                description "Set when TX output power exceeds high warning
+                                     level.";
+            }
+            leaf output-power-low-warning {
+                type string;
+                description "Set when TX output power is below low warning
+                                     level.";
+            }
+            leaf input-power-high-warning {
+                type string;
+                description "Set when received power exceeds high warning
+                                     level.";
+            }
+            leaf input-power-low-warning {
+                type string;
+                description "Set when received power is below low warning
+                                     level.";
+            }
+        }
+    }
+
+    grouping physical-channel-top {
+        description
+            "Top-level grouping for physical client channels";
+
+        container physical-channels {
+            description
+                "Enclosing container for client channels";
+
+            list channel {
+                key index;
+                description
+                    "List of client channels, keyed by index within a physical
+                    client port.  A physical port with a single channel would
+                    have a single zero-indexed element";
+
+                leaf index {
+                    type uint16;
+                    description
+                        "Reference to the index number of the channel";
+                }
+
+                uses optical-power-aw-state;
+            }
+
+            container alarm-status {
+                description "Diagnostic alarm flag status bits";
+
+                reference
+                    "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Table 9-12";
+                leaf temperature-high-alarm {
+                    type string;
+                    description "Set when internal temperature exceeds high
+                                     alarm level.";
+                }
+                leaf temperature-low-alarm {
+                    type string;
+                    description "Set when internal temperature is below low
+                                     alarm level.";
+                }
+                leaf voltage-high-alarm {
+                    type string;
+                    description "Set when internal supply voltage exceeds high
+                                         alarm level.";
+                }
+                leaf voltage-low-alarm {
+                    type string;
+                    description "Set when internal supply voltage is below
+                                     low alarm level.";
+                }
+            }
+
+            container warning-status {
+                description "Diagnostic warning flag status bits";
+
+                reference
+                    "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Table 9-12";
+
+                leaf temperature-high-warning {
+                    type string;
+                    description "Set when internal temperature exceeds high
+                                     warning level.";
+                }
+                leaf temperature-low-warning {
+                    type string;
+                    description "Set when internal temperature is below low
+                                     warning level.";
+                }
+                leaf voltage-high-warning {
+                    type string;
+                    description "Set when internal supply voltage exceeds high
+                                     warning level.";
+                }
+                leaf voltage-low-warning {
+                    type string;
+                    description "Set when internal supply voltage is below
+                                     low warning level.";
+                }
+            }
+        }
+    }
+
+    grouping port-transceiver-state {
+        description
+            "Operational state data for client port transceivers";
+
+        leaf form-factor {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Indicates the type of optical transceiver used on this
+                 port. If the client port is built into the device and not
+                 pluggable, then non-pluggable is the corresponding state. If
+                 a device port supports multiple form factors (e.g. QSFP28
+                 and QSFP+, then the value of the transceiver installed shall
+                 be reported. If no transceiver is present, then the value of
+                 the highest rate form factor shall be reported
+                 (QSFP28, for example).";
+        }
+
+        leaf extended-id {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Extended identifier of type of transceiver";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Table 5-2";
+        }
+
+        leaf connector-type {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Connector type used on this port";
+        }
+
+        leaf ethernet-pmd {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Ethernet PMD (physical medium dependent sublayer) that the
+                 transceiver supports. The SFF/QSFP MSAs have registers for
+                 this and CFP MSA has similar.";
+        }
+
+        leaf encoding {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Code for high speed serial encoding algorithm";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 5.6";
+        }
+
+        leaf nominal-bit-rate {
+            type uint16;
+            units "100Mbd";
+            description
+                "Nominal signalling rate";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 5.7";
+        }
+
+        container link-lengths {
+            description
+                "Link lengths supported for different types of fiber";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 6";
+            leaf smf-km {
+                type uint16;
+                units "km";
+                description
+                    "Link length supported for single mode fiber in kilometers";
+            }
+
+            leaf smf {
+                type uint16;
+                units "100m";
+                description
+                    "Link length supported for single mode fiber in units of 100m";
+            }
+
+            leaf um_50 {
+                type uint16;
+                units "10m";
+                description
+                    "Link length supported for 50 um OM2 fiber";
+            }
+
+            leaf um_625 {
+                type uint16;
+                units "10m";
+                description
+                    "Link length supported for 62.5 um OM1 fiber";
+            }
+
+            leaf cable {
+                type uint16;
+                units "10m";
+                description
+                    "Link length supported for 50um OM4 fiber";
+            }
+
+            leaf om3 {
+                type uint16;
+                units "10m";
+                description
+                    "Link length supported for 50 um OM3 fiber";
+            }
+        }
+
+        leaf internal-temp {
+            type opt-types:transceiver-operating-temperature;
+            description
+                "Internally measured temperature in degrees Celsius. MSA
+                 valid range is between -40 and +125C. Accuracy shall be
+                 better than +/- 3 degC over the whole temperature range.";
+        }
+
+        leaf voltage {
+            type opt-types:transceiver-supply-voltage;
+            description "Supply voltage to the SFP";
+        }
+
+        leaf vendor {
+            type string {
+                length 1..16;
+            }
+            description
+                "Full name of transceiver vendor. 16-octet field that
+                 contains ASCII characters, left-aligned and padded on the
+                 right with ASCII spaces (20h)";
+        }
+
+        leaf vendor-oui {
+            type string {
+                length 1..9;
+            }
+            description
+                "The vendor organizationally unique identifier field (vendor OUI)
+                 is a 3-byte field that contains the IEEE Company Identifier for
+                 the vendor. A value of all zero in the 3-byte field indicates
+                 that the Vendor OUI is unspecified. It is represented here as
+                 a hexadecimal string with a ':' between consecutive bytes";
+            reference
+                "https://en.wikipedia.org/wiki/Organizationally_unique_identifier
+                 http://standards-oui.ieee.org/oui/oui.txt";
+        }
+
+        leaf vendor-part {
+            type string {
+                length 1..16;
+            }
+            description
+                "Transceiver vendor's part number. 16-octet field that
+                 contains ASCII characters, left-aligned and padded on the
+                 right with ASCII spaces (20h). If part number is undefined,
+                 all 16 octets = '0'";
+        }
+
+        leaf vendor-rev {
+            type string {
+                length 1..2;
+            }
+            description
+                "Transceiver vendor's revision number. 2-octet field that
+                 contains ASCII characters, left-aligned and padded on the
+                 right with ASCII spaces (20h)";
+        }
+        leaf serial-no {
+            type string {
+                length 1..16;
+            }
+            description
+                "Transceiver serial number. 16-octet field that contains
+                 ASCII characters, left-aligned and padded on the right with
+                 ASCII spaces (20h). If part serial number is undefined, all
+                 16 octets = 0";
+        }
+        leaf date-code {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Representation of the transceiver date code, typically
+                 stored as YYMMDD. The time portion of the value is
+                 undefined and not intended to be read.";
+        }
+
+        leaf diagnostic-monitoring-type {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Indicates which type of diagnostic monitoring is implemented
+                 (if any) in the transceiver";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 8.8";
+        }
+
+        leaf sff-8472-compliance {
+            type string {
+                length "1..256";
+            }
+
+            description
+                "Indicates which feature set(s) are implemented in the
+                 transceiver. A zero value indicates that the digital
+                 diagnostic capabilities are not included. Values from
+                 01h to 08h indicate functionality in different revisions
+                 of SFF8472 upto Rev 12.0";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 8.11";
+        }
+
+        container temperature-thresholds {
+            description "Contains threshold values for internal operating
+                         temperature. When the operating temperature is outside
+                         the alarm/warning ranges, the appropriate temperature
+                         alarm/warning bits are set in the hardware";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.4";
+
+            leaf temperature-high-alarm {
+                type opt-types:transceiver-operating-temperature;
+                description "Factory preset threshold value. When the internal
+                             operating temperature exceeds this temperature,
+                             the temperature high alarm flag is set.";
+            }
+            leaf temperature-high-warning {
+                type opt-types:transceiver-operating-temperature;
+                description "Factory preset threshold value. When the internal
+                             operating temperature exceeds this temperature,
+                             the temperature high warning flag is set.";
+            }
+            leaf temperature-low-warning {
+                type opt-types:transceiver-operating-temperature;
+                description "Factory preset threshold value. When the internal
+                             operating temperature falls below this temperature,
+                             the temperature low warning flag is set.";
+            }
+            leaf temperature-low-alarm {
+                type opt-types:transceiver-operating-temperature;
+                description "Factory preset threshold value. When the internal
+                             operating temperature falls below this temperature,
+                             the temperature low alarm flag is set.";
+            }
+        }
+
+        container voltage-thresholds {
+            description "Contains threshold values for supply voltage.
+                         When the supply voltage is outside the alarm/warning
+                         ranges, the appropriate temperature alarm/warning
+                         bits are set in the hardware";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.4";
+
+            leaf voltage-high-alarm {
+                type opt-types:transceiver-supply-voltage;
+                description "Factory preset threshold value. When the supply
+                             voltage  exceeds this voltage, the voltage high
+                             alarm flag is set.";
+            }
+            leaf voltage-high-warning {
+                type opt-types:transceiver-supply-voltage;
+                description "Factory preset threshold value. When the supply
+                             voltage  exceeds this voltage, the voltage high
+                             warning flag is set.";
+            }
+            leaf voltage-low-warning {
+                type opt-types:transceiver-supply-voltage;
+                description "Factory preset threshold value. When the supply
+                             voltage falls below this voltage, the voltage low
+                             warning flag is set.";
+            }
+            leaf voltage-low-alarm {
+                type opt-types:transceiver-supply-voltage;
+                description "Factory preset threshold value. When the supply
+                             voltage falls below this voltage, the voltage low
+                             alarm flag is set.";
+            }
+        }
+
+        container laser-bias-current-thresholds {
+            description "Contains threshold values for laser bias current.
+                         When the measured current value is outside the
+                         alarm/warning ranges, the appropriate bias current
+                         alarm/warning bits are set in the hardware";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.4";
+
+            leaf laser-bias-current-high-alarm {
+                type opt-types:transceiver-laser-bias-current;
+                description "Factory preset threshold value. When the bias
+                             current exceeds this value, the bias current high
+                             alarm flag is set.";
+            }
+            leaf laser-bias-current-high-warning {
+                type opt-types:transceiver-laser-bias-current;
+                description "Factory preset threshold value. When the bias
+                             current exceeds this value, the bias current high
+                             warning flag is set.";
+           }
+            leaf laser-bias-current-low-warning {
+                type opt-types:transceiver-laser-bias-current;
+                description "Factory preset threshold value. When the bias
+                             current falls below this value, the bias current
+                             low warning flag is set.";
+            }
+            leaf laser-bias-current-low-alarm {
+                type opt-types:transceiver-laser-bias-current;
+                description "Factory preset threshold value. When the bias
+                             current falls below this value, the bias current
+                             low alarm flag is set.";
+            }
+        }
+
+        container output-power-thresholds {
+            description "Contains threshold values for transmit power.
+                         When the measured transmit power value is outside the
+                         alarm/warning ranges, the appropriate transmit power
+                         alarm/warning bits are set in the hardware";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.4";
+
+            leaf output-power-high-alarm {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the transmit
+                             power exceeds this value, the transmit power high
+                             alarm flag is set.";
+            }
+            leaf output-power-high-warning {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the transmit
+                             power exceeds this value, the transmit power
+                             high warning flag is set.";
+
+            }
+            leaf output-power-low-warning {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the transmit
+                             power falls below this value, the transmit power
+                             low warning flag is set.";
+            }
+            leaf output-power-low-alarm {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the transmit
+                             power falls below this value, the transmit power
+                             low alarm flag is set.";
+            }
+       }
+
+        container input-power-thresholds {
+            description "Contains threshold values for measured receive power.
+                         When the measured receive power value is outside the
+                         alarm/warning ranges, the appropriate receive power
+                         alarm/warning bits are set in the hardware";
+            reference
+                "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.4";
+
+            leaf input-power-high-alarm {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the receive
+                             power exceeds this value, the receive power high
+                             alarm flag is set.";
+            }
+            leaf input-power-high-warning {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the receive
+                             power exceeds this value, the receive power
+                             high warning flag is set.";
+            }
+            leaf input-power-low-warning {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the receive
+                             power falls below this value, the receive power
+                             low warning flag is set.";
+            }
+            leaf input-power-low-alarm {
+                type opt-types:transceiver-input-output-power;
+                description "Factory preset threshold value. When the receive
+                             power falls below this value, the receive power
+                             low alarm flag is set.";
+            }
+        }
+        uses physical-channel-top;
+    }
+
+    rpc xcvr-info {
+        configd:call-rpc "/opt/vyatta/sbin/vyatta-transceiver --action=xcvr-info";
+
+        description
+            "Transceiver information on a physical interface.
+            Provides information described in SFF8472.";
+
+        input {
+            leaf name {
+                description "Name of the port to get transceiver info";
+                mandatory true;
+                type port-name;
+            }
+        }
+        output {
+            container transceiver-info {
+                description
+                    "Transceiver information on a physical interface.
+                     Provides information described in SFF8472.";
+
+                uses port-transceiver-state;
+            }
+        }
+    }
+}

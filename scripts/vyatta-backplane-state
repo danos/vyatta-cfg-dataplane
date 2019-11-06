@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Vyatta::Dataplane;
+use JSON;
+
+my ( $dpids, $dpconns ) = Vyatta::Dataplane::setup_fabric_conns();
+
+my $cmd = 'backplane show';
+
+my %root;
+my @backplanes = ();
+
+$root{'backplanes'} = \@backplanes;
+
+my @dprsp = vplane_exec_cmd( $cmd, $dpids, $dpconns, 1 );
+
+sub process_port_stats {
+    my ( $stat, $port_stats ) = @_;
+    my %port = ();
+    my %dm_hash;
+    my $key;
+
+    $dm_hash{'Port'}    = 'name';
+    $dm_hash{'RxPkts'}  = 'rx_packets';
+    $dm_hash{'RxBytes'} = 'rx_bytes';
+    $dm_hash{'TxPkts'}  = 'tx_packets';
+    $dm_hash{'TxBytes'} = 'tx_bytes';
+
+    while ( my ( $port_stat, $port_stat_val ) = each( %{$stat} ) ) {
+
+        $key = $dm_hash{$port_stat};
+        if ( defined($key) ) {
+            $port{$key} = $port_stat_val;
+        }
+
+    }
+    push( @$port_stats, \%port );
+}
+
+sub process_rx_stat {
+    my ( $stat, $value, $rx_stats ) = @_;
+
+    my %dm_hash;
+    my $key;
+    $dm_hash{'BPRxBytes'} = 'bytes';
+    $dm_hash{'BPRxPkts'}  = 'packets';
+
+    $key = $dm_hash{$stat};
+    if ( defined($key) ) {
+        $rx_stats->{$key} = $value;
+    }
+    if ( $stat eq "RXDrops" ) {
+        while ( my ( $drop, $dropval ) = each( %{$stat} ) ) {
+            $rx_stats->{"dropped"} += $dropval;
+        }
+    }
+}
+
+sub process_tx_stat {
+    my ( $stat, $value, $tx_stats ) = @_;
+
+    my %dm_hash;
+    my $key;
+    $dm_hash{'BPTxBytes'} = 'bytes';
+    $dm_hash{'BPTxPkts'}  = 'packets';
+
+    $key = $dm_hash{$stat};
+    if ( defined($key) ) {
+        $tx_stats->{$key} = $value;
+    }
+    if ( $stat eq "TXDrops" ) {
+        while ( my ( $drop, $dropval ) = each( %{$stat} ) ) {
+            $tx_stats->{"dropped"} += $dropval;
+        }
+    }
+}
+
+sub process_backplane {
+    my ($value) = @_;
+    my %backplane_info;
+
+    my $link_state = $value->{'link_state'};
+
+    my $fal_info = $value->{'fal_info'};
+    if ( defined $fal_info ) {
+        my $bp_name  = %{$value}{'name'};
+        my $bp_stats = $fal_info->{'backplane_stats'};
+
+        $backplane_info{'name'}       = $bp_name;
+        $backplane_info{'link_state'} = $link_state;
+
+        my %rx_stats   = ();
+        my %tx_stats   = ();
+        my @port_stats = ();
+        while ( my ( $stat, $value ) = each( %{$bp_stats} ) ) {
+
+            process_rx_stat( $stat, $value, \%rx_stats );
+            process_tx_stat( $stat, $value, \%tx_stats );
+
+            if ( $stat eq "PortStats" ) {
+                foreach my $stat ( @{$value} ) {
+                    process_port_stats( $stat, \@port_stats );
+                }
+            }
+        }
+        $backplane_info{'receive-statistics'}  = \%rx_stats;
+        $backplane_info{'transmit-statistics'} = \%tx_stats;
+        $backplane_info{'port_stats'}          = \@port_stats;
+    }
+    push( @backplanes, \%backplane_info );
+}
+
+foreach my $rsp (@dprsp) {
+    foreach my $elem ( @{$rsp} ) {
+        my $decoded = decode_json($elem);
+
+        foreach my $value ( @{ $decoded->{'backplane_info'}->{'bp_intfs'} } ) {
+            process_backplane($value);
+        }
+    }
+}
+
+my $json = encode_json( \%root );
+print $json;

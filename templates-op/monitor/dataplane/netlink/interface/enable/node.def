@@ -1,0 +1,2 @@
+help: Enable netlink interface debugging
+run: vplane-monitor-cmd.pl --cmd="debug nl_interface"

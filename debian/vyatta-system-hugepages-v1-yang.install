@@ -1,0 +1,2 @@
+yang/vyatta-system-hugepages-v1.yang usr/share/configd/yang
+tmplscripts/system/hugepages/* opt/vyatta/share/tmplscripts/system/hugepages

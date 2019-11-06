@@ -1,0 +1,2 @@
+help: Show dataplane IP statistics for specific routing-instance
+run: vplane-statistics.pl --routing-instance $5 ip

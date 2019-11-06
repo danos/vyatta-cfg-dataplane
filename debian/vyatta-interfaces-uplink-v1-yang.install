@@ -1,0 +1,2 @@
+etc/netdevice.d/uplink opt/vyatta/etc/netdevice.d
+yang/vyatta-interfaces-uplink-v1.yang usr/share/configd/yang

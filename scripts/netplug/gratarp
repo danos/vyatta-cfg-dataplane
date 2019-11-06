@@ -1,0 +1,48 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2019, AT&T Intellectual Property.
+# All rights reserved.
+#
+# Copyright (c) 2015, Brocade Communications Systems, Inc.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::Config;
+use Vyatta::Interface;
+
+# return the value of the number of gratuitous arps to send on given interface
+sub get_gratuitous_arp_cfg {
+    my $name = shift;
+    my $intf = new Vyatta::Interface($name);
+
+    return 0 if !defined($intf);
+
+    my $config = new Vyatta::Config $intf->path();
+
+    if ( $config->existsOrig("ip gratuitous-arp-count") ) {
+        return $config->returnOrigValue('ip gratuitous-arp-count');
+    } else {
+
+        # Cope with yang issue not returning the default value when
+        # if there is no ip node present..
+        return 1;
+    }
+}
+
+my $dev              = shift;
+my $num_of_grat_arps = get_gratuitous_arp_cfg($dev);
+
+if ( $num_of_grat_arps > 0 ) {
+
+    foreach my $addr_and_mask ( Vyatta::Misc::getIP( $dev, 4 ) ) {
+
+        my ( $addr, undef ) = split( '/', $addr_and_mask );
+        `/usr/bin/arping -c $num_of_grat_arps -U -I $dev $addr`;
+    }
+}

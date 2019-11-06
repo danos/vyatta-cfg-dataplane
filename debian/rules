@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+export PYBUILD_NAME = vplaned
+export PYBUILD_SYSTEM = distutils
+export PYBUILD_TEST_ARGS_python3=$(CURDIR)/lib/python
+VERSION := $(shell dpkg-parsechangelog | grep '^Version: ' | awk '{print $$2}')
+
+%:
+	dh $@ --with yang --with autoreconf --with python3 --buildsystem=pybuild
+
+%.py: %.py.in
+	sed -e 's/__CHANGELOG_VERSION__/$(VERSION)/' < $< > $@
+
+override_dh_auto_clean: setup.py
+	dh_auto_clean
+	rm -f $(CURDIR)/setup.py
+	rm -rf $(CURDIR)/lib/python/vplaned.egg-info
+
+override_dh_auto_configure: setup.py
+	$(CURDIR)/configure --prefix=/opt/vyatta
+	dh_auto_configure
+
+override_dh_auto_build: setup.py
+	make
+	dh_auto_build
+
+override_dh_auto_install:
+	make install DESTDIR=$(CURDIR)/debian/tmp AM_UPDATE_INFO_DIR=no
+	dh_auto_install
+
+override_dh_auto_test:
+	VERBOSE=1 make check
+	dh_auto_test

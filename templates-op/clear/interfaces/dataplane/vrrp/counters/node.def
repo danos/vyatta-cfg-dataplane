@@ -1,0 +1,2 @@
+help: Clear all vrrp dataplane interface counters
+run: vplane-ifconfig.pl --action=clear --vrrp

@@ -1,0 +1,4 @@
+help: Clear virtual network interface (vif) information
+allowed: local -a array ;
+     array=( /sys/class/net/dp*.* ) ;
+          echo  -n ${array[@]##*/}

@@ -1,0 +1,4 @@
+lib/Vyatta/Backplane.pm opt/vyatta/share/perl5/Vyatta
+lib/Vyatta/Dataplane.pm opt/vyatta/share/perl5/Vyatta
+lib/Vyatta/DataplaneStats.pm opt/vyatta/share/perl5/Vyatta
+lib/Vyatta/PCIid.pm opt/vyatta/share/perl5/Vyatta

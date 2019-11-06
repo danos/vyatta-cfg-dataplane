@@ -1,0 +1,2 @@
+help: Enable dataplane VXLAN debugging
+run: vplane-monitor-cmd.pl --cmd="debug vxlan"

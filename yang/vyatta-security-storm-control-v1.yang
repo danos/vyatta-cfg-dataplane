@@ -1,0 +1,340 @@
+module vyatta-security-storm-control-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-security-storm-control:1";
+	prefix vyatta-security-storm-control-v1;
+
+	import vyatta-security-v1 {
+		prefix security;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-interfaces-dataplane-v1 {
+		prefix interfaces-dataplane;
+	}
+	import vyatta-interfaces-dataplane-switch-v1 {
+		prefix dp-sw;
+	}
+	import vyatta-interfaces-switch-v1 {
+		prefix sw;
+	}
+	import vyatta-services-v1 {
+		prefix service;
+	}
+	import vyatta-service-snmp-v1 {
+		prefix service-snmp;
+	}
+	import vyatta-types-v1 {
+		prefix types;
+	}
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+		         Dallas, TX 25202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2018-2019, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 YANG module and scripts for Vyatta storm control";
+
+	revision 2019-05-17 {
+		description "Add configd help text for storm-control";
+	}
+	revision 2019-01-18 {
+		description "Add restriction to make port & vlan level
+		             profile attachments mutually exclusive";
+	}
+	revision 2019-01-11 {
+		description "Add must statement for per-VLAN storm control";
+	}
+	revision 2018-12-13 {
+		description "Make storm-control container a presence container";
+	}
+	revision 2018-10-01 {
+		description "Add data model for statistics, operational state,
+                             SNMP notifications and per-VLAN per-port policing";
+	}
+	revision 2018-08-24 {
+		description "Add support for interface action and recovery interval";
+	}
+	revision 2018-08-23 {
+		description "Initial version.";
+	}
+
+	grouping bandwidth-threshold {
+		leaf bandwidth-level {
+			description "Level in Kbps";
+			configd:help "Level in Kbps";
+			type uint32 {
+				range 1..100000000;
+			}
+		}
+		leaf bandwidth-percent {
+			description "Level as percentage of interface bandwidth";
+			configd:help "Level as percentage of interface bandwidth";
+			type decimal64 {
+				fraction-digits 2;
+				range 1..100;
+			}
+		}
+	}
+
+	grouping storm-ctl-state {
+		leaf traffic-type {
+			type enumeration {
+				enum unicast {
+					description "Unicast traffic";
+				}
+				enum multicast {
+					description "Multicast traffic";
+				}
+				enum broadcast {
+					description "Broadcast traffic";
+				}
+			}
+		}
+		leaf threshold-level {
+			description "Threshold level (Kbps) for this traffic type on this interface";
+			type uint32 {
+				range 0..100000000;
+			}
+		}
+		leaf packets-dropped {
+			description "Packets dropped by storm control policer for this traffic type";
+			type uint64;
+		}
+		leaf bytes-dropped {
+			description "Bytes dropped by storm control policer for this traffic type";
+			type uint64;
+		}
+	}
+
+	augment /security:security {
+		container storm-control-state {
+			config false;
+			configd:get-state "vyatta-storm-ctl-state";
+
+			list interfaces {
+				description "State of storm control on interfaces in the system";
+				key intf-name;
+
+				leaf intf-name {
+					description "Name of interface on which storm control is enabled";
+					type string;
+				}
+
+				list storm-control-interface-state {
+					description "State of storm control on this interface";
+					key traffic-type;
+
+					uses storm-ctl-state;
+				}
+
+				list vlan-storm-control-state {
+					description "State of storm control on vlan on this interface";
+					key vlan-id;
+					leaf vlan-id {
+						type types:vlan;
+					}
+					list vlan-storm-control-traffic-state {
+						description "State of storm control for different traffic
+						             types on this interface and vlan";
+						key traffic-type;
+
+						uses storm-ctl-state;
+					}
+				}
+			}
+		}
+
+		container storm-control {
+			description "Layer 2 traffic storm control";
+			configd:help "Layer 2 traffic storm control";
+			presence "Presence of this container activates the default storm control config";
+
+			leaf detection-interval {
+				description "Interval (seconds) within which traffic storm is detected on an interface.
+ 				             Any actions configured by the user are initiated within the configured interval";
+				configd:help "Interval (seconds) within which traffic storm is detected";
+				type uint32 {
+					range 5..60;
+				}
+				default 5;
+				configd:update "/opt/vyatta/sbin/vplane-storm-control --action SET --update $VAR(.)";
+			}
+
+
+			list profile {
+				description "Traffic storm control profile configuration.
+				             Defines a set of storm control traffic threshold parameters that can be re-used
+				             across interfaces.
+				             Thresholds can be specified for three types of traffic - unicast/multicast/broadcast.
+				             Thresholds can be specified either as absolute levels or percentages of interface bandwidth.
+				             When a threshold is specified as a percentage, the absolute level is set implicitly
+				             depending on the speed of the interface to which the policy is applied.
+				             When ingress traffic on an interface exceeds the configured threshold for any of the traffic
+				             types, it is dropped";
+				configd:help "Traffic storm control profile configuration.";
+
+				key "profile-name";
+				leaf profile-name {
+					type string;
+					description "Name of storm control profile";
+					configd:help "Name of storm control profile";
+				}
+				container broadcast {
+					description "Threshold for broadcast traffic";
+					configd:help "Threshold for broadcast traffic";
+					uses bandwidth-threshold;
+					must "count(bandwidth-level) + count(bandwidth-percent) <= 1" {
+						error-message "Only one of bandwidth-level or bandwidth-percent may be configured";
+					}
+					configd:update "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action SET --update $VAR(@)";
+					configd:delete "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action DELETE --update $VAR(@)";
+				}
+				container multicast {
+					description "Threshold for multicast traffic";
+					configd:help "Threshold for multicast traffic";
+					uses bandwidth-threshold;
+					must "count(bandwidth-level) + count(bandwidth-percent) <= 1" {
+						error-message "Only one of bandwidth-level or bandwidth-percent may be configured";
+					}
+					configd:update "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action SET --update $VAR(@)";
+					configd:delete "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action DELETE --update $VAR(@)";
+				}
+				container unicast {
+					description "Threshold for unicast traffic";
+					configd:help "Threshold for unicast traffic";
+					uses bandwidth-threshold;
+					must "count(bandwidth-level) + count(bandwidth-percent) <= 1" {
+						error-message "Only one of bandwidth-level or bandwidth-percent may be configured";
+					}
+					configd:update "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action SET --update $VAR(@)";
+					configd:delete "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action DELETE --update $VAR(@)";
+				}
+
+				container action {
+					description "Actions to perform when a traffic storm is detected";
+					configd:help "Actions to perform when a traffic storm is detected";
+
+					leaf shutdown {
+						description "Shutdown interface on detection of traffic storm";
+						configd:help "Shutdown interface on detection of traffic storm";
+						type empty;
+						configd:update "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../../@) --action SET --update $VAR(@)";
+						configd:delete "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../../@) --action DELETE --update $VAR(@)";
+
+						must "../../recovery-interval" {
+							error-message "A recovery interval must be configured when the shutdown action is configured";
+						}
+					}
+				}
+
+				leaf recovery-interval {
+					description "Interval (seconds) after which an interface shut down due to a traffic storm is brought back up";
+					configd:help "Interval (seconds) after which an interface is brought back up";
+					type uint32 {
+						range 60..300;
+					}
+					configd:update "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action SET --update $VAR(.)";
+					configd:delete "/opt/vyatta/sbin/vplane-storm-control --profile $VAR(../@) --action DELETE --update $VAR(.)";
+				}
+			}
+		}
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane {
+		container storm-control {
+			description "Traffic storm control parameters on this interface";
+			configd:help "Traffic storm control parameters on this interface";
+
+			leaf profile {
+				description "Storm control profile name";
+				configd:help "Storm control profile name";
+				type leafref {
+					path "/security:security/storm-control/profile/profile-name";
+				}
+				configd:update "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action SET --profile $VAR(@)";
+				configd:delete "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action DELETE --profile $VAR(@)";
+			}
+
+			list vlan {
+				description "Storm control for traffic on specified vlan";
+				configd:help "Storm control for traffic on specified vlan";
+				configd:end "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action UPDATE_VLANS";
+				key vlan-id;
+
+				must "not(../profile)" {
+					error-message "Storm control cannot be enabled at interface and vlan levels at the same time";
+				}
+
+				leaf vlan-id {
+					must "../../../dp-sw:switch-group/dp-sw:port-parameters/dp-sw:vlan-parameters/dp-sw:primary-vlan-id = current() or " +
+					     "../../../dp-sw:switch-group/dp-sw:port-parameters/dp-sw:vlan-parameters/dp-sw:vlans[. = current()] or " +
+					     "/if:interfaces/sw:switch[sw:name = current()/../../../dp-sw:switch-group/dp-sw:switch]/sw:default-port-parameters/sw:vlan-parameters/sw:primary-vlan-id = current() or " +
+					     "/if:interfaces/sw:switch[sw:name = current()/../../../dp-sw:switch-group/dp-sw:switch]/sw:default-port-parameters/sw:vlan-parameters/sw:vlans[. = current()]" {
+						error-message "Interface is not a member of the specified VLAN";
+					}
+					type types:vlan;
+				}
+
+				leaf profile {
+					description "Storm control profile for specified vlan";
+					configd:help "Storm control profile for specified vlan";
+					mandatory true;
+					type leafref {
+						path "/security:security/storm-control/profile/profile-name";
+					}
+				}
+			}
+		}
+	}
+
+	augment /service:service/service-snmp:snmp/service-snmp:notification {
+		container storm-control {
+			description "Enable notifications (traps) for storm-control events";
+			configd:help "Enable notifications (traps) for storm-control events";
+			leaf all {
+				description "Generate SNMP traps for all storm-control events";
+				configd:help "Generate SNMP traps for all storm-control events";
+				type empty;
+				configd:update "/opt/vyatta/sbin/vplane-storm-control --action SET --update $VAR(../../@)";
+				configd:delete "/opt/vyatta/sbin/vplane-storm-control --action DELETE --update $VAR(../../@)";
+			}
+		}
+	}
+}

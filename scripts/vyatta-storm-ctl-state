@@ -1,0 +1,77 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2018, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Vyatta::Dataplane;
+use JSON;
+
+my ( $dpids, $dpconns ) = Vyatta::Dataplane::setup_fabric_conns();
+
+my $cmd = 'storm-ctl show';
+my @tr_types = ( 'unicast', 'multicast', 'broadcast' );
+
+my @dprsp = vplane_exec_cmd( $cmd, $dpids, $dpconns, 1 );
+
+my ( $intf_state, $ifname, $pkts_dropped, $bytes_dropped, $threshold, $state );
+my %root;
+my @intf_arr = ();
+
+sub get_storm_ctl_state {
+    my ( $value, $arr ) = @_;
+    my ( $pkts_dropped, $bytes_dropped, $threshold, $vlan );
+
+    foreach my $tr_type (@tr_types) {
+        my %state;
+
+        $pkts_dropped  = 0;
+        $bytes_dropped = 0;
+        $threshold     = 0;
+        if ( defined( %$value{$tr_type} ) ) {
+            $threshold     = %$value{$tr_type}->{'max_rate_kbps'};
+            $pkts_dropped  = %$value{$tr_type}->{'pkts_dropped'};
+            $bytes_dropped = %$value{$tr_type}->{'bytes_dropped'};
+        }
+        $state{'traffic-type'}    = $tr_type;
+        $state{'threshold-level'} = $threshold;
+        $state{'packets-dropped'} = $pkts_dropped;
+        $state{'bytes-dropped'}   = $bytes_dropped;
+        push( @{$arr}, \%state );
+    }
+}
+
+$root{'interfaces'} = \@intf_arr;
+
+foreach my $rsp (@dprsp) {
+    foreach my $elem ( @{$rsp} ) {
+        my $decoded = decode_json($elem);
+        foreach my $value ( @{ $decoded->{'storm_ctl_state'}->{'intfs'} } ) {
+            my %intf_info;
+            $intf_info{'intf-name'} = $value->{'ifname'};
+            get_storm_ctl_state( $value->{'whole_interface'},
+                \@{ $intf_info{'storm-control-interface-state'} } );
+
+            foreach my $vlan_info ( @{ $value->{'vlan_table'} } ) {
+                my %vlan_state;
+
+                $vlan_state{'vlan-id'} = %$vlan_info{'vlan'};
+                get_storm_ctl_state( $vlan_info,
+                    \@{ $vlan_state{'vlan-storm-control-traffic-state'} } );
+                push(
+                    @{ $intf_info{'vlan-storm-control-state'} },
+                    \%vlan_state
+                );
+            }
+            push( @intf_arr, \%intf_info );
+        }
+    }
+}
+
+my $json = encode_json( \%root );
+print $json;

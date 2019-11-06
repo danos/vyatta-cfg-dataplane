@@ -1,0 +1,4 @@
+scripts/vyatta-backplane opt/vyatta/sbin
+scripts/vyatta-backplane-state opt/vyatta/sbin
+yang/vyatta-interfaces-backplane-v1.yang usr/share/configd/yang
+platform/vyatta-backplane.platform /lib/vyatta-platform/platforms

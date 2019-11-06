@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2018, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+# The purpose of this script is to block tables from being deleted
+# when they are still in use by PBR. An exit code of zero indicates
+# the table may be deleted and non-zero indicates it should be
+# retained.
+#
+
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+
+use Vyatta::VPlaned;
+
+#
+# Update controller and dataplane PBR tablemap to remove tableid
+# mapping for deleted table.
+#
+
+my $vrf_name = shift;
+my $ptid     = shift;
+my $ktid     = shift;
+my $vrf_id   = shift;
+
+my $ctrl = new Vyatta::VPlaned;
+
+$ctrl->store("tablemap-$vrf_name-$ktid",
+             "tablemap $vrf_name $ptid 0 $vrf_id",
+             "ALL", "DELETE");

@@ -1,0 +1,49 @@
+#! /usr/bin/perl
+# Copyright (c) 2018, AT&T Intellectual Property.  All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+# Script to add a Rib section to the dataplane.conf file as this is not
+# overwritten on image upgrade as files in /etc/vyatta are not modified
+#
+#[Rib]
+#control=ipc:///var/run/routing/rib.control
+
+use strict;
+use warnings;
+use File::Slurp;
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::FeatureConfig qw(get_cfg);
+
+my $file = "/etc/vyatta/dataplane.conf";
+my $section = "Rib";
+my $var = "control";
+my $val = "ipc:///var/run/routing/rib.control";
+
+# Don't use the version of set_cfg from FeatureConfig as that adds a
+# [Defaults] section which we don't want here.
+sub set_cfg {
+    my ( $cfg_file, $section, $var, $value ) = @_;
+    my ( $fh, $success );
+
+    $success = open( $fh, "+<", $cfg_file );
+    die "Could not open config file $cfg_file" unless $success;
+
+    my $cfg = Config::IniFiles->new(
+        -file          => $fh,
+        -allowcontinue => 1,
+        -allowempty    => 1
+    );
+    die
+"Could not create ini instance for $cfg_file : @Config::IniFiles::errors\n"
+      unless defined($cfg);
+
+    $cfg->newval( $section, $var, $value );
+    $cfg->RewriteConfig();
+    close($fh);
+}
+
+
+if (!defined get_cfg($file, $section, $var)) {
+    set_cfg($file, $section, $var, $val);
+}

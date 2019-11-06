@@ -1,0 +1,3 @@
+help: Show specified dataplane interface mpls information
+allowed: ${vyatta_sbindir}/vyatta-interfaces.pl --show dataplane
+run: vplane-mpls.pl --interfaces --statistics --dev "$5"

@@ -1,0 +1,2 @@
+scripts/cfg-tcp-mss opt/vyatta/sbin
+yang/vyatta-interfaces-tcp-mss-v1.yang usr/share/configd/yang

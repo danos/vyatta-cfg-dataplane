@@ -1,0 +1,3 @@
+help: Lookup dataplane route to single destination in routing instance
+allowed: echo -n '<X:X::X:X>' '<X:X::X:X/M>'
+run: vplane-route.pl -v6 --routing-instance=$5 --lookup $6

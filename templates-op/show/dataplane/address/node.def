@@ -1,0 +1,2 @@
+help: Show dataplane address table
+run: vplsh -l -c local

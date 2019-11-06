@@ -1,0 +1,145 @@
+#! /usr/bin/perl
+# Copyright (c) 2015 Brocade Communications Systems, Inc.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+use strict;
+use warnings;
+use lib '/opt/vyatta/share/perl5';
+
+use Getopt::Long;
+use File::Slurp;
+use Config::Tiny;
+use Vyatta::CPUset;
+use File::Copy;
+
+# TODO support fabric
+my $DATAPLANE_CFG = '/etc/vyatta/dataplane.conf';
+
+sub read_cpumask {
+    my $cfg = Config::Tiny->read($DATAPLANE_CFG);
+    die "Can't read $DATAPLANE_CFG: $!\n" unless $cfg;
+
+    return $cfg->{Dataplane}->{cpumask};
+}
+
+sub show_cpumask {
+    my $mask = read_cpumask();
+
+    if ( defined($mask) ) {
+        printf "cpus = %s\n", $mask;
+    } else {
+        print "cpumask not set.\n";
+    }
+
+    exit 0;
+}
+
+sub set_cpumask {
+    my $mask = shift;
+
+    my $cfg = Config::Tiny->read($DATAPLANE_CFG);
+    die "Can't read $DATAPLANE_CFG: $!\n"
+      unless defined($cfg);
+
+    my $oldmask = $cfg->{Dataplane}->{cpumask};
+    if ( !defined($oldmask) || $mask ne $oldmask ) {
+        $cfg->{Dataplane}->{cpumask} = $mask;
+
+        die "Can't write $DATAPLANE_CFG: $!\n"
+          unless $cfg->write($DATAPLANE_CFG);
+    }
+}
+
+sub delete_cpumask {
+    my $cfg = Config::Tiny->read($DATAPLANE_CFG);
+    die "Can't read $DATAPLANE_CFG: $!\n"
+      unless defined($cfg);
+
+    delete $cfg->{Dataplane}->{cpumask};
+    die "Can't write $DATAPLANE_CFG: $!\n"
+      unless $cfg->write($DATAPLANE_CFG);
+}
+
+# get range of online cpus from
+# /sys/devices/system/cpu/online returns "0-7"
+sub online_cpus {
+    my $cpus = read_file('/sys/devices/system/cpu/online');
+    die "Can't find online cpus" unless defined($cpus);
+
+    chomp $cpus;
+    return $cpus;
+}
+
+# Show CPU's available for control activity
+sub control_cpus {
+    my $online = online_cpus();
+    my $mask   = read_cpumask();
+
+    unless ( defined($mask) ) {
+        print $online, "\n";
+        exit 0;
+    }
+
+    my $onset = Vyatta::CPUset->new($online);
+
+    # always keep CPU 0 in control set
+    my $ctrl      = Vyatta::CPUset->new('0');
+    my $dataplane = Vyatta::CPUset->new($mask);
+
+    # master thread in dataplane can be shared
+    my $master = $dataplane->first();
+    $ctrl->add_cpu($master);
+
+    foreach my $i ( $onset->list() ) {
+        $ctrl->add_cpu($i)
+          unless $dataplane->is_set($i);
+    }
+
+    print $ctrl->range(), "\n";
+    exit 0;
+}
+
+sub isolated_cpuset {
+    my $mask = read_cpumask();
+
+    # if cpu affinity not configured, use all cpus
+    $mask = online_cpus()
+      unless defined($mask);
+
+    my $isolated = Vyatta::CPUset->new($mask);
+
+    # master thread in dataplane can be shared
+    my $master = $isolated->first();
+    $isolated->del_cpu($master);
+
+    # never ban CPU 0
+    $isolated->del_cpu(0);
+    return $isolated;
+}
+
+sub isolated_cpus {
+    my $cpus = isolated_cpuset();
+
+    print $cpus->range(), "\n";
+    exit 0;
+}
+
+my ( $fabric, $cpumask, $delete_mask, $update_irq );
+my ( $show_control, $show_isolated );
+
+GetOptions(
+    'fabric=s' => \$fabric,
+    'set=s'    => \$cpumask,
+    'isolated' => \$show_isolated,
+    'delete'   => \$delete_mask,
+    'update'   => \$update_irq,
+    'control'  => \$show_control,
+) or die "Unknown option\n";
+
+set_cpumask($cpumask)    if defined($cpumask);
+delete_cpumask($cpumask) if $delete_mask;
+control_cpus()           if $show_control;
+isolated_cpus()          if $show_isolated;
+show_cpumask();

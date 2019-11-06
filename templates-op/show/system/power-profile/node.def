@@ -1,0 +1,2 @@
+help: Show current power profile
+run: vplane-power-profile

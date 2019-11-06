@@ -1,0 +1,2 @@
+help: Show dataplane IPv6 FIB PBR table
+run: vplane-route.pl --table=$5 --v6

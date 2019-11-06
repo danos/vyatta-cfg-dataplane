@@ -1,0 +1,2 @@
+help: Enable mpls events debugging
+run: vplane-monitor-cmd.pl --cmd="debug mpls_control"

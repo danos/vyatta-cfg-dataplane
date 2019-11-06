@@ -1,0 +1,3 @@
+allowed: echo '<routing-instance>' && /opt/vyatta/share/tmplscripts/routing-instance/routing-instance-list.sh
+help: Show dataplane address table for routing-instance
+run: vplsh -l -c "local vrf_id $(/usr/sbin/getvrfid $5)"

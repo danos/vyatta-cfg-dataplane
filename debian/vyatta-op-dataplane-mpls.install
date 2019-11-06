@@ -1,0 +1,4 @@
+mpls-op/show/dataplane/* opt/vyatta/share/vyatta-op/templates/show/dataplane
+mpls-op/clear/interfaces/dataplane/* opt/vyatta/share/vyatta-op/templates/clear/interfaces/dataplane
+mpls-op/monitor/dataplane/* opt/vyatta/share/vyatta-op/templates/monitor/dataplane
+scripts/vplane-mpls.pl opt/vyatta/bin

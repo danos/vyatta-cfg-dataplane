@@ -1,0 +1,61 @@
+#!/opt/vyatta/bin/cliexec
+#
+# Copyright (c) 2018, AT&T Intellectual Property.  All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+# Configures huge pages in /etc/default/hugemem-hint
+#
+#set -x
+
+HINTS=/etc/default/hugemem-hint
+
+get_limits() {
+    set -- $( NOHINT=1 /lib/vplane/vplane-hugepages show MIN_HUGEMEM MAX_HUGEMEM )
+    MIN_HUGEMEM="${1:-0}"
+    MAX_HUGEMEM="${2:-4294967296}"
+}
+
+save_hints() {
+    local huge="$1"
+    local dpdk="${2:-${1}}"
+    local overcommit="${3:-0}"
+
+    if [[ -z $huge || $dpdk -gt $huge ]]; then
+        echo "Bad values for Hugepage Memory ${huge} and Dataplane memory ${dpdk}" >&2
+        return
+    fi
+
+    get_limits
+
+    [[ $huge -lt $MIN_HUGEMEM ]] && \
+        echo "Warning: Hugepages ${huge} too small (minimum ${MIN_HUGEMEM} MB)"
+    [[ $huge -gt $MAX_HUGEMEM ]] && \
+        echo "Warning: Hugepages ($huge) too large, (maximum ${MAX_HUGEMEM} MB"
+
+    if [[ -r $HINTS ]]; then
+        . "$HINTS"
+    fi
+
+    [[ $huge -eq $HUGEMEM && $dpdk -eq $DPDKMEM && $overcommit -eq $OVERCOMMIT_HUGEMEM ]] && return
+
+    tmpfile="$(mktemp -p /tmp hugepage.XXXXX)"
+    if [[ $? != 0 ]]; then
+        echo "can't create tempfile for writing. Exiting"
+        exit 1
+    fi
+
+    printf "HUGEMEM=%d\nDPDKMEM=%d\nOVERCOMMIT_HUGEMEM=%d\n" \
+        "${huge}" "${dpdk}" "${overcommit}" > "${tmpfile}"
+
+    mv "$tmpfile" "${HINTS}" || rm -f "${tmpfile}"
+    echo "Hugepage configuration changes will take effect on next boot"
+}
+
+# delete HINTS if nothing is set.
+if [[ $COMMIT_ACTION = DELETE ]]; then
+        rm -f "$HINTS"
+else
+        save_hints "$VAR(reserved/@)" "$VAR(dataplane/@)" "0"
+fi
+exit 0

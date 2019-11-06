@@ -1,0 +1,139 @@
+module vyatta-system-dataplane-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-system-dataplane:1";
+	prefix vyatta-system-dataplane-v1;
+
+	import vyatta-types-v1 {
+		prefix types;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+	import vyatta-system-v1 {
+		prefix system;
+	}
+
+	organization "Brocade Communications Systems, Inc.";
+	contact
+		"Brocade Communications Systems, Inc.
+		 Postal: 130 Holger Way
+		         San Jose, CA 95134
+		 E-mail: support@Brocade.com
+		 Web: www.brocade.com";
+
+	description
+		"Copyright (c) 2015-2016 by Brocade Communications Systems, Inc.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Vyatta dataplane interface specific system yang file and related
+		 template scripts.";
+
+	revision 2015-10-01 {
+		description "Initial revision.";
+	}
+
+	grouping power-profile {
+		configd:help "Power profile settings";
+		leaf policy {
+			type enumeration {
+				enum balanced {
+					configd:help "Balanced latency versus cpu usage";
+				}
+				enum low-latency {
+					configd:help "Low latency";
+				}
+				enum power-save {
+					configd:help "Conserve CPU and power";
+				}
+			}
+			configd:help "Pre-configured policy";
+			configd:validate "/opt/vyatta/share/tmplscripts/power-profile/configd_validate.cli";
+		}
+
+		container custom {
+			presence "required leaf nodes";
+			leaf idle-threshold {
+				type uint32 {
+					range 1..100000;
+				}
+				mandatory true;
+				configd:help "Threshold for increasing sleep";
+			}
+			leaf min-sleep {
+				type uint32 {
+					range 0..100000;
+				}
+				mandatory true;
+				configd:help "Lowest sleep interval (us)";
+			}
+			leaf max-sleep {
+				type uint32 {
+					range 0..1000000;
+				}
+				mandatory true;
+				configd:help "Maximum sleep interval (us)";
+			}
+			configd:help "Custom settings";
+		}
+	}
+
+	augment /system:system {
+		container default {
+			configd:help "Default parameters";
+
+			container dataplane {
+				configd:help "Dataplane parameters";
+				configd:priority "300";
+
+				container power-profile {
+						uses power-profile {
+								refine policy {
+										configd:update "vplane-power-profile $VAR(@)";
+										configd:delete "vplane-power-profile balanced";
+								}
+								refine custom {
+										configd:update "vplane-power-profile custom $VAR(idle-threshold/@) $VAR(min-sleep/@) $VAR(max-sleep/@)";
+										configd:delete "vplane-power-profile balanced";
+								}
+						}
+				}
+
+				leaf cpu-affinity {
+					type types:cpu-range;
+
+					configd:help "Dataplane CPU affinity";
+					configd:update "vplane-cpumask --set $VAR(@)";
+					configd:delete "vplane-cpumask --delete";
+				}
+			}
+		}
+	}
+}

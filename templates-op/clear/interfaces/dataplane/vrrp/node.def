@@ -1,0 +1,2 @@
+help: Clear vrrp dataplane interface information
+allowed: vyatta-show-vrrp.pl --show=interface

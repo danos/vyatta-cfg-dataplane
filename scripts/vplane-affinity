@@ -1,0 +1,205 @@
+#! /usr/bin/perl
+#
+# Copyright (c) 2017,2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2015 Brocade Communications Systems, Inc.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+use strict;
+use warnings;
+use lib '/opt/vyatta/share/perl5';
+
+use Getopt::Long;
+use File::Slurp;
+use Vyatta::CPUset;
+use Vyatta::VPlaned;
+use Vyatta::Dataplane;
+use Vyatta::Interface;
+use JSON qw( decode_json );
+use Vyatta::Backplane qw( is_backplane_intf );
+
+# could be part of Interface.pm and use ioctl
+sub get_ifindex {
+    my $ifname = shift;
+
+    my $ifindex = read_file("/sys/class/net/$ifname/ifindex");
+    chomp $ifindex if defined($ifindex);
+    return $ifindex;
+}
+
+sub set_cpu_affinity {
+    my ( $ifname, $mask ) = @_;
+
+    my $ifindex = get_ifindex($ifname);
+    die "Interface $ifname does not exist\n"
+      unless defined($ifindex);
+
+    my $cpuset = Vyatta::CPUset->new($mask);
+    die "Invalid cpu affinity mask $mask\n"
+      unless defined($cpuset);
+
+    # send them to controller
+    my $ctrl = new Vyatta::VPlaned;
+    die "Can not connect to controller: $!\n"
+      unless defined($ctrl);
+
+    # pseudo path for config store
+    my $path = "affinity $ifindex";
+
+    my $cpumask = $cpuset->hex();
+    $ctrl->store( $path, "$path set $cpumask", $ifname, "SET" );
+}
+
+sub set_rx_tx_cpu_affinity {
+    my ( $ifname, @rx_tx_cpu_mask ) = @_;
+
+    my $ifindex = get_ifindex($ifname);
+    die "Interface $ifname does not exist\n"
+      unless defined($ifindex);
+
+    my $rx_cpuset = Vyatta::CPUset->new( $rx_tx_cpu_mask[0] );
+    die "Invalid rx cpu affinity mask $rx_tx_cpu_mask[0]\n"
+      unless defined($rx_cpuset);
+
+    # If tx affinity not specified then convert it to an empty mask
+    # Dataplane will treat this to mean use all forwarding CPUs
+    $rx_tx_cpu_mask[1] = "0x0" if !defined( $rx_tx_cpu_mask[1] );
+    my $tx_cpuset = Vyatta::CPUset->new( $rx_tx_cpu_mask[1] );
+    die "Invalid tx cpu affinity mask $rx_tx_cpu_mask[1]\n"
+      unless defined($tx_cpuset);
+
+    # send them to controller
+    my $ctrl = new Vyatta::VPlaned;
+    die "Can not connect to controller: $!\n"
+      unless defined($ctrl);
+
+    # pseudo path for config store
+    my $path = "affinity $ifindex";
+
+    my $rx_cpumask = $rx_cpuset->hex();
+    my $tx_cpumask = $tx_cpuset->hex();
+    $ctrl->store( $path, "$path set-rx-tx $rx_cpumask $tx_cpumask",
+        $ifname, "SET" );
+}
+
+sub delete_cpu_affinity {
+    my $ifname = shift;
+
+    my $ifindex = get_ifindex($ifname);
+    die "Interface $ifname does not exist\n"
+      unless defined($ifindex);
+
+    # send them to controller
+    my $ctrl = new Vyatta::VPlaned;
+    die "Can not connect to controller: $!\n"
+      unless defined($ctrl);
+
+    # pseudo path for config store
+    my $path = "affinity $ifindex";
+
+    $ctrl->store( $path, "$path delete", $ifname, "DELETE" );
+}
+
+sub update {
+    my $dev = shift;
+    my $path;
+
+    my $if = new Vyatta::Interface($dev);
+    if ( !defined($if) ) {
+        if ( is_backplane_intf($dev) ) {
+            $path = "interfaces backplane $dev";
+        } else {
+            die "Invalid device $dev\n" unless defined($if);
+        }
+    } else {
+        $path = $if->path();
+    }
+
+    my $cfg = new Vyatta::Config($path);
+
+    if ( $cfg->exists("cpu-affinity") ) {
+        set_cpu_affinity( $dev, $cfg->returnValue("cpu-affinity") );
+    } elsif ( $cfg->exists("receive-cpu-affinity") ) {
+        my @rx_tx_mask = (
+            $cfg->returnValue("receive-cpu-affinity"),
+            $cfg->returnValue("transmit-cpu-affinity")
+        );
+        set_rx_tx_cpu_affinity( $dev, @rx_tx_mask );
+    } else {
+        delete_cpu_affinity($dev);
+    }
+}
+
+sub show_cpu_affinity {
+    my $ifname = shift;
+    my $fabric = 0;
+
+    my $intf = new Vyatta::Interface($ifname);
+    if ( !defined($intf) ) {
+        if ( !is_backplane_intf($ifname) ) {
+            die "$ifname is not a backplane interface\n";
+        }
+    } else {
+        die "$ifname is not a dataplane interface\n"
+          if ( $intf->type() ne 'dataplane' );
+        $fabric = $intf->dpid();
+    }
+    my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
+    die "Dataplane $fabric is not connected or does not exist\n"
+      unless ( scalar(@$dpids) > 0 );
+
+    my $sock = ${$dpsocks}[$fabric];
+    die "Can not connect to dataplane $fabric\n"
+      unless $sock;
+
+    my $response = $sock->execute("affinity show $ifname");
+    exit 1 unless defined($response);
+
+    Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );
+
+    my $decoded = decode_json($response);
+    die "Invalid response from dataplane: $response"
+      unless $decoded;
+
+    my $affinity = $decoded->{$ifname}->{affinity};
+    die "Missing affinity in $response"
+      unless $affinity;
+
+    my $cpuset = Vyatta::CPUset->new( '0x' . $affinity );
+    print "Cpu-affinity: ", $cpuset->range(), "\n";
+
+    my $rxaffinity = $decoded->{$ifname}->{rx_affinity};
+    if ( defined($rxaffinity) ) {
+        my $rxcpuset = Vyatta::CPUset->new( '0x' . $rxaffinity );
+        print "Rx cpu-affinity: ", $rxcpuset->range(), "\n";
+    }
+
+    my $txaffinity = $decoded->{$ifname}->{tx_affinity};
+    if ( defined($txaffinity) ) {
+        my $txcpuset = Vyatta::CPUset->new( '0x' . $txaffinity );
+        print "Tx cpu-affinity: ", $txcpuset->range(), "\n";
+    }
+
+    my $rxcpus  = Vyatta::CPUset->new( '0x' . $decoded->{$ifname}->{rx_cpu} );
+    my $rxrange = $rxcpus->range();
+    print "Rx cpu(s):    $rxrange\n" if defined($rxrange);
+
+    my $txcpus  = Vyatta::CPUset->new( '0x' . $decoded->{$ifname}->{tx_cpu} );
+    my $txrange = $txcpus->range();
+    print "Tx cpu:       $txrange\n" if defined($txrange);
+}
+
+my ( $dev, $show_option, $update_option );
+
+GetOptions(
+    'dev=s'  => \$dev,
+    'update' => \$update_option,
+    'show'   => \$show_option,
+) or die "Unknown option\n";
+
+die "Must specify device\n"
+  unless defined($dev);
+
+update($dev)            if $update_option;
+show_cpu_affinity($dev) if $show_option;

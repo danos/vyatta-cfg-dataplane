@@ -1,0 +1,2 @@
+help: Clear all dataplane interface mpls counters
+run: vplane-mpls.pl --clear

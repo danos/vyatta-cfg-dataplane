@@ -1,0 +1,2 @@
+help: Show dataplane FIB summary for specific routing-instance
+run: vplane-route.pl --routing-instance=$5 --summary

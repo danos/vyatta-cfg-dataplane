@@ -1,0 +1,2 @@
+help: Show dataplane IPv6 Neighbor Discovery statistics
+run: vplane-statistics.pl nd6

@@ -1,0 +1,155 @@
+module vyatta-interfaces-uplink-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-uplink:1";
+	prefix vyatta-interfaces-uplink-v1;
+
+	import configd-v1 {
+		prefix configd;
+	}
+	import vyatta-hardware-binding-v1 {
+		prefix hw-binding;
+	}
+	import vyatta-ipv6-rtradv-groups-v1 {
+		prefix ipv6-rtradv-grp;
+	}
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-types-v1 {
+		prefix types;
+	}
+
+	organization "Brocade Communications Systems, Inc.";
+	contact
+		"Brocade Communications Systems, Inc.
+		 Postal: 130 Holger Way
+		         San Jose, CA 95134
+		 E-mail: support@Brocade.com
+		 Web: www.brocade.com";
+
+	description
+		"Copyright (c) 2017, AT&T Intellectual Property. All rights reserved.
+		 Copyright (c) 2017 by Brocade Communication Systems, Inc.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Distributed Services Platform uplink interface configuration";
+
+	revision 2017-07-04 {
+		description "Initial revision for version 1";
+	}
+
+	typedef dataplane-uplink-ifname {
+		type union {
+			// Onboard device
+			type string {
+				pattern 'up[0-9]+o[0-9]+(d[0-9]+)?';
+				configd:pattern-help "<upFoN>";
+			}
+			// hotplug slot index
+			type string {
+				pattern 'up[0-9]+s[0-9]+(f[0-9]+)?(d[0-9]+)?';
+				configd:pattern-help "<upFsN>";
+			}
+			// PCI device address
+			type string {
+				pattern 'up[0-9]+(P[0-9]+)?p[0-9]{1,3}s[0-9]{1,3}(f[0-9]+)?(d[0-9]+)?';
+				configd:pattern-help "<upFpNsS>";
+			}
+			// Biosdevname compatible names. VMware only
+			type string {
+				pattern 'up[0-9]+p[0-9]+p[0-9]+';
+				configd:pattern-help "<upFpNpS>";
+			}
+		}
+	}
+
+	grouping if-parameters {
+		uses if:if-parameters-base {
+			augment ipv6 {
+				uses ipv6-rtradv-grp:if-ipv6-parameters;
+			}
+		}
+
+		leaf description {
+			type string;
+			configd:help "Interface Description";
+			configd:update "ip li set dev $VAR(../@) alias '$VAR(@)'";
+			configd:delete "vyatta-interfaces.pl --dev=$VAR(../@) --delete-description";
+		}
+	}
+
+	augment /if:interfaces {
+		list uplink {
+			configd:priority "318";
+			configd:help "Dataplane uplink interface";
+			configd:allowed "vyatta-interfaces.pl --show=uplink --filter='\.[0-9]+'";
+			configd:create "vyatta-interfaces.pl --create-dev $VAR(@)";
+			configd:delete "vyatta-interfaces.pl --delete-dev $VAR(@)";
+			configd:validate "vyatta-interfaces.pl --validate-interface --dev $VAR(@) --addrs $VAR(./address/@@)";
+			configd:end "vyatta-intf-end $VAR(@)";
+
+			key "ifname";
+			leaf ifname {
+				type dataplane-uplink-ifname;
+			}
+
+			uses hw-binding:hardware-parameters;
+			uses if-parameters;
+
+			leaf-list address {
+				type if:address-dhcp;
+				ordered-by "user";
+				configd:help "IP address";
+				configd:create "vyatta-address add $VAR(../@) $VAR(@)";
+				configd:delete "vyatta-address delete $VAR(../@) $VAR(@)";
+				configd:allowed "echo 'dhcp dhcpv6 <>'";
+			}
+
+			leaf mac {
+				type types:mac-address;
+				configd:help "Media Access Control (MAC) address";
+				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --set-mac $VAR(@)";
+				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --del-mac";
+			}
+
+			leaf mtu {
+				type uint32 {
+					range 68..9000;
+				}
+				configd:priority "381";
+				configd:help "Maximum Transmission Unit (MTU)";
+				default "1500";
+				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu $VAR(@) --action ${COMMIT_ACTION}";
+				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu 1500 --action ${COMMIT_ACTION}";
+			}
+		}
+	}
+}

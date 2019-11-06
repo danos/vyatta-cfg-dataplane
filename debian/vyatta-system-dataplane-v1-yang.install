@@ -1,0 +1,3 @@
+yang/vyatta-system-dataplane-v1.yang usr/share/configd/yang
+tmplscripts/power-profile opt/vyatta/share/tmplscripts
+templates-op/show/system/power-profile opt/vyatta/share/vyatta-op/templates/show/system

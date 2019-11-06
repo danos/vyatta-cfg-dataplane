@@ -1,0 +1,2 @@
+help: Enable dataplane ARP debugging
+run: vplane-monitor-cmd.pl --cmd="debug arp"

@@ -1,0 +1,439 @@
+module vyatta-interfaces-dataplane-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-dataplane:1";
+	prefix vyatta-interfaces-dataplane-v1;
+
+	import vyatta-hardware-binding-v1 {
+		prefix hw-binding;
+	}
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-interfaces-vif-v2 {
+		prefix vif;
+	}
+	import vyatta-types-v1 {
+		prefix types;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+		         Dallas, TX 25202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2017-2019, AT&T Intellectual Property.
+		 All rights reserved.
+		 Copyright (c) 2014-2017 by Brocade Communications Systems, Inc.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Vyatta dataplane interface specific yang file and related
+		 template scripts.";
+
+	revision 2019-05-07 {
+		description "Use single quotes for pattern and configd extension statements where necessary";
+	}
+	revision 2019-03-15 {
+		description "Add feature toggle for interface breakout";
+	}
+        revision 2019-02-19 {
+                description "Remove validate-breakout check";
+        }
+	revision 2018-10-05 {
+		description "Support for interface breakout";
+	}
+	revision 2018-10-01 {
+		description "Add end action to handle vif updates";
+	}
+	revision 2018-09-13 {
+		description
+			"Dataplane script-based validation now done with must statements.";
+	}
+	revision 2018-09-08 {
+		description
+			"Remove per interface MTU validation.  Now done on
+             interfaces node.";
+	}
+	revision 2018-09-04 {
+		description
+			"Switch validation on dataplane node removed as done on
+             interface node instead.
+			 Use new dataplane validation that doesn't check VIFs as
+             this is done by VIF YANG anyway.";
+	}
+	revision 2018-07-16 {
+		description "Expand allowed interface name pattern to include 1G switchports.";
+	}
+	revision 2018-05-14 {
+		description "Expand allowed interface name pattern to include BMC interface.
+			     Fix VIF pattern help strings";
+	}
+	revision 2018-03-20 {
+		description "Expand allowed interface name pattern to include switchports.
+                     Add validation for feature config on switchports";
+	}
+	revision 2017-12-19 {
+		description "Add link-parameters grouping to dataplane interfaces";
+	}
+	revision 2017-10-31 {
+		description
+			"Use if:if-status grouping backed by yang-getop-interface script to
+			include oper-status and admin-status in op-state output";
+	}
+	revision 2017-10-17 {
+		description
+			"Add receive-cpu-affinity and
+			 transmit-cpu-affinity to cpu-affinity
+			 grouping";
+	}
+	revision 2017-10-09 {
+		description
+			"Add kernel-based dataplane interface names
+			 Use run-parts to handle create and delete of interfaces";
+	}
+	revision 2017-08-25 {
+		description
+			"Move cpu-affinity leaf to new grouping.
+			 Use the vif:vif-parameters,
+			 vif:vlan-proto-group,
+			 if:if-parameter-log-martians and
+			 vif:vif-group groupings for code reuse";
+	}
+	revision 2017-07-04 {
+		description "Pull hardware binding into a separate module";
+	}
+	revision 2016-10-04 {
+		description "Pass default IP MTU to script when deleting vif mtu, also remove the validate statement on vif mtu";
+	}
+	revision 2016-06-10 {
+		description "Validate vif mtu is less than physical interface's mtu.";
+	}
+	revision 2016-04-21 {
+		description "Delete dataplane interface address when address node is removed.";
+	}
+	revision 2016-03-28 {
+		description "Remove use of bash in action scripts";
+	}
+	revision 2015-11-26 {
+		description "Modify actions for mac address changes";
+	}
+
+	revision 2015-11-23 {
+		description "Add definition for dataplane-vifname.";
+	}
+
+	revision 2015-11-20 {
+		description "Revert to biosdevname naming policy on VMWare.";
+	}
+
+	revision 2015-11-10 {
+		description "Support for configuring interface CPU affinity.";
+	}
+
+	revision 2015-08-14 {
+		description "Initial revision of version 1.";
+	}
+
+	feature breakout {
+		description "Interface breakout support";
+	}
+
+	typedef dataplane-ifname {
+		type union {
+			// Onboard device
+			type string {
+				pattern 'dp[0-9]+o[0-9]+(d[0-9]+)?';
+				configd:pattern-help "<dpFoN>";
+			}
+			// hotplug slot index
+			type string {
+				pattern 'dp[0-9]+s[0-9]+(f[0-9]+)?(d[0-9]+)?';
+				configd:pattern-help "<dpFsN>";
+			}
+			// PCI device address
+			type string {
+				pattern 'dp[0-9]+(P[0-9]+)?p[0-9]{1,3}s[0-9]{1,3}(f[0-9]+)?(d[0-9]+)?';
+				configd:pattern-help "<dpFpNsS>";
+			}
+			// Biosdevname compatible names. VMware only
+			type string {
+				pattern 'dp[0-9]+p[0-9]+p[0-9]+';
+				configd:pattern-help "<dpFpNpS>";
+			}
+			// USB and USB modem based names (AF_PACKET)
+			type string {
+				pattern 'dp[0-9]+p[0-9]+s[0-9]+(u[0-9]+){1,}(i[0-9]+)?';
+				configd:pattern-help "<dpFpNsSuU> | <dpFpNsSuUiI>";
+			}
+			// hardware switch interface name patterns
+			type string {
+				pattern 'dp[0-9]+p[0-9]+';
+				configd:pattern-help "<dpFpN>";
+			}
+			type string {
+				pattern 'dp[0-9]+ce[0-9]+';
+				configd:pattern-help "<dpFceN>";
+			}
+			type string {
+				pattern 'dp[0-9]+xe[0-9]+';
+				configd:pattern-help "<dpFxeN>";
+			}
+			type string {
+				pattern 'dp[0-9]+ge[0-9]+';
+				configd:pattern-help "<dpFgeN>";
+			}
+			// hardware switch to BMC interface name patterns
+			type string {
+				pattern 'dp[0-9]+bmc[0-9]+';
+				configd:pattern-help "<dpFbmcN>";
+			}
+			// pattern for subports of dpXceY interfaces
+			type string {
+				pattern 'dp[0-9]+ce[0-9]+p[0-3]';
+				configd:pattern-help "<dpFceNpP>";
+			}
+		}
+	}
+
+	typedef dataplane-vifname {
+		type union {
+			// Onboard device
+			type string {
+				pattern 'dp[0-9]+o[0-9]+(d[0-9]+)?\.[1-9][0-9]*';
+				configd:pattern-help "<dpFoN.N>";
+			}
+			// hotplug slot index
+			type string {
+				pattern 'dp[0-9]+s[0-9]+(f[0-9]+)?(d[0-9]+)?\.[1-9][0-9]*';
+				configd:pattern-help "<dpFsN.N>";
+			}
+			// PCI device address
+			type string {
+				pattern 'dp[0-9]+(P[0-9]+)?p[0-9]{1,3}s[0-9]{1,3}(f[0-9]+)?(d[0-9]+)?\.[1-9][0-9]*';
+				configd:pattern-help "<dpFpNsS.N>";
+			}
+			// Biosdevname compatible names. VMware only
+			type string {
+				pattern 'dp[0-9]+p[0-9]+p[0-9]+\.[1-9][0-9]*';
+				configd:pattern-help "<dpFpNpS.N>";
+			}
+			// hardware switch interface
+			type string {
+				pattern 'dp[0-9]+p[0-9]+.[1-9][0-9]*';
+				configd:pattern-help "<dpFpN.N>";
+			}
+			type string {
+				pattern 'dp[0-9]+ce[0-9]+.[1-9][0-9]*';
+				configd:pattern-help "<dpFceN.N>";
+			}
+			type string {
+				pattern 'dp[0-9]+xe[0-9]+.[1-9][0-9]*';
+				configd:pattern-help "<dpFxeN.N>";
+			}
+			type string {
+				pattern 'dp[0-9]+ge[0-9]+.[1-9][0-9]*';
+				configd:pattern-help "<dpFgeN.N>";
+			}
+			// hardware switch to BMC interface vif name patterns
+			type string {
+				pattern 'dp[0-9]+bmc[0-9]+.[1-9][0-9]*';
+				configd:pattern-help "<dpFbmcN.N>";
+			}
+		}
+	}
+
+	grouping if-parameters {
+		// if:if-parameter-description not used here for
+		// backwards compatibility as type is more restrictive
+		leaf description {
+			type string;
+			configd:help "Interface Description";
+			configd:update "ip li set dev $VAR(../@) alias '$VAR(@)'";
+			configd:delete "vyatta-interfaces.pl --dev=$VAR(../@) --delete-description";
+		}
+		uses if:if-parameters-base {
+			augment ip {
+				leaf disable-forwarding {
+					type empty;
+					configd:help "Disable IPv4 forwarding on this interface";
+					configd:create "sysctl -wq /net/ipv4/conf/$VAR(../../@)/forwarding=0";
+					configd:delete "sysctl -wq /net/ipv4/conf/$VAR(../../@)/forwarding=1";
+				}
+			}
+		}
+		uses if:if-parameter-log-martians;
+	}
+
+	grouping vif-parameters {
+		uses vif:vif-parameters;
+	}
+
+	grouping cpu-affinity {
+		leaf cpu-affinity {
+			type types:cpu-range;
+
+			description "Interface CPU affinity in the dataplane";
+			configd:help "Interface CPU affinity";
+			configd:end "vplane-affinity --dev=$VAR(../@) --update";
+		}
+		leaf receive-cpu-affinity {
+			type types:cpu-range;
+
+			must "not(../cpu-affinity)" {
+				error-message "receive-cpu-affinity cannot be configured at the same time as cpu-affinity";
+			}
+			description "CPU affinity for interface receive processing in the dataplane";
+			configd:help "Interface receive CPU affinity";
+			configd:end "vplane-affinity --dev=$VAR(../@) --update";
+		}
+		leaf transmit-cpu-affinity {
+			type types:cpu-range;
+
+			must "not(../cpu-affinity)" {
+				error-message "transmit-cpu-affinity cannot be configured at the same time as cpu-affinity";
+			}
+			must "../receive-cpu-affinity" {
+				error-message "receive-cpu-affinity must also be specified";
+			}
+			description "CPU affinity for interface transmit processing in the dataplane";
+			configd:help "Interface transmit CPU affinity";
+			configd:end "vplane-affinity --dev=$VAR(../@) --update";
+		}
+	}
+
+	augment /if:interfaces {
+		list dataplane {
+			configd:priority "318";
+			configd:help "Dataplane interface name";
+			configd:allowed 'vyatta-interfaces.pl --show=dataplane --filter="\.[0-9]+"';
+			configd:create "/bin/run-parts --arg=$VAR(@) ${vyatta_datarootdir}/tmplscripts/interfaces/dataplane/configd_create.d";
+			configd:delete "/bin/run-parts --arg=$VAR(@) ${vyatta_datarootdir}/tmplscripts/interfaces/dataplane/configd_delete.d";
+			configd:end "vyatta-intf-end $VAR(@)";
+			configd:end "vyatta-update-vifs $VAR(@)";
+			key "tagnode";
+
+			must "not(address = 'dhcp' and address[contains(., '.')])" {
+				error-message "Can't configure static IPv4 address and DHCP " +
+					"on the same interface.";
+			}
+
+			must "not(address = 'dhcpv6' and address[contains(., ':')])" {
+				error-message "Can't configure static IPv6 address and " +
+					"DHCPv6 on the same interface.";
+			}
+
+			leaf tagnode {
+				type dataplane-ifname;
+				configd:help "Dataplane interface name";
+				configd:allowed 'vyatta-interfaces.pl --show=dataplane --filter="\.[0-9]+"';
+			}
+			uses vif:vlan-proto-group;
+			leaf mtu {
+				type uint32 {
+					range 68..9000;
+				}
+				configd:priority "381";
+				configd:help "Maximum Transmission Unit (MTU)";
+				default "1500";
+				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu $VAR(@) --action ${COMMIT_ACTION}";
+				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu 1500 --action ${COMMIT_ACTION}";
+			}
+			uses if-parameters;
+			uses vif:vif-group;
+			leaf-list address {
+				type if:address-dhcp;
+				ordered-by "user";
+				configd:help "IP address";
+
+				must "not(substring-before(current(), '/') = '127.0.0.1')" {
+					error-message "127.0.0.1 reserved for system use.";
+				}
+				must "not(" +
+					"substring-before(current(), '/') = '::1')" {
+					error-message "::1 reserved for system use.";
+				}
+				must "not(" +
+					"(substring-before(current(), '.') >= 224) and " +
+					"(substring-before(current(), '.') <= 239))" {
+					error-message "IPv4 address reserved for multicast use";
+				}
+				must "not(substring(current(), 1, 2) = 'FF')" {
+					error-message "IPv6 address reserved for multicast use";
+				}
+
+				configd:create "vyatta-address add $VAR(../@) $VAR(@)";
+				configd:delete "vyatta-address delete $VAR(../@) $VAR(@)";
+				configd:allowed "echo 'dhcp dhcpv6 <>'";
+			}
+			leaf mac {
+				type types:mac-address {
+					configd:syntax "/opt/vyatta/share/tmplscripts/interfaces/dataplane/mac/configd_syntax1.cli";
+				}
+				configd:help "Media Access Control (MAC) address";
+				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --set-mac $VAR(@)";
+				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --del-mac";
+			}
+			uses cpu-affinity;
+			uses if:if-status;
+			leaf breakout {
+				if-feature breakout;
+				description "This command is used to 'break out' a high bandwidth interface
+				             into an even number of lower-bandwidth interfaces. The number of lower
+				             bandwidth interfaces that can be created is limited by the number of
+				             serdes lanes available for reassignment from the parent interface.";
+				configd:help "Break out interface into subports";
+				type uint8 {
+					range 2|4;
+					configd:help "Number of subports";
+				}
+				must "contains(../tagnode, 'ce')" {
+					error-message "Interface breakout only supported on 100Gbps (dpXceY) interfaces";
+				}
+				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --action SET --breakout $VAR(@)";
+				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --action DELETE --breakout $VAR(@)";
+			}
+			configd:get-state "/opt/vyatta/bin/yang-getop-interface dataplane";
+		}
+	}
+
+	augment /if:interfaces/dataplane {
+		uses hw-binding:hardware-parameters;
+	}
+
+	augment /if:interfaces/dataplane {
+		uses if:link-parameters;
+	}
+}

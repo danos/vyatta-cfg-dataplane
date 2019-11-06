@@ -1,0 +1,295 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Array::Utils;
+use List::MoreUtils qw(uniq);
+use Vyatta::Backplane qw(get_backplane_intfs);
+
+my $bp_intfs;
+
+sub main {
+    my ( $action, $dev, $backplane );
+
+    GetOptions(
+        "action=s"    => \$action,
+        "dev=s"       => \$dev,
+        "backplane=s" => \$backplane,
+    ) or usage();
+
+    usage() unless ( defined($action) );
+
+    $bp_intfs = get_backplane_intfs();
+
+    validate_backplane_cfg() if $action eq 'validate';
+    list_backplane_intfs()   if $action eq 'list_bps';
+    list_allowed_intfs()     if $action eq 'list_allowed_intfs';
+    set_backplane( $dev, $backplane )
+      if ( $action eq 'set' || $action eq 'delete' );
+    set_default() if $action eq 'set_default';
+}
+
+sub usage {
+    print <<EOF;
+Usage: $0 --action set --dev <intf-name> --backplane <backplane-id>
+       $0 --action validate
+EOF
+    exit 1;
+}
+
+sub list_backplane_intfs {
+    print join( ' ', sort( @{$bp_intfs} ) );
+}
+
+sub list_allowed_intfs {
+    return unless eval 'use Vyatta::SwitchConfig; 1';
+    my %swports = Vyatta::SwitchConfig::get_hwcfg();
+    print join( ' ', sort keys %swports );
+}
+
+sub get_vlans {
+    my ($vlan_params) = @_;
+    my @vlans = ();
+
+    if ( defined( $vlan_params->{'vlans'} ) ) {
+        push( @vlans, @{ $vlan_params->{'vlans'} } );
+    } elsif ( defined( $vlan_params->{'primary-vlan-id'} ) ) {
+        push( @vlans, $vlan_params->{'primary-vlan-id'} );
+    }
+    return \@vlans;
+}
+
+sub update_backplane_map {
+    my ( $all_switches, $switch, $vlans, $bp_name, $intf ) = @_;
+
+    foreach my $vlan (@$vlans) {
+        $all_switches->{$switch}->{$vlan}->{$bp_name} = []
+          if not defined $all_switches->{$switch}->{$vlan}->{$bp_name};
+
+        push( @{ $all_switches->{$switch}->{$vlan}->{$bp_name} }, $intf );
+    }
+}
+
+# If any vlan has 2 backplanes associated with it that is not allowed
+sub check_vlan_intersection {
+    my ( $all_switches, $bp_cfg ) = @_;
+    my $overlap = 0;
+
+    while ( my ( $k, $v ) = each( %{$all_switches} ) ) {
+        while ( my ( $k1, $v1 ) = each( %{$v} ) ) {
+            if ( keys %{$v1} > 1 ) {
+                $overlap = 1;
+                while ( my ( $k2, $v2 ) = each( %{$v1} ) ) {
+
+                    foreach my $port (@$v2) {
+
+                        #Print if there is explicit config
+                        if ( defined $bp_cfg->{$port} ) {
+                            print_vlan_intersection_error( $k2, $port, $k1 );
+                        }
+                    }
+                }
+                print_vlan_intersection_map( $k, $k1, $v1 );
+            }
+        }
+    }
+
+    return $overlap;
+}
+
+sub print_vlan_intersection_map {
+    my ( $switch, $vlan, $bps ) = @_;
+
+    print "\nswitch $switch vlan $vlan\n";
+    while ( my ( $k2, $v2 ) = each( %{$bps} ) ) {
+        print "    backplane $k2 : ";
+        foreach my $port (@$v2) {
+            print "$port ";
+        }
+        print "\n";
+    }
+}
+
+sub print_vlan_intersection_error {
+    my ( $bp, $swport, $vlan ) = @_;
+    print "\n[ [ interfaces backplane $bp bind interface $swport ] ]\n\n";
+    print "Overlapping vlans [ $vlan ] found on backplanes\n";
+    print
+"Interface<->backplane binding needs to be fixed to remove overlapping vlans\n";
+}
+
+sub get_dp_intf_cfg {
+    my ($cfg) = @_;
+    my %dp_intfs =
+      map { $_->{tagnode} => $_ } @{ $cfg->{'interfaces'}->{'dataplane'} };
+    return \%dp_intfs;
+}
+
+sub get_bp_cfg {
+    my ($cfg) = @_;
+    my %bp_cfg;
+
+    foreach my $bp ( @{ $cfg->{'interfaces'}->{'backplane'} } ) {
+        foreach my $dp_intf ( @{ $bp->{'bind'}->{'interface'} } ) {
+            $bp_cfg{$dp_intf} = $bp->{'name'};
+        }
+    }
+    return \%bp_cfg;
+}
+
+sub get_backplane_intf {
+    my ( $bp_cfg, $dp_intf ) = @_;
+
+    if ( defined( $bp_cfg->{$dp_intf} ) ) {
+        return $bp_cfg->{$dp_intf};
+    }
+    return @{$bp_intfs}[0];
+}
+
+sub validate_backplane_cfg {
+    return unless eval 'use Vyatta::Configd; 1';
+    return unless eval 'use Vyatta::SwitchConfig; 1';
+
+    my $common;
+    my $cfg = new Vyatta::Configd::Client;
+
+    my $intfs = $cfg->tree_get_hash("interfaces");
+
+    # no validation required if there is no switch config
+    # or no backplane config
+    return
+      if ( !defined( $intfs->{'interfaces'}->{'switch'} )
+        || !defined( $intfs->{'interfaces'}->{'backplane'} ) );
+
+    my $switches = $intfs->{'interfaces'}->{'switch'};
+
+    my @sw_vlans = ();
+    my $sw_name;
+    my %switch_vlans = ();
+
+    # for each switch get the configured vlans
+    for my $switch ( @{$switches} ) {
+        my %sw       = ();
+        my @sw_vlans = ();
+
+        # Check switch even if not bound to physical switch.
+        my $vlan_params =
+          $switch->{'default-port-parameters'}->{'vlan-parameters'};
+        my $vlans = get_vlans($vlan_params);
+
+        push( @sw_vlans, @{$vlans} );
+
+        $sw_name     = $switch->{'name'};
+        $sw{'name'}  = $sw_name;
+        $sw{'vlans'} = \@sw_vlans;
+
+        $switch_vlans{$sw_name} = \%sw;
+    }
+
+    my %all_switches;
+
+    my %swports = Vyatta::SwitchConfig::get_hwcfg();
+
+    # for all hardware interfaces get the explicitly configured vlans, and
+    # default to the switch ones if not set on interface. Get the backplane
+    # port it is using too.
+    my $dp_cfg = get_dp_intf_cfg($intfs);
+    my $bp_cfg = get_bp_cfg($intfs);
+
+    for my $swport ( keys %swports ) {
+
+        my $dp_intf = $dp_cfg->{$swport};
+
+        if ( defined($dp_intf) ) {
+
+            # skip isolated port unless it is also a member of a switch
+            next
+              if ( defined( $dp_intf->{'hardware-switching'} )
+                and not defined $dp_intf->{'switch-group'} );
+
+        }
+
+        # get backplane port
+        my $bp = get_backplane_intf( $bp_cfg, $swport );
+
+        # get vlans
+        my $vlans = get_vlans(
+            $dp_intf->{'switch-group'}->{'port-parameters'}->{'vlan-parameters'}
+        );
+
+        my $switch = $dp_intf->{'switch-group'}->{'switch'};
+        $switch = 'sw0' if not defined $switch;
+
+        if ( !scalar @{$vlans} ) {
+
+            # if length of array is 0 then inherit from switch
+            $vlans = $switch_vlans{$switch}->{'vlans'};
+        }
+
+        # add intfs & vlans to mapping.
+        update_backplane_map( \%all_switches, $switch, $vlans, $bp, $swport );
+    }
+
+    my $overlap = check_vlan_intersection( \%all_switches, $bp_cfg );
+    if ($overlap) {
+        exit(1);
+    }
+}
+
+sub set_backplane {
+    return unless eval 'use Vyatta::VPlaned; 1';
+    my ( $dev, $bp ) = @_;
+
+    usage if ( !defined($dev) );
+
+    my $ctrl = new Vyatta::VPlaned;
+    die "Can not connect to controller: $!\n"
+      unless defined($ctrl);
+
+    my $ckey = "backplane $dev";
+
+    if ( !defined($bp) ) {
+        if ( !scalar @{$bp_intfs} ) {
+            return;
+        }
+        $bp = @{$bp_intfs}[0];
+    }
+
+    my $cmd = "backplane SET $dev $bp";
+    $ctrl->store( $ckey, $cmd, $dev, "SET" );
+}
+
+sub set_default {
+    return unless eval 'use Vyatta::VPlaned; 1';
+    return unless eval 'use Vyatta::Configd; 1';
+    return unless eval 'use Vyatta::SwitchConfig; 1';
+
+    if ( !scalar @{$bp_intfs} ) {
+        return;
+    }
+
+    my %swports = Vyatta::SwitchConfig::get_hwcfg();
+    my $bp      = @{$bp_intfs}[0];
+    my $cfg     = Vyatta::Configd::Client->new();
+    my $intfs   = $cfg->tree_get_hash("interfaces");
+    my $bp_cfg  = get_bp_cfg($intfs);
+
+    my $ctrl = new Vyatta::VPlaned;
+    foreach my $swport ( keys %swports ) {
+
+        next if ( defined( $bp_cfg->{$swport} ) );
+
+        my $ckey = "backplane $swport";
+        my $cmd  = "backplane SET $swport $bp";
+        $ctrl->store( $ckey, $cmd, $swport, "SET" );
+    }
+}
+
+main();

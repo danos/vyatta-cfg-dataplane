@@ -1,0 +1,2 @@
+help: Show dataplane FIB policy table
+run: vplane-route.pl --table=$5

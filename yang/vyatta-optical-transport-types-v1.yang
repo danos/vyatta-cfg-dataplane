@@ -1,0 +1,425 @@
+module vyatta-optical-transport-types-v1 {
+    namespace "urn:vyatta.com:mgmt:vyatta-optical-transport-types:1";
+    prefix "vyatta-optical-transport-types-v1";
+
+    organization "AT&T Inc.";
+    contact
+        "AT&T
+         Postal: 208 S. Akard Street
+         Dallas, TX 25202
+         Web: www.att.com";
+
+    description
+        "Copyright (c) 2018, AT&T Intellectual Property.
+         All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+         Derived from
+         https://github.com/openconfig/public/blob/master/release/models/optical-transport/openconfig-transport-types.yang
+
+         Licensed under the Apache License, Version 2.0 (the License) which is available at
+         http://www.apache.org/licenses/LICENSE-2.0
+
+         This module contains general type definitions for optical
+         transport models.";
+
+    revision 2018-10-28 {
+        description "Initial version";
+    }
+
+    typedef frequency-type {
+        type uint64;
+        units "MHz";
+        description
+            "Type for optical spectrum frequency values";
+    }
+
+    typedef TRANSCEIVER_FORM_FACTOR_TYPE {
+        description
+            "Type of pluggable optic transceiver (i.e,. form factor)
+             used in a port.";
+
+        reference "ftp://ftp.seagate.com/sff/SFF-8024.PDF - Table 4.1";
+
+        type enumeration {
+
+            enum UNKNOWN {
+                description
+                "Unknown transceiver type";
+            }
+
+            enum GBIC {
+                description
+                "Gigabit Interface Card";
+            }
+
+            enum NON_PLUGGABLE {
+                description
+                "Represents a port that does not require a pluggable optic,
+                 e.g., with on-board optics like COBO";
+            }
+
+            enum SFP_OR_SFP_PLUS {
+                description
+                "SFP - Small form-factor pluggable transceiver
+                 supporting up to 10 Gb/s signal.
+                 SFP+ - Enhanced small form-factor pluggable transceiver
+                 supporting up to 16 Gb/s signals, including 10 GbE and OTU2";
+            }
+
+            enum XBI {
+                description
+                "300 pin XBI device";
+            }
+
+            enum XENPAK {
+                description
+                "Transceiver conforming to XENPAK multisource agreement";
+            }
+
+            enum XFP {
+                description
+                "10 Gigabit small form factor pluggable transceiver supporting
+                 10 GbE and OTU2";
+            }
+
+            enum XFF {
+                description
+                "SFP to SFP protocol-transparent fiber converter";
+            }
+
+            enum XFP-E {
+                description
+                "Transceiver conforming to XFP-E multisource agreement";
+            }
+
+            enum XPAK {
+                description
+                "Transceiver conforming to XPAK multisource agreement";
+            }
+
+            enum X2 {
+                description
+                "10 Gigabit small form factor pluggable transceiver supporting
+                 10 GbE using a XAUI inerface and 4 data channels.";
+            }
+
+            enum DWDM_SFP_SFP_PLUS {
+                description
+                "DWDM-SFP/SFP+ (not using SFF-8472)";
+            }
+
+            enum QSFP {
+                description
+                "OriginalQuad Small Form-factor Pluggable
+                 transceiver that can support 4x1G physical
+                 channels.  Not commonly used.";
+            }
+
+            enum QSFP_PLUS {
+                description
+                "Quad Small Form-factor Pluggable transceiver
+                 that can support up to 4x10G physical
+                 channels.";
+            }
+
+            enum QSFP28 {
+                description
+                "QSFP pluggable optic with support for up to
+                 4x28G physical channels";
+            }
+
+            enum OTHER {
+                description
+                "Represents a transceiver form factor not otherwise listed";
+            }
+        }
+    }
+
+    typedef FIBER_CONNECTOR_TYPE {
+        description "Type of optical fiber connector.";
+
+        reference "ftp://ftp.seagate.com/sff/SFF-8024.PDF - Table 4.3";
+
+        type enumeration {
+            enum UNKNOWN_CONNECTOR {
+                description
+                "Unknown or unspecified connector";
+            }
+
+            enum SC_CONNECTOR {
+                description
+                "SC type fiber connector";
+            }
+
+            enum FC_S1_C_CONNECTOR {
+                description
+                "Fibre Channel Style 1 copper connector";
+            }
+
+            enum FC_S2_C_CONNECTOR {
+                description
+                "Fibre Channel Style 2 copper connector";
+            }
+
+            enum BNC_TNC_CONNECTOR {
+                description
+                "Bayonet/Threaded Neill-Concelman connector";
+            }
+
+            enum FC_COAX_CONNECTOR {
+                description
+                "Fibre Channel coaxial";
+            }
+
+            enum FJ_CONNECTOR {
+                description
+                "FiberJack";
+            }
+
+            enum LC_CONNECTOR {
+                description
+                "LC type fiber connector";
+            }
+
+            enum MT_RJ_CONNECTOR {
+                description
+                "Mechanical Transfer Registered Jack connector";
+            }
+
+            enum MU_CONNECTOR {
+                description
+                "Miniature Unit connector";
+            }
+
+            enum OP_CONNECTOR {
+                description
+                "Optical pigtail";
+            }
+
+            enum MPO_CONNECTOR {
+                description
+                "MPO (multi-fiber push-on/pull-off) type fiber connector
+                 1x12 fibers";
+            }
+
+            enum HSSDC_II_CONNECTOR {
+                description
+                "High Speed Serial Data Connection II connector";
+            }
+
+            enum CP_CONNECTOR {
+                description
+                "Copper pigtail";
+            }
+
+            enum RJ45_CONNECTOR {
+                description
+                "RJ45 connector";
+            }
+        }
+   }
+
+    typedef ETHERNET_PMD_TYPE {
+
+        description
+            "Ethernet compliance codes (PMD) supported by transceivers";
+
+        reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Table 5.4";
+
+        type enumeration {
+
+            enum ETH_BASE_PX {
+                description "Ethernet compliance code: BASE-PX";
+            }
+
+            enum ETH_BASE_BX10 {
+                description "Ethernet compliance code: BASE-BX10";
+            }
+
+            enum ETH_100BASE_FX {
+                description "Ethernet compliance code: 100BASE-FX";
+            }
+
+            enum ETH_100BASE_LX_10 {
+                description "Ethernet compliance code: 100BASE-LX/LX10";
+            }
+
+            enum ETH_1GBASE_T {
+                description "Ethernet compliance code: 1000BASE-T";
+            }
+
+            enum ETH_1GBASE_CX {
+                description "Ethernet compliance code: 1000BASE-CX";
+            }
+
+            enum ETH_1GBASE_LX {
+                description "Ethernet compliance code: 1000BASE-LX";
+            }
+
+            enum ETH_1GBASE_SX {
+                description "Ethernet compliance code: 1000BASE-SX";
+            }
+
+            enum ETH_10GBASE_ER {
+                description "Ethernet compliance code: 10GBASE_ER";
+            }
+
+            enum ETH_10GBASE_LRM {
+                description "Ethernet compliance code: 10GBASE_LRM";
+            }
+
+            enum ETH_10GBASE_LR {
+                description "Ethernet compliance code: 10GBASE_LR";
+            }
+
+            enum ETH_10GBASE_SR {
+                description "Ethernet compliance code: 10GBASE_SR";
+            }
+
+            enum ETH_10GBASE_ZR {
+                description "Ethernet compliance code: 10GBASE_ZR";
+            }
+
+            enum ETH_40GBASE_CR4 {
+                description "Ethernet compliance code: 40GBASE_CR4";
+            }
+
+            enum ETH_40GBASE_SR4 {
+                description "Ethernet compliance code: 40GBASE_SR4";
+            }
+
+            enum ETH_40GBASE_LR4 {
+                description "Ethernet compliance code: 40GBASE_LR4";
+            }
+
+            enum ETH_40GBASE_ER4 {
+                description "Ethernet compliance code: 40GBASE_ER4";
+            }
+
+            enum ETH_40GBASE_PSM4 {
+                description "Ethernet compliance code: 40GBASE_PSM4";
+            }
+
+            enum ETH_4X10GBASE_LR {
+                description "Ethernet compliance code: 4x10GBASE_LR";
+            }
+
+            enum ETH_4X10GBASE_SR {
+                description "Ethernet compliance code: 4x10GBASE_SR";
+            }
+
+            enum ETH_100G_AOC {
+                description "Ethernet compliance code: 100G_AOC";
+            }
+
+            enum ETH_100G_ACC {
+                description "Ethernet compliance code: 100G_ACC";
+            }
+
+            enum ETH_100GBASE_SR10 {
+                description "Ethernet compliance code: 100GBASE_SR10";
+            }
+
+            enum ETH_100GBASE_SR4 {
+                description "Ethernet compliance code: 100GBASE_SR4";
+            }
+
+            enum ETH_100GBASE_LR4 {
+                description "Ethernet compliance code: 100GBASE_LR4";
+            }
+
+            enum ETH_100GBASE_ER4 {
+                description "Ethernet compliance code: 100GBASE_ER4";
+            }
+
+            enum ETH_100GBASE_CWDM4 {
+                description "Ethernet compliance code: 100GBASE_CWDM4";
+            }
+
+            enum ETH_100GBASE_CLR4 {
+                description "Ethernet compliance code: 100GBASE_CLR4";
+            }
+
+            enum ETH_100GBASE_PSM4 {
+                description "Ethernet compliance code: 100GBASE_PSM4";
+            }
+
+            enum ETH_100GBASE_CR4 {
+                description "Ethernet compliance code: 100GBASE_CR4";
+            }
+
+            enum ETH_UNDEFINED {
+                description "Ethernet compliance code: undefined";
+            }
+        }
+    }
+
+    typedef transceiver-operating-temperature {
+        description "Transceiver internal operating temperature";
+        reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2";
+        type decimal64 {
+            fraction-digits 2;
+            range "-127.99..127.99";
+        }
+        units "C";
+    }
+
+    typedef transceiver-supply-voltage {
+        description "Transceiver supply voltage";
+        reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2";
+        type decimal64 {
+            fraction-digits 2;
+            range "0..6.55";
+        }
+        units "V";
+    }
+
+    typedef transceiver-laser-bias-current {
+        description "Transceiver laser bias current";
+        reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2";
+        type decimal64 {
+            fraction-digits 2;
+            range "0..131.00";
+        }
+        units "mA";
+    }
+
+    typedef transceiver-input-output-power {
+        description "Measured transceiver transmit/receive optical power";
+        reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2";
+        type decimal64 {
+            fraction-digits 2;
+            range "-40..8.20";
+        }
+        units "dBm";
+    }
+}

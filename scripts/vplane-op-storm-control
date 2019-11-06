@@ -1,0 +1,168 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2018-2019, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Vyatta::Configd;
+use Vyatta::Dataplane;
+use JSON qw( decode_json );
+
+sub main {
+    my ( $action, $dev, $object );
+
+    GetOptions(
+        "action=s" => \$action,
+        "dev=s"    => \$dev,
+        "object=s" => \$object,
+    ) or usage();
+
+    if (   ( !defined($action) || !defined($object) )
+        || ( $action ne 'show'  && $action ne 'clear' )
+        || ( $object ne 'stats' && $object ne 'policies' ) )
+    {
+        usage();
+    }
+    if ( $action eq 'show' ) {
+        show_storm_ctl_stats($dev)    if ( $object eq 'stats' );
+        show_storm_ctl_policies($dev) if ( $object eq 'policies' );
+    } elsif ( $action eq 'clear' ) {
+        clear_storm_ctl_stats($dev) if ( $object eq 'stats' );
+    }
+}
+
+sub usage {
+    print <<EOF;
+Usage: $0 --action show --dev <ifname> --object <stats|policies>
+EOF
+    exit 1;
+}
+
+sub show_storm_ctl_traffic_thresholds {
+    my ( $ifname, $vlan, $tr_thresholds ) = @_;
+    my $ucast = 0;
+    my $mcast = 0;
+    my $bcast = 0;
+
+    foreach my $tr_state ( @{$tr_thresholds} ) {
+        my $tr_type = $tr_state->{'traffic-type'};
+        if ( $tr_type eq 'unicast' ) {
+            $ucast = $tr_state->{'threshold-level'};
+        } elsif ( $tr_type eq 'multicast' ) {
+            $mcast = $tr_state->{'threshold-level'};
+        } elsif ( $tr_type eq 'broadcast' ) {
+            $bcast = $tr_state->{'threshold-level'};
+        }
+    }
+    if ( $ucast || $mcast || $bcast ) {
+        printf "%-10s    %-4s  %-15d %-15d %-15d\n",
+          $ifname, $vlan, $ucast, $mcast, $bcast;
+    }
+}
+
+sub show_storm_ctl_policies {
+    my $dev    = shift;
+    my $client = Vyatta::Configd::Client->new();
+    my $tree   = $client->tree_get_full_hash('security storm-control-state');
+
+    my ( $ifname, $vlan, $ucast, $mcast, $bcast );
+    print "Thresholds in Kbps\n";
+    print "Interface    Vlan   Unicast         Multicast       Broadcast\n";
+    foreach my $intf ( @{ $tree->{'storm-control-state'}->{'interfaces'} } ) {
+        $ifname = $intf->{'intf-name'};
+
+        next if ( defined($dev) && ( $dev ne $ifname ) );
+
+        $vlan = "";
+        show_storm_ctl_traffic_thresholds( $ifname, $vlan,
+            \@{ $intf->{'storm-control-interface-state'} } );
+
+        foreach my $vlan_state ( @{ $intf->{'vlan-storm-control-state'} } ) {
+            $vlan = $vlan_state->{'vlan-id'};
+            show_storm_ctl_traffic_thresholds( $ifname, $vlan,
+                \@{ $vlan_state->{'vlan-storm-control-traffic-state'} } );
+        }
+    }
+}
+
+sub show_storm_ctl_traffic_stats {
+    my ( $ifname, $vlan, $tr_stat_arr ) = @_;
+
+    my $ucast_pkts_dropped  = 0;
+    my $ucast_bytes_dropped = 0;
+    my $mcast_pkts_dropped  = 0;
+    my $mcast_bytes_dropped = 0;
+    my $bcast_pkts_dropped  = 0;
+    my $bcast_bytes_dropped = 0;
+
+    foreach my $tr_stat ( @{$tr_stat_arr} ) {
+        my $tr_type = $tr_stat->{'traffic-type'};
+
+        if ( $tr_type eq 'unicast' ) {
+            $ucast_pkts_dropped  = $tr_stat->{'packets-dropped'};
+            $ucast_bytes_dropped = $tr_stat->{'bytes-dropped'};
+        } elsif ( $tr_type eq 'multicast' ) {
+            $mcast_pkts_dropped  = $tr_stat->{'packets-dropped'};
+            $mcast_bytes_dropped = $tr_stat->{'bytes-dropped'};
+        } elsif ( $tr_type eq 'broadcast' ) {
+            $bcast_pkts_dropped  = $tr_stat->{'packets-dropped'};
+            $bcast_bytes_dropped = $tr_stat->{'bytes-dropped'};
+        }
+    }
+    printf "%-10s    %-4s\n", $ifname, $vlan;
+    printf "    pkts            %-20d %-20d %-20d\n",
+      $ucast_pkts_dropped, $mcast_pkts_dropped, $bcast_pkts_dropped;
+    printf "    bytes           %-20d %-20d %-20d\n",
+      $ucast_bytes_dropped, $mcast_bytes_dropped, $bcast_bytes_dropped;
+}
+
+sub show_storm_ctl_stats {
+    my $dev = shift;
+    my (
+        $ucast_pkts_dropped,  $ucast_bytes_dropped, $mcast_pkts_dropped,
+        $mcast_bytes_dropped, $bcast_pkts_dropped,  $bcast_bytes_dropped,
+        $vlan
+    );
+
+    my $client = Vyatta::Configd::Client->new();
+    my $tree   = $client->tree_get_full_hash('security storm-control-state');
+
+    print
+"Interface    Vlan   Unicast Drops        Multicast Drops      Broadcast Drops\n";
+
+    foreach my $intf ( @{ $tree->{'storm-control-state'}->{'interfaces'} } ) {
+        my $ifname = $intf->{'intf-name'};
+
+        next if ( defined($dev) && ( $dev ne $ifname ) );
+
+        $vlan = "";
+        show_storm_ctl_traffic_stats( $ifname, $vlan,
+            \@{ $intf->{'storm-control-interface-state'} } );
+
+        foreach my $vlan_state ( @{ $intf->{'vlan-storm-control-state'} } ) {
+            $vlan = $vlan_state->{'vlan-id'};
+            show_storm_ctl_traffic_stats( $ifname, $vlan,
+                \@{ $vlan_state->{'vlan-storm-control-traffic-state'} } );
+        }
+    }
+}
+
+sub clear_storm_ctl_stats {
+    my $dev = shift;
+    my $cmd = 'storm-ctl clear stats';
+
+    if ( defined($dev) ) {
+        $cmd = "$cmd $dev";
+    }
+
+    my ( $dpids, $dpconns ) = Vyatta::Dataplane::setup_fabric_conns();
+
+    my $dprsp = vplane_exec_cmd( $cmd, $dpids, $dpconns, 1 );
+}
+
+main();

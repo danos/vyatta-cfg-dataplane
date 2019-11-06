@@ -1,0 +1,126 @@
+module vyatta-op-show-interfaces-dataplane-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-op-show-interfaces-dataplane:1";
+	prefix vyatta-op-show-interfaces-dataplane-v1;
+
+	import vyatta-opd-extensions-v1 {
+		prefix opd;
+	}
+	import vyatta-op-show-v1 {
+		prefix show;
+	}
+	import vyatta-op-show-interfaces-v1 {
+		prefix if;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+			 Dallas, TX 25202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2018-2019, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Defines the top 'dataplane' level under 'show interfaces' for operational CLI";
+
+	revision 2019-06-11 {
+		description "Updated the command physical with script";
+	}
+	revision 2018-12-04 {
+		description "Initial version";
+	}
+
+	opd:augment /show:show/if:interfaces {
+		opd:command dataplane {
+			opd:help "Show dataplane interface information";
+			opd:on-enter 'vyatta-show-interfaces.pl --intf-type=dataplane --action=show-brief';
+
+			opd:command detail {
+				opd:help "Show detailed interface information";
+				opd:on-enter 'vyatta-show-interfaces.pl --intf-type=dataplane --action=show';
+			}
+
+			opd:argument if-name {
+				opd:help "Show interface information for a given dataplane interface";
+				opd:on-enter 'vplane-ifconfig.pl "$4"';
+				opd:allowed 'vyatta-interfaces.pl --show dataplane';
+				type string;
+
+				opd:command affinity {
+					opd:help "Show device cpu-affinity";
+					opd:on-enter 'vplane-affinity --dev "$4" --show';
+				}
+
+				opd:command brief {
+					opd:help "Show summary interface information for a given dataplane interface";
+					opd:on-enter 'vyatta-show-interfaces.pl --intf="$4" --action=show-brief';
+				}
+
+				opd:command identify {
+					opd:help "Identify adapter by blinking LED";
+					opd:on-enter 'vplane-blink "$4"';
+				}
+
+				opd:command physical {
+					opd:help "Show physical device information for specified ethernet interface";
+					opd:on-enter 'vyatta-op-transceiver --action=xcvr-info -- --port="$4"';
+				}
+
+				opd:command slowpath {
+					opd:help "Show specified interface slowpath statistics";
+					opd:on-enter 'vplane-ifconfig.pl "$4" --action=show-slowpath';
+				}
+
+				opd:command vif {
+					opd:help "Show specified virtual interface (VIF) network information";
+					opd:on-enter 'vyatta-show-interfaces.pl --intf-vif="$4" --action=show-brief';
+
+					opd:argument vif {
+						type uint32 {
+							range 1..99999;
+						}
+						opd:help "Virtual interface (VIF) Id";
+						opd:on-enter 'vyatta-show-interfaces.pl --intf="$4.$6"';
+						opd:allowed 'vyatta-interfaces.pl --show dataplane --vif "$4"';
+
+						opd:command brief {
+							opd:help "Show summary of specified virtual network interface (vif) information";
+							opd:on-enter 'vyatta-show-interfaces.pl --intf="$4.$6" --action=show-brief';
+						}
+					}
+				}
+			}
+		}
+	}
+}

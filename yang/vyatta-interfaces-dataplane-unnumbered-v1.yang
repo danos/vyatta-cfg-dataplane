@@ -1,0 +1,194 @@
+module vyatta-interfaces-dataplane-unnumbered-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-unnumbered:1";
+	prefix vyatta-interfaces-dataplane-unnumbered-v1;
+
+	import vyatta-types-v1 {
+		prefix types;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-interfaces-dataplane-v1 {
+		prefix interfaces-dataplane;
+	}
+	import vyatta-interfaces-loopback-v1 {
+		prefix interfaces-loopback;
+	}
+
+	organization "Brocade Communications Systems, Inc.";
+	contact
+		"Brocade Communications Systems, Inc.
+		 Postal: 130 Holger Way
+		         San Jose, CA 95134
+		 E-mail: support@Brocade.com
+		 Web: www.brocade.com";
+
+	description
+		"Copyright (c) 2019, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Copyright (c) 2014-2017 by Brocade Communications Systems, Inc.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Vyatta dataplane interface unnumbered specific yang file and related
+		 template scripts.";
+
+	revision 2019-05-02 {
+		description "Use single quotes for pattern statements";
+	}
+
+	revision 2016-07-13 {
+		description "Define constraints and remove configd:validate";
+	}
+
+	revision 2015-08-14 {
+		description "Initial revision of version 1.";
+	}
+
+	grouping unnumbered-opts {
+		list donor-interface {
+			max-elements  "1";
+			configd:help "donor interface name";
+			configd:allowed "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/unnumbered-allowed.sh";
+			key "tagnode";
+			leaf tagnode {
+				type union {
+					type string {
+						pattern 'lo(|[1-9]([0-9]){0,4})';
+						configd:pattern-help "<lo|loN>";
+					}
+					type interfaces-dataplane:dataplane-ifname;
+				}
+				must "(/if:interfaces/*[local-name(.) = 'dataplane' or local-name(.) = 'loopback']/"
+				   + "*[local-name(.) = 'tagnode' and . = current()])" {
+					error-message "Donor Interface is not a valid dataplane or loopback interface";
+				}
+				must "not(../../../../*[(local-name(.) = 'address') and (. = 'dhcp')])" {
+					error-message "Can't configure unnumbered on interface that has dhcp configured.";
+				}
+				must "not(../../../../*[local-name(.) = 'address' and contains(., '.')])" {
+					error-message "Can't configure unnumbered on interface that has ipv4 address configured.";
+				}
+				must "((/if:interfaces/interfaces-loopback:loopback/"
+				   + "interfaces-loopback:address[(../interfaces-loopback:tagnode = current()) and contains(., '.')])"
+				   + "or (/if:interfaces/interfaces-dataplane:dataplane/"
+				   + "interfaces-dataplane:address[(../interfaces-dataplane:tagnode = current()) and contains(., '.')]))" {
+					error-message "Can't configure donor interface without an ip address.";
+				}
+			}
+			leaf preferred-address {
+				type types:ipv4-address;
+				configd:help "preferred address to use from donor interface";
+				configd:allowed "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/preferred-address/configd_allowed.pl --donor-dev=$VAR(../@) --ipv4";
+			}
+		}
+	}
+
+	grouping unnumbered-opts-ipv6 {
+		list donor-interface {
+			max-elements  "1";
+			configd:help "donor interface name";
+			configd:allowed "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/unnumbered-allowed.sh";
+			key "tagnode";
+			leaf tagnode {
+				type union {
+					type string {
+						pattern 'lo(|[1-9]([0-9]){0,4})';
+						configd:pattern-help "<lo|loN>";
+					}
+					type interfaces-dataplane:dataplane-ifname;
+				}
+				must "(/if:interfaces/*[local-name(.) = 'dataplane' or local-name(.) = 'loopback']/"
+				   + "*[local-name(.) = 'tagnode' and . = current()])" {
+					error-message "Donor Interface is not a valid dataplane or loopback interface";
+				}
+				must "not(../../../../*[(local-name(.) = 'address') and (. = 'dhcpv6')])" {
+					error-message "Can't configure unnumbered on interface that has dhcpv6 configured.";
+				}
+				must "not(../../../../*[local-name(.) = 'address' and contains(., ':')])" {
+					error-message "Can't configure unnumbered on interface that has ipv6 address configured.";
+				}
+				must "((/if:interfaces/interfaces-loopback:loopback/"
+				   + "interfaces-loopback:address[../interfaces-loopback:tagnode = current() and contains(., ':')]) "
+				   + "or (/if:interfaces/interfaces-dataplane:dataplane/"
+				   + "interfaces-dataplane:address[(../interfaces-dataplane:tagnode = current()) and contains(., ':')]))" {
+					error-message "Can't configure unnumbered on interface without an ipv6 address.";
+				}
+			}
+			leaf preferred-address {
+				type types:ipv6-address;
+				configd:help "preferred address to use from donor interface";
+				configd:allowed "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/preferred-address/configd_allowed.pl --donor-dev=$VAR(../@) --ipv6";
+			}
+		}
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:ip {
+		container unnumbered {
+			configd:help "Enable unnumbered IP";
+			configd:priority "330";
+			configd:validate "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/unnumbered-vrf-check $VAR(../../@) $VAR(./donor-interface/@@) $VAR(/routing/routing-instance/@@)";
+			configd:end "/opt/vyatta/sbin/vyatta-update-unnumbered.pl --dev=$VAR(../../@)";
+			uses unnumbered-opts;
+		}
+	}
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:ipv6 {
+		container unnumbered {
+			configd:help "Enable unnumbered IPv6";
+			configd:priority "330";
+			configd:validate "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/unnumbered-vrf-check $VAR(../../@) $VAR(./donor-interface/@@) $VAR(/routing/routing-instance/@@)";
+			configd:end "/opt/vyatta/sbin/vyatta-update-unnumbered.pl --dev=$VAR(../../@) --ipv6";
+			uses unnumbered-opts-ipv6;
+		}
+	}
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:vif/interfaces-dataplane:ip {
+		container unnumbered {
+			configd:help "Enable unnumbered IP";
+			configd:priority "330";
+			configd:validate "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/unnumbered-vrf-check $VAR(../../../@).$VAR(../../@) $VAR(./donor-interface/@@) $VAR(/routing/routing-instance/@@)";
+			configd:end "/opt/vyatta/sbin/vyatta-update-unnumbered.pl --dev=$VAR(../../../@).$VAR(../../@)";
+			uses unnumbered-opts;
+		}
+	}
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:vif/interfaces-dataplane:ipv6 {
+		container unnumbered {
+			configd:help "Enable unnumbered IPv6";
+			configd:priority "330";
+			configd:validate "/opt/vyatta/share/tmplscripts/interfaces/dataplane/unnumbered/unnumbered-vrf-check $VAR(../../../@).$VAR(../../@) $VAR(./donor-interface/@@) $VAR(/routing/routing-instance/@@)";
+			configd:end "/opt/vyatta/sbin/vyatta-update-unnumbered.pl --dev=$VAR(../../../@).$VAR(../../@) --ipv6";
+			uses unnumbered-opts-ipv6;
+		}
+	}
+}

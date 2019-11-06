@@ -1,0 +1,2 @@
+help: Clear interface counters for a given dataplane interface
+run: vplane-ifconfig.pl "$4" --action=clear

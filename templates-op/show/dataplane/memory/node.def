@@ -1,0 +1,2 @@
+help: Show dataplane memory usage
+run: vplane-show-memory.pl

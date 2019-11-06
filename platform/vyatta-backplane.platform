@@ -1,0 +1,8 @@
+[Platform att.flexware-s]
+Features=vyatta-interfaces-backplane-v1:backplane
+
+[Platform att.flexware-m]
+Features=vyatta-interfaces-backplane-v1:backplane
+
+[Platform att.flexware-l]
+Features=vyatta-interfaces-backplane-v1:backplane

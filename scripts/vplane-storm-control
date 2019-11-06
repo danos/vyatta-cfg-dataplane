@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2018-2019, AT&T Intellectual Property.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+from argparse import ArgumentParser
+from vplaned import Controller
+from vyatta import configd
+
+#
+# process_storm_ctl_global_cfg
+#
+# update global config
+#
+def process_storm_ctl_global_cfg(action, update):
+    ( value, tree) = ( "", "" )
+
+    cfg = configd.Client()
+
+    if update == 'detection-interval':
+            tree  = cfg.tree_get_dict("security storm-control {}".format(update));
+            value = tree.get(update);
+
+    ckey = "storm-ctl {}".format(update)
+    cmd  = "storm-ctl {} {}".format(action, update)
+    if action == 'SET':
+        cmd = "{} {}".format(cmd, value)
+    with Controller() as controller:
+        controller.store(ckey, cmd, "ALL", action)
+
+#
+# process_storm_ctl_dev_cfg
+#
+# update cstore for all interfaces that use the specified profile
+#
+def process_storm_ctl_profile_cfg(action, profile, update):
+    ( type, value, tree ) = ( "", "", "" )
+
+    cfg = configd.Client()
+
+    if action == 'SET':
+        if update != 'shutdown':
+            tree = cfg.tree_get_dict(
+                "security storm-control profile {} {}".format(profile, update))
+
+            if update == 'unicast' or update == 'multicast' or update == 'broadcast':
+                for type in tree[update].keys():
+                    value = tree[update][type]
+            elif update == 'recovery-interval':
+                value = tree[update]
+
+    # update profile info in vplaned->dataplane path
+
+    ckey = "storm-ctl profile {} {}".format(profile, update)
+    cmd = "storm-ctl {} profile {} {} {} {}".format(action, profile, update, type, value)
+    with Controller() as controller:
+        controller.store(ckey, cmd, "ALL", action)
+
+#
+# process_storm_ctl_dev_cfg
+#
+# update cstore for specified interface
+#
+# cmd format: storm-ctl <SET|DELETE> <ifname> profile <profile>
+def process_storm_ctl_dev_cfg(action, ifname, profile):
+    with Controller() as controller:
+        controller.store("storm-ctl {}".format(ifname),
+		         "storm-ctl {} {} profile {}".format(action, ifname, profile),
+		         action=action, interface=ifname)
+
+
+#
+# process_storm_ctl_dev_vlan_cfg
+#
+# update cstore for all vlans for which config has changed
+#
+def process_storm_ctl_dev_vlan_cfg(ifname):
+    ( key, cmd, profile ) = ( "", "", "" )
+
+    CONFIG_CANDIDATE = configd.Client.CANDIDATE
+    CONFIG_RUNNING = configd.Client.RUNNING
+
+    client = configd.Client()
+    path = "interfaces dataplane {} storm-control vlan".format(ifname)
+    with Controller() as controller:
+        try:
+            vlans = client.tree_get_dict(path, CONFIG_RUNNING)['vlan']
+        except:
+            vlans = {}
+        for vlan in vlans:
+            vlan_id = vlan['vlan-id']
+            status = client.node_get_status(CONFIG_RUNNING, "{} {} profile".format(path, vlan_id))
+            if status == client.DELETED or status == client.CHANGED:
+                key = "storm-ctl {} {}".format(ifname, vlan_id)
+                cmd = "storm-ctl DELETE {} vlan {}".format(ifname, vlan_id)
+                controller.store(key, cmd, ifname, "DELETE")
+
+        try:
+            vlans = client.tree_get_dict(path, CONFIG_CANDIDATE)['vlan']
+        except:
+            vlans = {}
+        for vlan in vlans:
+            vlan_id = vlan['vlan-id']
+            status = client.node_get_status(CONFIG_CANDIDATE, "{} {} profile".format(path, vlan_id))
+            if status == client.CHANGED or status == client.ADDED:
+                profile = client.tree_get_dict("{} {} profile".format(path, vlan_id))['profile']
+                key = "storm-ctl {} {}".format(ifname, vlan_id)
+                cmd = "storm-ctl SET {} vlan {} profile {}".format(ifname, vlan_id, profile)
+                controller.store(key, cmd, ifname, "SET")
+
+
+arg_parser = ArgumentParser()
+arg_parser.add_argument('--action', action='store', required=True,
+                        choices=['SET', 'DELETE', 'UPDATE_VLANS'])
+arg_parser.add_argument('--dev', action='store')
+arg_parser.add_argument('--profile', action='store')
+arg_parser.add_argument('--vlan', action='store')
+arg_parser.add_argument('--update', action='store')
+args = arg_parser.parse_args()
+
+if args.dev is None:
+    if args.profile is None:
+        process_storm_ctl_global_cfg(args.action, args.update)
+    else:
+        process_storm_ctl_profile_cfg(args.action, args.profile, args.update)
+else:
+    if args.action == 'UPDATE_VLANS':
+        process_storm_ctl_dev_vlan_cfg(args.dev)
+    else:
+        process_storm_ctl_dev_cfg(args.action, args.dev, args.profile)

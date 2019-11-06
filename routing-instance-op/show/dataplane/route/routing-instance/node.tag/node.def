@@ -1,0 +1,3 @@
+allowed: echo '<routing-instance>' && /opt/vyatta/share/tmplscripts/routing-instance/routing-instance-list.sh
+help: Show dataplane FIB for specific routing instance
+run: vplane-route.pl --routing-instance=$5

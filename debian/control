@@ -1,0 +1,261 @@
+Source: vplane-config
+Section: contrib/net
+Priority: extra
+Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
+Build-Depends:
+ autoconf,
+ automake,
+ autotools-dev,
+ debhelper (>= 9),
+ dh-autoreconf,
+ dh-python,
+ dh-yang,
+ iptables-dev (>= 1.4.21-2),
+ libtool,
+ python3-all,
+ python3-setuptools,
+ python3-zmq,
+Standards-Version: 3.9.6
+X-Python3-Version: >= 3.3
+
+Package: vplane-config
+Architecture: all
+Depends:
+ bmon (>= 3.5),
+ iproute (>= 20120319-vyatta+1),
+ iputils-arping,
+ libconfig-tiny-perl,
+ libdata-validate-ip-perl,
+ libfile-remove-perl,
+ libipc-system-simple-perl,
+ libjson-perl,
+ libmodule-load-conditional-perl,
+ libvyatta-dataplane-perl,
+ libvyatta-interface-perl,
+ libvyatta-vplaned-perl,
+ libsort-key-perl,
+ netplug,
+ vplane-controller (>= 1.2.0),
+ vyatta-cfg (>= 0.104.32),
+ vyatta-dataplane-cfg-affinity-1,
+ vyatta-dataplane-cfg-npf-cfg-2,
+ vyatta-dataplane-op-affinity-0,
+ vyatta-dataplane-op-nd6-1,
+ ${misc:Depends},
+ ${perl:Depends}
+Breaks: vplane-routing (<= 1:10.11.9), vyatta-dataplane (<= 3.4.29)
+Description: vyatta dataplane config
+ Vyatta configuration/operational commands for integrated
+ dataplane service.
+
+Package: vyatta-interfaces-dataplane-v1-yang
+Architecture: all
+Depends:
+ vplane-config (>= ${source:Version}),
+ vyatta-cfg ( >= 0.104.32),
+ vyatta-dataplane-cfg-speed-0,
+ vyatta-dataplane-cfg-breakout-0,
+ vyatta-interfaces (>= 1.46),
+ vyatta-op (>= 0.13),
+ vyatta-system,
+ vyatta-update-vifs,
+ vyatta-dataplane-op-ifconfig-1,
+ vyatta-interfaces-switch-v1-yang,
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta interfaces dataplane yang package
+ Vyatta dataplane interface specific yang file and related
+ template scripts.
+Conflicts: vplane-config (<< 2.1.4)
+Replaces: vplane-config (<< 2.1.4)
+
+Package: vyatta-dataplane-routing-instance
+Architecture: all
+Depends:
+ vyatta-interfaces-dataplane-v1-yang (>=${source:Version}),
+ ${misc:Depends}
+Description: vyatta dataplane routing-instance package
+ Vyatta dataplane routing-instance specific template scripts.
+
+Package: vyatta-op-dataplane-mpls
+Architecture: all
+Depends:
+ vyatta-interfaces-dataplane-v1-yang (>=${source:Version}),
+ ${misc:Depends},
+ ${perl:Depends}
+Description: vyatta dataplane mpls package
+ Vyatta dataplane mpls template scripts.
+
+Package: vyatta-interfaces-dataplane-unnumbered-v1-yang
+Architecture: all
+Depends:
+ vplane-config (>= ${source:Version}),
+ vyatta-cfg ( >= 0.104.32),
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta unnumbered yang package
+ Vyatta dataplane interface unnumbered specific yang file and related
+ template scripts.
+Conflicts: vplane-config (<< 2.1.4)
+Replaces: vplane-config (<< 2.1.4)
+
+Package: vyatta-interfaces-uplink-v1-yang
+Architecture: all
+Depends: vyatta-interfaces-base, ${misc:Depends}, ${yang:Depends}
+Description: vyatta interfaces uplink yang package
+ Vyatta uplink interface specific yang file and related
+ template scripts.
+
+Package: vyatta-hardware-binding-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: vyatta hardware binding yang package
+ Vyatta dataplane interface hardware binding specific yang file and
+ related template scripts.
+
+Package: vyatta-system-hugepages-v1-yang
+Architecture: all
+Section: contrib/admin
+Depends:
+ vyatta-dataplane,
+ vyatta-cfg ( >= 0.104.32),
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-system-hugepages-v1 module
+ The YANG module for hugepages configuration
+
+Package: vyatta-system-dataplane-v1-yang
+Architecture: all
+Depends:
+ vplane-config (>= ${source:Version}),
+ vyatta-cfg ( >= 0.104.32),
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta system dataplane yang package
+ Vyatta dataplane interface specific system yang file and related
+ template scripts.
+Conflicts: vplane-config (<< 2.1.4)
+Replaces: vplane-config (<< 2.1.4)
+
+Package: xtables-addons-bypass
+Architecture: any
+Depends: iptables, ${misc:Depends}, ${shlibs:Depends}
+Description: vyatta iptables bypass extension
+ Vyatta extension to iptables to bypass normal forwarding
+ rules.
+
+Package: libvyatta-dataplane-perl
+Architecture: all
+Section: contrib/perl
+Depends: libzmq-libzmq3-perl, ${misc:Depends}, ${perl:Depends}
+Breaks: vplane-config (<< 2.10)
+Replaces: vplane-config(<< 2.10)
+Description: Module for accessing dataplane for status commands.
+
+Package: libvyatta-dataplanepunt-perl
+Architecture: all
+Section: contrib/perl
+Depends: xtables-addons-bypass, ${misc:Depends}, ${perl:Depends}
+Description: Module for installing iptables rules for punting traffic
+ from the kernel to the dataplane
+
+Package: libvyatta-vplaned-perl
+Architecture: all
+Section: contrib/perl
+Depends: libjson-perl, libzmq-libzmq3-perl, ${misc:Depends}, ${perl:Depends},
+	 libgoogle-protocolbuffers-perl, libmime-base64-perl,
+	 libvyatta-dataplane-proto-support, libvyatta-controller-proto-support
+Breaks: vplane-config (<< 2.17)
+Replaces: vplane-config (<< 2.17)
+Description: Module for interacting with vplaned
+ Perl module for connecting to the dataplane controller to send store
+ commands.
+
+Package: python3-vplaned
+Architecture: all
+Section: contrib/python
+Depends: python3-zmq, python3-protobuf,
+ libvyatta-dataplane-proto-support,
+ libvyatta-controller-proto-support,
+ ${misc:Depends}, ${python3:Depends}
+Description: vplane-controller Python 3 API
+ Provides a vplaned Python 3 module, which contains a Controller and a Dataplane
+ class, which can be used to communicate to the respective components through
+ ZMQ.
+
+Package: vyatta-interfaces-tcp-mss-v1-yang
+Architecture: all
+Depends: libvyatta-dataplane-proto-support,
+	 vyatta-dataplane-cfg-pb-vyatta:tcp-mss-0,
+	 ${misc:Depends}, ${yang:Depends}
+Description: vyatta-interfaces-tcp-mss-v1 module
+ The YANG module for vyatta-interfaces-tcp-mss-v1 to provide support
+ for TCP MSS clamping.
+
+Package: vyatta-op-monitor-dataplane-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: vyatta-op-monitor-dataplane-v1 module
+ The YANG module for monitor dataplane operational commands
+
+Package: vyatta-op-show-dataplane-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: vyatta-op-show-dataplane-v1 module
+ The YANG module for show dataplane operational commands
+
+Package: vyatta-op-show-platform-dataplane-v1-yang
+Architecture: all
+Depends: python3, vyatta-dataplane-op-pd-1, ${misc:Depends}, ${yang:Depends}
+Recommends: python3-vrfmanager
+Description: vyatta-op-show-platform-dataplane-v1 module
+ The YANG module for show platform dataplane operational commands
+
+Package: vyatta-security-storm-control-v1-yang
+Architecture: all
+Depends: python3, vyatta-dataplane-cfg-storm-ctl-3, ${misc:Depends},
+         ${yang:Depends}
+Description: vyatta storm control
+ YANG module for configuring traffic storm control
+
+Package: vyatta-op-show-interfaces-dataplane-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}, vplane-config, vyatta-interfaces-base
+Description: vyatta-op-show-interfaces-dataplane-v1 module
+ Operational mode integration for viewing dataplane interface configuration
+
+Package: vyatta-op-storm-control-v1-yang
+Architecture: all
+Depends: vyatta-dataplane-op-storm-ctl-2, ${misc:Depends}, ${yang:Depends}
+Description: vyatta storm control op mode
+ Operational commands for traffic storm control
+
+Package: vyatta-interfaces-backplane-v1-yang
+Architecture: all
+Depends: vyatta-dataplane-cfg-backplane-0, ${misc:Depends}, ${yang:Depends},
+         libarray-utils-perl, libvyatta-dataplane-perl
+Description: Backplane management
+ Backplane interface configuration. Commands to bind dataplane interfaces to
+ backplane interfaces, configure cpu affinity for backplane interfaces, etc.
+
+Package: vyatta-op-interfaces-backplane-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: Backplane management op mode
+ Commands to show backplane interfaces
+
+Package: vyatta-interfaces-dataplane-transceiver-v1-yang
+Architecture: all
+Depends:
+ vyatta-optical-transport-types-v1-yang,
+ vyatta-dataplane-op-ifconfig-2,
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-interfaces-dataplane-transceiver-v1 module
+ Commands to show dataplane transceiver information
+
+Package: vyatta-optical-transport-types-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: vyatta-optical-transport-types-v1 module
+ Commands to show dataplane transceiver information

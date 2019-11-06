@@ -1,0 +1,58 @@
+#! /usr/bin/perl
+
+# Copyright (c) 2016, Brocade Communications Systems, Inc.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::Dataplane;
+use Vyatta::Interface;
+
+# global
+my ( $sock, $ifname );
+
+# callback to stop blink on signal
+sub end_blink {
+    $sock->execute("led $ifname off");
+}
+
+$ifname = shift;
+die "Usage: $0 interface\n"
+  unless defined($ifname);
+
+my $intf = Vyatta::Interface->new($ifname);
+die "unknown interface $ifname"
+  unless defined($intf);
+
+die "not a dataplane interface $ifname"
+  unless $intf->type() eq 'dataplane';
+
+my $fabric = $intf->dpid();
+my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
+die "Dataplane $fabric is not connected or does not exist\n"
+  unless ( scalar(@$dpids) > 0 );
+
+$sock = ${$dpsocks}[$fabric];
+die "Can not connect to dataplane $fabric\n"
+  unless $sock;
+
+my $resp = $sock->execute("led $ifname on");
+exit 1 unless defined($resp);
+
+# stop blinking early if interrupted
+$SIG{INT}  = \&sig_handler;
+$SIG{TERM} = \&sig_handler;
+
+print "Interface $ifname should be blinking now.\n";
+print "Press control-C to stop..\n";
+STDOUT->flush();
+
+sleep(300);
+
+print "Timed out\n";
+end_blink();
+Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );

@@ -1,0 +1,2 @@
+help: Enable dataplane link state debugging
+run: vplane-monitor-cmd.pl --cmd="debug link"

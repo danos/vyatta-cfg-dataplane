@@ -1,0 +1,30 @@
+#!/bin/bash
+# validate_unnumbered_vrf <unnumbered-if> <donor-if> routing instance list..
+# check if unnumbered and donor interface belong to same routing-instance
+# cli-shell-api is much faster than perl api for small number of
+# vrfs
+
+# No routing instances configured - always success
+[[ $# == 2 ]] && exit 0;
+
+err_out() {
+     echo "Can't configure unnumbered interface $1 with" \
+	"donor-interface $2 in different routing-instance" >&2
+     exit 1
+}
+
+if1=$1; 
+if2=$2;
+shift 2
+for v in "$@"; do
+	vrf_ifs=`cli-shell-api listNodes routing routing-instance $v interface`
+	# cli-shell-api wraps values in quotes.
+	for x in ${vrf_ifs}; do
+		[[ "'$if1'" == $x ]] && m1=1
+		[[ "'$if2'" == $x ]] && m2=1
+		[[ $m1 -eq 1 && $m2 -eq 1 ]] && exit 0
+	done
+	[[ $m1 != $m2 ]] && err_out $if1 $if2
+	unset m1 m2
+done
+exit 0

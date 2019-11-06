@@ -1,0 +1,2 @@
+help: Show dataplane MPLS label table
+run: vplane-route.pl --label-table

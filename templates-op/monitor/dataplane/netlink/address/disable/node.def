@@ -1,0 +1,2 @@
+help: Disable netlink address debugging
+run: vplane-monitor-cmd.pl --cmd="debug -nl_address"

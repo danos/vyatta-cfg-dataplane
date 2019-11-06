@@ -1,0 +1,2 @@
+help: Enable dataplane route debugging
+run: vplane-monitor-cmd.pl --cmd="debug route"

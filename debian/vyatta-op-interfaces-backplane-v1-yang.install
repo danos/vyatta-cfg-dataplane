@@ -1,0 +1,2 @@
+scripts/vplane-op-backplane opt/vyatta/sbin
+yang/vyatta-op-interfaces-backplane-v1.yang usr/share/configd/yang

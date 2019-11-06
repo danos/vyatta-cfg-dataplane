@@ -1,0 +1,4 @@
+help: Clear interface mpls information for a given dataplane interface
+allowed: local -a array ;
+	 array=( /sys/class/net/dp* ) ;
+	 echo  -n ${array[@]##*/}

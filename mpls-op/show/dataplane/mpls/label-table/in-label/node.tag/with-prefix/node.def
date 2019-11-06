@@ -1,0 +1,2 @@
+help: Show dataplane MPLS label table for specified in-label
+run: vplane-route.pl --label-table --with-prefix --in-label $6

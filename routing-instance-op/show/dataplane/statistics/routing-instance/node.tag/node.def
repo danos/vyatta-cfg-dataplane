@@ -1,0 +1,2 @@
+allowed: echo '<routing-instance>' && /opt/vyatta/share/tmplscripts/routing-instance/routing-instance-list.sh
+help: Show dataplane statistics for specific routing-instance

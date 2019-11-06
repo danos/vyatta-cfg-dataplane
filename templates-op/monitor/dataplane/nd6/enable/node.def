@@ -1,0 +1,2 @@
+help: enable dataplane IPV6 neighbor debugging
+run: vplane-monitor-cmd.pl --cmd="debug nd6"

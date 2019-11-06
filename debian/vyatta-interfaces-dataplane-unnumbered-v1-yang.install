@@ -1,0 +1,2 @@
+tmplscripts/interfaces/dataplane/unnumbered opt/vyatta/share/tmplscripts/interfaces/dataplane
+yang/vyatta-interfaces-dataplane-unnumbered-v1.yang usr/share/configd/yang
