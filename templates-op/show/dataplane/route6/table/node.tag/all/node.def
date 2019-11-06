@@ -1,0 +1,2 @@
+help: Show dataplane IPv6 FIB policy routing table including non-RIB routes
+run: vplane-route.pl --table=$5 --v6 --all

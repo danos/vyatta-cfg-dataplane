@@ -1,0 +1,54 @@
+#! /bin/bash
+#
+# Copyright (c) 2019, AT&T Intellectual Property.  All rights reserved.
+# Copyright (c) 2014-2016 by Brocade Communications Systems, Inc.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+source "$(cd "$(dirname "${0}")" && pwd -P)"/../tech-support.functions
+
+header Dataplane
+time_out "run show dataplane"
+
+for dp in $(/opt/vyatta/sbin/vyatta-interfaces.pl --show=dataplane)
+do header "Interface statistics for $dp"
+	time_out "run show interface dataplane $dp"
+done
+
+header "Dataplane ARP"
+time_out 'run show dataplane statistics arp'
+
+time_out 'run show dataplane arp'
+
+header "Dataplane Routes"
+
+vrf_names=(default $(cli-shell-api listActiveNodes routing routing-instance | tr -d \'))
+for vrf_name in "${vrf_names[@]}"; do
+	if [ "$vrf_name" != "default" ]; then
+		header "routing instance $vrf_name"
+		inst="routing-instance $vrf_name"
+		show_cmd="route $inst"
+		table_cmd="routing $inst protocols"
+	else
+		show_cmd="route"
+		table_cmd="protocols"
+	fi
+
+	time_out "run show dataplane $show_cmd"
+
+	tables=($(cli-shell-api listActiveNodes $table_cmd static table | tr -d \'))
+	for table in "${tables[@]}"; do
+		header "Table $table"
+
+		time_out "run show dataplane $show_cmd table $table"
+	done
+done
+
+header "Dataplane memory usage"
+time_out "run show dataplane memory"
+
+header "Extensive dataplane interface information"
+time_out "run show interfaces extensive"
+time_out "/opt/vyatta/bin/vplsh -lc ifconfig"

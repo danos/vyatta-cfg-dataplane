@@ -1,0 +1,246 @@
+module vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1:1";
+	prefix vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1;
+
+	import configd-v1 {
+		prefix configd;
+	}
+
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+
+	import vyatta-interfaces-dataplane-v1 {
+		prefix dataplane;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+          Postal: 208 S. Akard Street
+                  Dallas, TX 25202
+          Web: www.att.com";
+
+	description
+		"Copyright (c) 2019, AT&T Intellectual Property.
+          All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+         Deviations for dataplane interfaces on the UfiSpace Apollo NCP1-1 platform";
+
+	revision 2019-09-05 {
+		description "Initial revision of version 1.";
+	}
+
+	deviation /if:interfaces/dataplane:dataplane/dataplane:breakout {
+		description "Due to hardware limitations, breakout of
+			4 subports on this platform requires resources from
+			another interface, such that that interface cannot be
+			used for forwarding and therefore must be
+			reserved. The interface that is reserved is restricted
+			by chip and physical connection limitations on this
+			platform to be:
+			  if port < 20 and port is even => dest_port must be port + 21
+			  if port < 20 and port is odd => dest_port must be port + 19
+			  if port >= 20 and port is even => dest_port must be port - 19
+			  if port >= 20 and port is odd => dest_port must be port - 21";
+		deviate add {
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce0')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce21']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce21 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce1')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce20']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce20 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce2')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce23']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce23 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce3')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce22']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce22 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce4')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce25']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce25 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce5')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce24']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce24 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce6')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce27']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce27 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce7')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce26']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce26 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce8')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce29']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce29 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce9')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce28']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce28 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce10')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce31']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce31 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce11')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce30']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce30 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce12')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce33']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce33 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce13')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce32']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce32 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce14')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce35']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce35 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce15')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce34']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce34 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce16')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce37']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce37 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce17')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce36']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce36 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce18')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce39']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce39 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce19')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce38']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce38 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce20')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce1']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce1 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce21')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce0']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce0 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce22')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce3']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce3 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce23')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce2']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce2 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce24')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce5']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce5 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce25')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce4']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce4 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce26')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce7']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce7 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce27')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce6']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce6 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce28')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce9']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce9 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce29')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce8']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce8 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce30')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce11']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce11 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce31')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce10']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce10 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce32')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce13']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce13 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce33')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce12']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce12 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce34')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce15']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce15 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce35')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce14']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce14 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce36')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce17']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce17 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce37')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce16']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce16 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce38')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce19']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce19 needs to be reserved for breaking out this interface into four interfaces";
+			}
+			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce39')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce18']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
+				error-message "Interface dp0ce18 needs to be reserved for breaking out this interface into four interfaces";
+			}
+		}
+	}
+
+	deviation /if:interfaces/dataplane:dataplane/dataplane:breakout-reserved-for {
+		deviate add {
+			configd:allowed "/opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_allowed-ufi-apollo-ncp1-1.sh $VAR(../@)";
+			must "((not(../dataplane:tagnode = 'dp0ce0')) or (current() = 'dp0ce21')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce1')) or (current() = 'dp0ce20')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce2')) or (current() = 'dp0ce23')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce3')) or (current() = 'dp0ce22')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce4')) or (current() = 'dp0ce25')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce5')) or (current() = 'dp0ce24')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce6')) or (current() = 'dp0ce27')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce7')) or (current() = 'dp0ce26')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce8')) or (current() = 'dp0ce29')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce9')) or (current() = 'dp0ce28')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce10')) or (current() = 'dp0ce31')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce11')) or (current() = 'dp0ce30')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce12')) or (current() = 'dp0ce33')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce13')) or (current() = 'dp0ce32')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce14')) or (current() = 'dp0ce35')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce15')) or (current() = 'dp0ce34')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce16')) or (current() = 'dp0ce37')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce17')) or (current() = 'dp0ce36')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce18')) or (current() = 'dp0ce39')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce19')) or (current() = 'dp0ce38')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce20')) or (current() = 'dp0ce1')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce21')) or (current() = 'dp0ce0')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce22')) or (current() = 'dp0ce3')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce23')) or (current() = 'dp0ce2')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce24')) or (current() = 'dp0ce5')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce25')) or (current() = 'dp0ce4')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce26')) or (current() = 'dp0ce7')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce27')) or (current() = 'dp0ce6')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce28')) or (current() = 'dp0ce9')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce29')) or (current() = 'dp0ce8')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce30')) or (current() = 'dp0ce11')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce31')) or (current() = 'dp0ce10')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce32')) or (current() = 'dp0ce13')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce33')) or (current() = 'dp0ce12')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce34')) or (current() = 'dp0ce15')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce35')) or (current() = 'dp0ce14')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce36')) or (current() = 'dp0ce17')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce37')) or (current() = 'dp0ce16')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce38')) or (current() = 'dp0ce19')) and " +
+				"((not(../dataplane:tagnode = 'dp0ce39')) or (current() = 'dp0ce18'))" {
+				error-message "Invalid reservation target interface";
+			}
+		}
+	}
+}

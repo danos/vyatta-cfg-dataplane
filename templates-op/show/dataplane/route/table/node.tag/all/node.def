@@ -1,0 +1,2 @@
+help: Show dataplane FIB policy table including non-RIB routes
+run: vplane-route.pl --table=$5 --all

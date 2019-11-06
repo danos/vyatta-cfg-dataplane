@@ -63,6 +63,9 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
+	revision 2019-09-05 {
+		description "Support for interface breakout reservation";
+	}
 	revision 2019-05-07 {
 		description "Use single quotes for pattern and configd extension statements where necessary";
 	}
@@ -169,6 +172,10 @@ module vyatta-interfaces-dataplane-v1 {
 
 	feature breakout {
 		description "Interface breakout support";
+	}
+
+	feature breakout-reserved-for {
+		description "Interface reservation for another broken out interface support";
 	}
 
 	typedef dataplane-ifname {
@@ -426,6 +433,31 @@ module vyatta-interfaces-dataplane-v1 {
 				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --action DELETE --breakout $VAR(@)";
 			}
 			configd:get-state "/opt/vyatta/bin/yang-getop-interface dataplane";
+			leaf breakout-reserved-for {
+				if-feature breakout-reserved-for;
+				description "Reserve interface for
+				             break out of another
+				             interface. Due to
+				             hardware limitations, it
+				             may be required to
+				             reserve another interface
+				             to break out an
+				             interface. When an
+				             interface is reserved for
+				             break out of another
+				             interface then it cannot
+				             be used for forwarding.";
+				configd:help "Reserve for breaking out another interface into subports";
+				type dataplane-ifname;
+				must "contains(../tagnode, 'ce')" {
+					error-message "Breakout reservation only supported on 100Gbps (dpXceY) interfaces";
+				}
+				must "not(../breakout)" {
+					error-message "Cannot reserve for breakout and use for breakout at the same time";
+				}
+				configd:update "/opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_update.sh";
+				configd:delete "/opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_delete.sh";
+			}
 		}
 	}
 

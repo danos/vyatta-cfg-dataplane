@@ -1,0 +1,3 @@
+[Platform ufi.s9700-53dx]
+Features=vyatta-interfaces-dataplane-v1:breakout,vyatta-interfaces-dataplane-v1:breakout-reserved-for
+Yang=vyatta-deviation-dataplane-defer-v1.yang,vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1.yang

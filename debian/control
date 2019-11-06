@@ -40,7 +40,8 @@ Depends:
  vyatta-dataplane-cfg-affinity-1,
  vyatta-dataplane-cfg-npf-cfg-2,
  vyatta-dataplane-op-affinity-0,
- vyatta-dataplane-op-nd6-1,
+ vyatta-dataplane-op-nd6-2,
+ vyatta-dataplane-op-route-1,
  ${misc:Depends},
  ${perl:Depends}
 Breaks: vplane-routing (<= 1:10.11.9), vyatta-dataplane (<= 3.4.29)
@@ -53,7 +54,6 @@ Architecture: all
 Depends:
  vplane-config (>= ${source:Version}),
  vyatta-cfg ( >= 0.104.32),
- vyatta-dataplane-cfg-speed-0,
  vyatta-dataplane-cfg-breakout-0,
  vyatta-interfaces (>= 1.46),
  vyatta-op (>= 0.13),
@@ -147,7 +147,11 @@ Description: vyatta iptables bypass extension
 Package: libvyatta-dataplane-perl
 Architecture: all
 Section: contrib/perl
-Depends: libzmq-libzmq3-perl, ${misc:Depends}, ${perl:Depends}
+Depends:
+ libzmq-libzmq3-perl,
+ vyatta-platform-util (>= 2.1),
+ ${misc:Depends},
+ ${perl:Depends}
 Breaks: vplane-config (<< 2.10)
 Replaces: vplane-config(<< 2.10)
 Description: Module for accessing dataplane for status commands.
@@ -259,3 +263,9 @@ Architecture: all
 Depends: ${misc:Depends}, ${yang:Depends}
 Description: vyatta-optical-transport-types-v1 module
  Commands to show dataplane transceiver information
+
+Package: vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: Dataplane interface YANG deviations for Ufi Apollo NCP1-1 platform
+ Deviations to the dataplane interfaces YANG for the Ufi Apollo NCP1-1 platform

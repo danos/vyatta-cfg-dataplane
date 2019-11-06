@@ -1,5 +1,7 @@
 yang/vyatta-interfaces-dataplane-v1.yang usr/share/configd/yang
 yang/vyatta-deviation-dataplane-defer-v1.yang lib/vyatta-platform/yang
+tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_update.sh opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for
+tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_delete.sh opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for
 tmplscripts/interfaces/dataplane/configd_create.d opt/vyatta/share/tmplscripts/interfaces/dataplane
 tmplscripts/interfaces/dataplane/configd_delete.d opt/vyatta/share/tmplscripts/interfaces/dataplane
 tmplscripts/interfaces/dataplane/mac opt/vyatta/share/tmplscripts/interfaces/dataplane

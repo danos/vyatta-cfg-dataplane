@@ -10,28 +10,43 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-use JSON qw( decode_json );
+use JSON qw( decode_json encode_json );
 
 use lib "/opt/vyatta/share/perl5/";
 use Vyatta::Dataplane;
 use Vyatta::Interface;
 
 sub show_nd {
-    my ( $data, $intf ) = @_;
+    my ( $sock, $data, $intf, $filter_addr ) = @_;
     my $format = "%-39s %-17s %-9s %-10s %s\n";
 
-    printf $format, "IPv6 Address", "HW address", "Flags", "State", "Device";
+    printf $format, "IPv6 Address", "HW address", "Flags", "State", "Device"
+      unless defined($intf) && defined($filter_addr);
 
     my @entries = @{ $data->{nd6} };
     foreach my $entry (@entries) {
-        next if ( defined($intf) && $entry->{ifname} ne $intf );
-        printf $format, $entry->{ip}, $entry->{mac}, $entry->{flags},
-          $entry->{state}, $entry->{ifname};
+        next if ( defined($intf)        && $entry->{ifname} ne $intf );
+        next if ( defined($filter_addr) && $entry->{ip} ne $filter_addr );
+
+        if ( !defined($intf) || !defined($filter_addr) ) {
+            printf $format, $entry->{ip}, $entry->{mac}, $entry->{flags},
+              $entry->{state}, $entry->{ifname};
+        } else {
+            printf "%s %s\n", $entry->{ip}, $entry->{ifname};
+            printf "    Flags: %s\n",      $entry->{flags};
+            printf "    State: %s\n",      $entry->{state};
+            printf "    HW Address: %s\n", $entry->{mac};
+            if ( defined( $entry->{platform_state} ) ) {
+                printf "    Platform state:\n";
+                print $sock->format_platform_state( 'ip-neigh',
+                    encode_json($entry) );
+            }
+        }
     }
 }
 
 sub show_nd_all {
-    my ( $data, $intf ) = @_;
+    my ( $sock, $data, $intf, $filter_addr ) = @_;
     my %kernel_nd    = ();
     my $format       = "%-39s %-17s %-18s %-18s %s\n";
     my %kernel_flags = (
@@ -64,7 +79,8 @@ sub show_nd_all {
 
     my @entries = @{ $data->{nd6} };
     foreach my $entry (@entries) {
-        next if ( defined($intf) && $entry->{ifname} ne $intf );
+        next if ( defined($intf)        && $entry->{ifname} ne $intf );
+        next if ( defined($filter_addr) && $entry->{ip} ne $filter_addr );
 
         my $kernel_flag = "";
         if ( exists $kernel_nd{ $entry->{ifname} }{ $entry->{ip} } ) {
@@ -107,12 +123,13 @@ sub show_nd_all {
 
 sub usage {
     print "Usage: $0 [--fabric=N] <CMD>
-$0 [--show-intf=s] <CMD>\n";
+$0 [--show-intf=s] [--addr=s] <CMD>\n";
     exit 1;
 }
 
 my $fabric;
 my $intf;
+my $addr;
 my %show_func = (
     'nd'     => \&show_nd,
     'nd-all' => \&show_nd_all,
@@ -120,15 +137,14 @@ my %show_func = (
 
 GetOptions(
     'fabric=s'    => \$fabric,
-    'show-intf=s' => \$intf
+    'show-intf=s' => \$intf,
+    'addr=s'      => \$addr,
 ) or usage();
 
 if ( defined($intf) ) {
     my $ifn = new Vyatta::Interface($intf);
     $ifn or die "$intf is not a valid dataplane interface\n";
     $fabric = $ifn->dpid();
-    die "$intf is on a dataplane that is not connected or does not exist\n"
-      unless defined($fabric);
 }
 
 my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
@@ -159,7 +175,7 @@ for my $fid (@$dpids) {
         print "vplane $fid -\n"
           unless $fid == 0;
 
-        &$func( $decoded, $intf );
+        &$func( $sock, $decoded, $intf, $addr );
     }
 }
 Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );

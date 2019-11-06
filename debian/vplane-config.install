@@ -5,6 +5,8 @@ lib/Vyatta/CPUset.pm opt/vyatta/share/perl5/Vyatta
 update-pbr-tablemap opt/vyatta/etc/vrf-manager-add-vrf.d
 add-pbr-tablemap opt/vyatta/etc/vrf-manager-add-table.d
 del-pbr-tablemap opt/vyatta/etc/vrf-manager-del-table.d
+scripts/0400-vplane opt/vyatta/share/vyatta-op/functions/tech-support.d
+scripts/nbr-res-cfg.pl opt/vyatta/sbin
 scripts/nbr-res-flush.pl opt/vyatta/bin
 scripts/netplug/gratarp etc/netplug/linkup.d
 scripts/vplane-affinity opt/vyatta/sbin

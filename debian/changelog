@@ -1,3 +1,9 @@
+vplane-config (2.52) unstable; urgency=medium
+ 
+  * DANOS Import master
+
+ -- Vyatta Package Maintainers <DL-vyatta-help@att.com>  Wed, 06 Nov 2019 15:53:22 +0000
+
 vplane-config (2.45+danos2) unstable; urgency=medium
 
   * DANOS Import

@@ -23,10 +23,13 @@ use Config::Tiny;
 use ZMQ::Constants qw(ZMQ_REQ ZMQ_RCVMORE ZMQ_POLLIN ZMQ_LINGER ZMQ_IPV4ONLY);
 use ZMQ::LibZMQ3;
 use JSON qw(decode_json);
+use IPC::Run3 qw( run3 );
 
 my $CTRL_CFG  = "/etc/vyatta/controller.conf";
 my $LOCAL_IPC = "ipc:///var/run/vplane.socket";
 my $TIMEOUT = 10000;    # timeout in milliseconds, so this is 10 sec
+
+my $PLATFORM_STATE_CMD = "/opt/vyatta/bin/vyatta-platform-util";
 
 # Create one ZMQ context when object is loaded
 # -- ok to create multiple instances each with own socketsa
@@ -247,6 +250,22 @@ sub get_vplane_info {
     }
 
     return $local, sort @ids;
+}
+
+sub format_platform_state {
+    # dp not currently used, but may be used in the future if we
+    # needed to support remote dataplanes of different platform type
+    # to the controller
+    my ( $dp, $object, $encoded_json ) = @_;
+    my $platform_state_str;
+    my $platform_state_err;
+
+    run3( [ $PLATFORM_STATE_CMD, '--format-platform-state', $object ],
+            \$encoded_json, \$platform_state_str,
+            \$platform_state_err );
+    print $platform_state_err;
+
+    return $platform_state_str;
 }
 
 1;

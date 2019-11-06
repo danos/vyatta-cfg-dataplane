@@ -10,41 +10,57 @@ use strict;
 use warnings;
 
 use Getopt::Long;
-use JSON qw( decode_json );
+use JSON qw( decode_json encode_json );
 
 use lib "/opt/vyatta/share/perl5/";
 use Vyatta::Dataplane;
 use Vyatta::Misc qw(getInterfaces);
 
-my $CTRL_CFG = "/etc/vyatta/controller.conf";
 my ( $dp_ids, $dp_conns, $local_controller );
 
 sub show_arp {
-    my $intf = shift;
+    my ( $intf, $addr ) = @_;
 
     printf( "%-20s %-10s %-17s %s\n",
-        "IP Address", "Flags", "HW address", "Device" );
+        "IP Address", "Flags", "HW address", "Device" )
+      unless defined($intf) && defined($addr);
 
     for my $dp_id ( @{$dp_ids} ) {
         my $sock = ${$dp_conns}[$dp_id];
 
         next unless $sock;
 
-        my $response = $sock->execute('arp');
+        if ( !defined($intf) ) {
+            $intf = "";
+        }
+        my $response = $sock->execute("arp show $intf");
         next unless defined($response);
         my $decoded = decode_json($response);
         my @entries = @{ $decoded->{arp} };
         foreach my $entry (@entries) {
+            next if defined($addr) && $addr ne $entry->{ip};
+
             my $mac = sprintf "%02s:%02s:%02s:%02s:%02s:%02s",
               split /\:/, $entry->{mac};
-            printf "%-20s %-10s %-17s %s\n", $entry->{ip},
-              $entry->{flags}, $mac, $entry->{ifname};
+            if ( !defined($intf) || !defined($addr) ) {
+                printf "%-20s %-10s %-17s %s\n", $entry->{ip},
+                  $entry->{flags}, $mac, $entry->{ifname};
+            } else {
+                printf "%s %s\n", $entry->{ip}, $entry->{ifname};
+                printf "    Flags: %s\n",      $entry->{flags};
+                printf "    HW Address: %s\n", $mac;
+                if ( defined( $entry->{platform_state} ) ) {
+                    printf "    Platform state:\n";
+                    print $sock->format_platform_state( 'ip-neigh',
+                        encode_json($entry) );
+                }
+            }
         }
     }
 }
 
 sub show_arp_all {
-    my $intf = shift;
+    my ( $intf, $addr ) = @_;
     my %kernel_arp = ();
     my $format     = "%-18s %-17s %-10s %-10s %s\n";
 
@@ -64,7 +80,7 @@ sub show_arp_all {
     foreach my $dp_id ( @{$dp_ids} ) {
         my $sock = ${$dp_conns}[$dp_id];
         if ($sock) {
-            if (!defined($intf)) {
+            if ( !defined($intf) ) {
                 $intf = "";
             }
             my $response = $sock->execute("arp show $intf");
@@ -73,6 +89,7 @@ sub show_arp_all {
             my $decoded = decode_json($response);
             my @entries = @{ $decoded->{arp} };
             foreach my $entry (@entries) {
+                next if defined($addr) && $addr ne $entry->{ip};
 
                 my $mac = sprintf "%02s:%02s:%02s:%02s:%02s:%02s",
                   split /\:/, $entry->{mac};
@@ -107,12 +124,13 @@ sub show_arp_all {
 sub usage {
     print "Usage: $0 [--fabric=N] <CMD>
 $0 [--show-all] <CMD>
-$0 [--show-intf=s] <CMD>\n";
+$0 [--show-intf=s] [--addr=s] <CMD>\n";
     exit 1;
 }
 
 my $fabric;
 my $intf;
+my $addr;
 my %show_func = (
     'arp'     => \&show_arp,
     'arp-all' => \&show_arp_all,
@@ -120,11 +138,12 @@ my %show_func = (
 
 GetOptions(
     'fabric=s'    => \$fabric,
-    'show-intf=s' => \$intf
+    'show-intf=s' => \$intf,
+    'addr=s'      => \$addr,
 ) or usage();
 
-if (defined($intf)) {
-   die "interface $intf does not exist on system\n"
+if ( defined($intf) ) {
+    die "interface $intf does not exist on system\n"
       unless grep { $intf eq $_ } getInterfaces();
 }
 
@@ -135,6 +154,6 @@ my $decoded;
 foreach my $arg (@ARGV) {
     my $func = $show_func{$arg};
 
-    &$func($intf);
+    &$func( $intf, $addr );
 }
 Vyatta::Dataplane::close_fabric_conns( $dp_ids, $dp_conns );

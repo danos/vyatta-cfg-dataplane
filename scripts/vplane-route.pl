@@ -11,7 +11,7 @@ use warnings;
 use Readonly;
 
 use Getopt::Long;
-use JSON qw( decode_json );
+use JSON qw( decode_json encode_json );
 use Data::Validate::IP qw(is_ipv4 is_ipv6);
 use IPC::System::Simple qw(capture);
 
@@ -19,8 +19,10 @@ use lib "/opt/vyatta/share/perl5/";
 use Module::Load::Conditional qw(can_load);
 use Vyatta::Dataplane;
 
-my $vrf_available = can_load( modules => {"Vyatta::VrfManager"=>undef},
-			      autoload => "true" );
+my $vrf_available = can_load(
+    modules  => { "Vyatta::VrfManager" => undef },
+    autoload => "true"
+);
 
 my $route_segment_cnt = 1000;
 
@@ -80,7 +82,7 @@ sub show_labels {
 }
 
 sub show_destination {
-    my ( $entry, $sep ) = @_;
+    my ( $sock, $entry, $sep, $detail_level ) = @_;
 
     if ( $entry->{state} eq 'gateway' ) {
         printf "%svia %s", $sep, $entry->{via};
@@ -93,37 +95,63 @@ sub show_destination {
 
     show_labels( $entry->{labels} ) if $entry->{labels};
 
-    print " dead"    if $entry->{dead};
-    print " dynamic" if $entry->{dynamic};
-    print " static"  if $entry->{static};
+    print " dead"                       if $entry->{dead};
+    print " dynamic"                    if $entry->{dynamic};
+    print " static"                     if $entry->{static};
+    print " created-by-neighbour-entry" if $entry->{neigh_created};
+
+    if ( $detail_level >= 1 ) {
+        print " linked-to-neighbour" if $entry->{neigh_present};
+        if ( defined( $entry->{platform_state} ) ) {
+            print "\n\t  platform state:\n";
+            my $pd_state =
+              $sock->format_platform_state( 'route-nh', encode_json($entry) );
+
+            # remove newline since this will be added by the separator
+            chomp $pd_state;
+            print $pd_state;
+        }
+    }
 }
 
 sub show_nexthop {
-    my ( $prefix, $nexthop ) = @_;
+    my ( $sock, $prefix, $nexthop, $detail_level ) = @_;
 
     print $prefix;
 
-    if ( ref($nexthop) eq 'ARRAY' ) {
-        my $sep = ( scalar @$nexthop > 1 ) ? "\n\tnexthop " : " ";
-        foreach my $entry (@$nexthop) {
-            show_destination( $entry, $sep );
-        }
-    } else {
-        show_destination( $nexthop, " " );
+    $nexthop = [$nexthop] if ref($nexthop) ne 'ARRAY';
+
+    my $sep =
+      ( scalar @$nexthop > 1 || @$nexthop[0]->{platform_state} )
+      ? "\n\tnexthop "
+      : " ";
+    foreach my $entry (@$nexthop) {
+        show_destination( $sock, $entry, $sep, $detail_level );
     }
+
     print "\n";
 }
 
 sub show_route_lookup {
-    my ( $af_cmd, $decoded ) = @_;
+    my ( $sock, $af_cmd, $decoded ) = @_;
     my $result = $decoded->{ $af_cmd . '_lookup' };
 
     foreach my $rt (@$result) {
-        my $addr    = $rt->{address};
+        my $addr = defined( $rt->{prefix} ) ? $rt->{prefix} : $rt->{address};
         my $nexthop = $rt->{next_hop};
 
+        if ( defined( $rt->{nhg_platform_state} ) ) {
+            my $pd_state =
+              $sock->format_platform_state( 'route-nhg', encode_json($rt) );
+
+            # remove newline since this will be added by the separator
+            # in show_nexthop
+            chomp $pd_state;
+            $addr .= "\n\tplatform state:\n" . $pd_state;
+        }
+
         if ($nexthop) {
-            show_nexthop( $addr, $nexthop );
+            show_nexthop( $sock, $addr, $nexthop, 1 );
         } else {
             warn "no route to $addr\n" unless $nexthop;
         }
@@ -131,17 +159,17 @@ sub show_route_lookup {
 }
 
 sub show_route {
-    my ( $af_cmd, $decoded ) = @_;
+    my ( $sock, $af_cmd, $decoded ) = @_;
     my $result = $decoded->{ $af_cmd . '_show' };
-    my $addr = 0;
-    my $depth = 0;
+    my $addr   = 0;
+    my $depth  = 0;
 
     foreach my $route (@$result) {
         if ( $route->{prefix} eq 'more' ) {
             return ( 'more', $addr, $depth );
         }
-        show_nexthop( $route->{prefix}, $route->{next_hop} );
-        ( $addr, $depth) = split( '/', $route->{prefix} );
+        show_nexthop( $sock, $route->{prefix}, $route->{next_hop}, 0 );
+        ( $addr, $depth ) = split( '/', $route->{prefix} );
     }
 
     return ( 'end', $addr, $depth );
@@ -220,7 +248,7 @@ sub show_fec {
 }
 
 sub show_mpls_route {
-    my ( $route, $ref ) = @_;
+    my ( $sock, $route, $ref ) = @_;
 
     my $next_hops = $route->{next_hop};
     ( my $fec, my $local ) = get_fec( $route, $ref );
@@ -235,7 +263,7 @@ sub show_mpls_route {
         my $labels = $nexthop->{labels};
         if ( $nexthop->{state} eq 'gateway' ) {
             print "\n\tnexthop";
-            show_destination( $nexthop, " " );
+            show_destination( $sock, $nexthop, " ", 0 );
         } else {
             show_labels($labels) if $labels;
         }
@@ -244,7 +272,7 @@ sub show_mpls_route {
 }
 
 sub show_label_table {
-    my ( $decoded, $withprefix, $inlabel ) = @_;
+    my ( $sock, $decoded, $withprefix, $inlabel ) = @_;
     my $tables = $decoded->{mpls_tables};
 
     my $ref = label_table_fec_hash($withprefix);
@@ -254,9 +282,9 @@ sub show_label_table {
         print "Label Space: $table->{lblspc}\n";
         foreach my $route ( sort { $a->{address} <=> $b->{address} } @$route ) {
             if ( defined($inlabel) && $route->{address} ne $inlabel ) {
-              next;
+                next;
             }
-            show_mpls_route( $route, $ref );
+            show_mpls_route( $sock, $route, $ref );
         }
     }
 }
@@ -269,46 +297,48 @@ sub function_exists {
 }
 
 my ( $fabric, $table, $v6, $summary, $ip, $routing_instance_name );
-my ( $labeltable, $withprefix, $inlabel );
+my ( $labeltable, $withprefix, $inlabel, $all );
 
 sub usage {
 
     my $ri_opt_str = " ";
 
-    if ( $vrf_available ) {
-	$ri_opt_str = " [--routing-instance=<NAME>] ";
+    if ($vrf_available) {
+        $ri_opt_str = " [--routing-instance=<NAME>] ";
     }
-    print "Usage: $0 [--fabric=N]".$ri_opt_str."[table=N] [--v6] \n";
-    print "       $0 --summary".$ri_opt_str."[--v6]\n";
-    print "       $0 --lookup <ADDR>".$ri_opt_str."[--v6]\n";
+    print "Usage: $0 [--fabric=N]" . $ri_opt_str . "[table=N] [--v6] [--all] \n";
+    print "       $0 --summary" . $ri_opt_str . "[--v6]\n";
+    print "       $0 --lookup <ADDR>" . $ri_opt_str . "[--v6]\n";
     print "       $0 --label-table [--with-prefix]\n";
     print "       $0 --in-label <NUM>\n";
 }
 
-if ( $vrf_available ) {
+if ($vrf_available) {
     GetOptions(
-	"fabric=s" => \$fabric,
-	"routing-instance=s"  => \$routing_instance_name,
-	"table=s"  => \$table,
-	"v6"       => \$v6,
-	"summary"  => \$summary,
-	"lookup=s" => \$ip,
-	"label-table" => \$labeltable,
-	"with-prefix" => \$withprefix,
-	"in-label=s"  => \$inlabel,
-	) or usage();
+        "fabric=s"           => \$fabric,
+        "routing-instance=s" => \$routing_instance_name,
+        "table=s"            => \$table,
+        "v6"                 => \$v6,
+        "summary"            => \$summary,
+        "lookup=s"           => \$ip,
+        "label-table"        => \$labeltable,
+        "with-prefix"        => \$withprefix,
+        "in-label=s"         => \$inlabel,
+        "all"                => \$all,
+    ) or usage();
 
 } else {
     GetOptions(
-	"fabric=s" => \$fabric,
-	"table=s"  => \$table,
-	"v6"       => \$v6,
-	"summary"  => \$summary,
-	"lookup=s" => \$ip,
-	"label-table" => \$labeltable,
-	"with-prefix" => \$withprefix,
-	"in-label=s"  => \$inlabel,
-	) or usage();
+        "fabric=s"    => \$fabric,
+        "table=s"     => \$table,
+        "v6"          => \$v6,
+        "summary"     => \$summary,
+        "lookup=s"    => \$ip,
+        "label-table" => \$labeltable,
+        "with-prefix" => \$withprefix,
+        "in-label=s"  => \$inlabel,
+        "all"         => \$all,
+    ) or usage();
 }
 
 my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
@@ -322,8 +352,9 @@ my $cmd = $labeltable ? 'mpls show tables' : $af_cmd;
 
 if ( $vrf_available and $routing_instance_name ) {
     my $routing_instance_id =
-	Vyatta::VrfManager::get_vrf_id($routing_instance_name);
-    # dummy assign to avoid '..VRFID_INVALID used once: ..' warning 
+      Vyatta::VrfManager::get_vrf_id($routing_instance_name);
+
+    # dummy assign to avoid '..VRFID_INVALID used once: ..' warning
     $Vyatta::VrfManager::VRFID_INVALID = $Vyatta::VrfManager::VRFID_INVALID;
     if ( $routing_instance_id == $Vyatta::VrfManager::VRFID_INVALID ) {
         die "$routing_instance_name is not a valid routing-instance\n";
@@ -331,20 +362,30 @@ if ( $vrf_available and $routing_instance_name ) {
     $cmd .= " vrf_id $routing_instance_id";
 }
 
-if ( $table and $vrf_available and $routing_instance_name and
-     my $get_vrf_name_map = function_exists("Vyatta::VrfManager::get_vrf_name_map")) {
+if (    $table
+    and $vrf_available
+    and $routing_instance_name
+    and my $get_vrf_name_map =
+    function_exists("Vyatta::VrfManager::get_vrf_name_map") )
+{
     my $name_hash = &$get_vrf_name_map();
 
-    die "Unknown VRF and table $routing_instance_name $table" if !defined($name_hash->{$routing_instance_name}) || !defined($name_hash->{$routing_instance_name}{$table});
+    die "Unknown VRF and table $routing_instance_name $table"
+      if !defined( $name_hash->{$routing_instance_name} )
+      || !defined( $name_hash->{$routing_instance_name}{$table} );
 
     $cmd .= " table " . $name_hash->{$routing_instance_name}{$table};
 } else {
     $cmd .= " table $table" if $table;
 }
 
-$cmd .= " summary"      if $summary;
+$cmd .= " summary" if $summary;
+
+$cmd .= " all" if $all;
 
 if ($ip) {
+    ( my $addr, my $depth ) = split( '/', $ip );
+    $ip = $addr if defined $addr;
     if ($v6) {
         is_ipv6($ip) or die "$ip is not a valid IPv6 address\n";
     } else {
@@ -352,15 +393,16 @@ if ($ip) {
     }
 
     $cmd .= " lookup $ip";
+    $cmd .= " $depth" if defined $depth;
 }
 
-if (!$table && !$summary && !$ip) {
-	$cmd .= " show $route_segment_cnt";
+if ( !$table && !$summary && !$ip ) {
+    $cmd .= " show $route_segment_cnt";
 }
 
 for my $fid (@$dpids) {
-    my $sock = ${$dpsocks}[$fid];
-    my $ret = 'end';
+    my $sock    = ${$dpsocks}[$fid];
+    my $ret     = 'end';
     my $cmd_tmp = $cmd;
     die "Can not connect to dataplane $fid\n"
       unless defined($sock);
@@ -377,14 +419,15 @@ for my $fid (@$dpids) {
         if ($summary) {
             show_route_summary( $af_cmd, $decoded );
         } elsif ($labeltable) {
-            show_label_table( $decoded, $withprefix, $inlabel );
+            show_label_table( $sock, $decoded, $withprefix, $inlabel );
         } elsif ($ip) {
-            show_route_lookup( $af_cmd, $decoded );
+            show_route_lookup( $sock, $af_cmd, $decoded );
         } else {
-            ( $ret, my $addr, my $depth ) = show_route( $af_cmd, $decoded );
+            ( $ret, my $addr, my $depth ) =
+              show_route( $sock, $af_cmd, $decoded );
             $cmd = " $af_cmd show get-next $addr $depth $route_segment_cnt";
         }
-    } while ($ret eq 'more');
+    } while ( $ret eq 'more' );
 
     $cmd = $cmd_tmp;
 }

@@ -1,0 +1,3 @@
+help: Show IPv6 Neighbor Discovery (ND) information for a specific address
+allowed: echo -n '<X:X::X:X>'
+run: vplane-nd.pl --show-intf "$4" --addr "$5" nd
