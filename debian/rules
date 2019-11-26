@@ -23,10 +23,12 @@ override_dh_auto_configure: setup.py
 
 override_dh_auto_build: setup.py
 	make
+	make -C lib/c++
 	dh_auto_build
 
 override_dh_auto_install:
 	make install DESTDIR=$(CURDIR)/debian/tmp AM_UPDATE_INFO_DIR=no
+	make -C lib/c++ install DESTDIR=$(CURDIR)/debian/tmp
 	dh_auto_install
 
 override_dh_auto_test:

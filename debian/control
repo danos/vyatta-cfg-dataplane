@@ -10,12 +10,20 @@ Build-Depends:
  dh-autoreconf,
  dh-python,
  dh-yang,
+ dh-exec,
  iptables-dev (>= 1.4.21-2),
  libtool,
  python3-all,
  python3-setuptools,
  python3-zmq,
-Standards-Version: 3.9.6
+ libprotobuf-dev,
+ libjansson-dev,
+ libzmq3-dev,
+ libvyatta-dataplane-proto-dev,
+ libvyatta-controller-proto-dev,
+ libb64-dev,
+ pkg-config,
+Standards-Version: 3.9.8
 X-Python3-Version: >= 3.3
 
 Package: vplane-config
@@ -294,3 +302,35 @@ Depends:
 Description: vyatta-interfaces-dataplane-speed-deviations-siad-yang package
  Deviations to the dataplane interfaces YANG for interfaces within
  PM25 interface module on SIAD platform.
+
+Package: libvplaned-client1
+Architecture: any
+Depends:
+ libprotobuf17,
+ libjansson4,
+ libzmq5,
+ libvyatta-dataplane-proto1,
+ libvyatta-controller-proto1,
+ libb64-0d,
+ ${shlibs:Depends},
+ ${misc:Depends}
+Multi-Arch: same
+Description: Provides C++ language bindings for vplaned API.
+ C++ client bindings for vplaned.
+
+Package: libvplaned-client-dev
+Architecture: any
+Section: contrib/libdevel
+Depends:
+ libprotobuf-dev,
+ libjansson-dev,
+ libzmq3-dev,
+ libvyatta-dataplane-proto-dev,
+ libvyatta-controller-proto-dev,
+ libb64-dev,
+ ${shlibs:Depends},
+ ${misc:Depends}
+Multi-Arch: same
+Description: Provides C++ language headers for vplaned API.
+ C++ client headers for vplaned.
+
