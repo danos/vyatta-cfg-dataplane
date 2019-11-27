@@ -1,0 +1,3 @@
+yang/vyatta-security-mac-limit-v1.yang usr/share/configd/yang/
+scripts/vyatta-mac-limit /opt/vyatta/sbin/
+platform/vyatta-mac-limit.platform lib/vyatta-platform/platforms

@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2020, AT&T Intellectual Property.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+from argparse import ArgumentParser
+from vplaned import Controller
+from vyatta import configd
+from vyatta.proto import MacLimitConfig_pb2
+
+arg_parser = ArgumentParser()
+arg_parser.add_argument('--cmd', action='store', required=False)
+arg_parser.add_argument('--dev', action='store', required=False)
+arg_parser.add_argument('--vlan', action='store', required=False)
+arg_parser.add_argument('--profile', action='store', required=False)
+arg_parser.add_argument('--action', action='store', required=False)
+arg_parser.add_argument('--update', action='store', required=False)
+
+args = arg_parser.parse_args()
+
+def config_profile(action, dev, vlan, profile, update):
+    cfg = configd.Client()
+    value = 0
+
+    if action == 'SET':
+        action_id = MacLimitConfig_pb2.MacLimitConfig.SET
+    else:
+        action_id = MacLimitConfig_pb2.MacLimitConfig.DELETE
+
+    if dev is None:
+        if action == 'SET' and update == "limit":
+            tree = cfg.tree_get_dict(
+                "security mac-limit profile {} {}".format(profile, update))
+            value = tree[update]
+
+        cfg = MacLimitConfig_pb2.MacLimitConfig()
+        cfg.profile.action = action_id
+        cfg.profile.profile = profile
+        cfg.profile.limit = value
+        key = "mac-limit profile {} {}".format(profile,update)
+
+    else:
+        cfg = MacLimitConfig_pb2.MacLimitConfig()
+        cfg.ifvlan.action = action_id
+        cfg.ifvlan.profile = profile
+        cfg.ifvlan.vlan = int(vlan)
+        cfg.ifvlan.ifname = dev
+        key="mac-limit profile {} {}".format(dev, vlan)
+
+    controller.store(key, cfg, "ALL", action, cmd_name="vyatta:maclimit")
+
+with Controller() as controller:
+     if args.cmd == "profile":
+          config_profile(args.action, args.dev, args.vlan, args.profile,
+                         args.update)
+     else:
+          print("invalid command: {}".format(args.cmd))

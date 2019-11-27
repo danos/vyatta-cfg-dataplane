@@ -68,6 +68,7 @@ Depends:
  vyatta-update-vifs,
  vyatta-dataplane-op-ifconfig-1,
  vyatta-interfaces-switch-v1-yang,
+ python3,
  ${misc:Depends},
  ${yang:Depends}
 Description: vyatta interfaces dataplane yang package
@@ -229,6 +230,13 @@ Depends: python3, vyatta-dataplane-cfg-storm-ctl-3, ${misc:Depends},
 Description: vyatta storm control
  YANG module for configuring traffic storm control
 
+Package: vyatta-security-mac-limit-v1-yang
+Architecture: all
+Depends: python3, vyatta-dataplane-cfg-pb-vyatta:maclimit-0, ${misc:Depends},
+         ${yang:Depends}
+Description: vyatta MAC limiting
+ YANG module for configuring MAC limiting
+
 Package: vyatta-op-show-interfaces-dataplane-v1-yang
 Architecture: all
 Depends: ${misc:Depends}, ${yang:Depends}, vplane-config, vyatta-interfaces-base
@@ -342,3 +350,11 @@ Depends: golang-github-danos-vyatta-dataplane-protobuf-dev,
  ${misc:Depends}
 Description: Provides Go language bindings for the vplaned client API.
  Go bindings for the vplaned client API.
+
+Package: vyatta-interfaces-dataplane-mac-limit-v1-yang
+Architecture: all
+Depends:
+ ${misc:Depends}, ${yang:Depends}, python3
+Description: vyatta-interfaces-dataplane-mac-limit-v1 yang package
+ MAC Address limit configuration on dataplane interfaces
+
