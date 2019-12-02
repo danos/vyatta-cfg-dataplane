@@ -71,6 +71,9 @@ module vyatta-security-storm-control-v1 {
 
 		 YANG module and scripts for Vyatta storm control";
 
+	revision 2019-12-02 {
+		description "Move per-interface container to grouping";
+	}
 	revision 2019-05-17 {
 		description "Add configd help text for storm-control";
 	}
@@ -277,7 +280,7 @@ module vyatta-security-storm-control-v1 {
 		}
 	}
 
-	augment /if:interfaces/interfaces-dataplane:dataplane {
+	grouping storm-control-intf-cfg {
 		container storm-control {
 			description "Traffic storm control parameters on this interface";
 			configd:help "Traffic storm control parameters on this interface";
@@ -286,42 +289,52 @@ module vyatta-security-storm-control-v1 {
 				description "Storm control profile name";
 				configd:help "Storm control profile name";
 				type leafref {
-					path "/security:security/storm-control/profile/profile-name";
+					path "/security:security/vyatta-security-storm-control-v1:storm-control/vyatta-security-storm-control-v1:profile/vyatta-security-storm-control-v1:profile-name";
 				}
 				configd:update "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action SET --profile $VAR(@)";
 				configd:delete "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action DELETE --profile $VAR(@)";
 			}
+		}
+	}
 
-			list vlan {
-				description "Storm control for traffic on specified vlan";
-				configd:help "Storm control for traffic on specified vlan";
-				configd:end "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action UPDATE_VLANS";
-				key vlan-id;
+	grouping storm-control-intf-cfg-vlan {
+		list vlan {
+			description "Storm control for traffic on specified vlan";
+			configd:help "Storm control for traffic on specified vlan";
+			configd:end "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../@) --action UPDATE_VLANS";
+			key vlan-id;
 
-				must "not(../profile)" {
-					error-message "Storm control cannot be enabled at interface and vlan levels at the same time";
+			must "not(../profile)" {
+				error-message "Storm control cannot be enabled at interface and vlan levels at the same time";
+			}
+
+			leaf vlan-id {
+				must "../../../dp-sw:switch-group/dp-sw:port-parameters/dp-sw:vlan-parameters/dp-sw:primary-vlan-id = current() or " +
+				     "../../../dp-sw:switch-group/dp-sw:port-parameters/dp-sw:vlan-parameters/dp-sw:vlans[. = current()] or " +
+				     "/if:interfaces/sw:switch[sw:name = current()/../../../dp-sw:switch-group/dp-sw:switch]/sw:default-port-parameters/sw:vlan-parameters/sw:primary-vlan-id = current() or " +
+				     "/if:interfaces/sw:switch[sw:name = current()/../../../dp-sw:switch-group/dp-sw:switch]/sw:default-port-parameters/sw:vlan-parameters/sw:vlans[. = current()]" {
+					error-message "Interface is not a member of the specified VLAN";
 				}
+				type types:vlan;
+			}
 
-				leaf vlan-id {
-					must "../../../dp-sw:switch-group/dp-sw:port-parameters/dp-sw:vlan-parameters/dp-sw:primary-vlan-id = current() or " +
-					     "../../../dp-sw:switch-group/dp-sw:port-parameters/dp-sw:vlan-parameters/dp-sw:vlans[. = current()] or " +
-					     "/if:interfaces/sw:switch[sw:name = current()/../../../dp-sw:switch-group/dp-sw:switch]/sw:default-port-parameters/sw:vlan-parameters/sw:primary-vlan-id = current() or " +
-					     "/if:interfaces/sw:switch[sw:name = current()/../../../dp-sw:switch-group/dp-sw:switch]/sw:default-port-parameters/sw:vlan-parameters/sw:vlans[. = current()]" {
-						error-message "Interface is not a member of the specified VLAN";
-					}
-					type types:vlan;
-				}
-
-				leaf profile {
-					description "Storm control profile for specified vlan";
-					configd:help "Storm control profile for specified vlan";
-					mandatory true;
-					type leafref {
-						path "/security:security/storm-control/profile/profile-name";
-					}
+			leaf profile {
+				description "Storm control profile for specified vlan";
+				configd:help "Storm control profile for specified vlan";
+				mandatory true;
+				type leafref {
+					path "/security:security/vyatta-security-storm-control-v1:storm-control/vyatta-security-storm-control-v1:profile/vyatta-security-storm-control-v1:profile-name";
 				}
 			}
 		}
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane {
+		uses storm-control-intf-cfg;
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane/storm-control {
+		uses storm-control-intf-cfg-vlan;
 	}
 
 	augment /service:service/service-snmp:snmp/service-snmp:notification {
