@@ -334,3 +334,12 @@ Multi-Arch: same
 Description: Provides C++ language headers for vplaned API.
  C++ client headers for vplaned.
 
+Package: golang-github-danos-vyatta-cfg-dataplane-lib-go-dev
+Architecture: all
+Depends: golang-github-danos-vyatta-dataplane-protobuf-dev,
+ golang-github-danos-vyatta-controller-protobuf-dev,
+ golang-github-zeromq-goczmq-dev,
+ golang-goprotobuf-dev,
+ ${misc:Depends}
+Description: Provides Go language bindings for the vplaned client API.
+ Go bindings for the vplaned client API.
