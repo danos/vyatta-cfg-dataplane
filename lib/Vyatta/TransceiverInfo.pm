@@ -49,8 +49,8 @@ sub get_transceiver_info {
         my $interface = $decoded->{'interfaces'}[0];
 
         my $xcvr_info = $interface->{'xcvr_info'};
-        my $identifier = $xcvr_info->{'identifier'};
         next unless defined $xcvr_info;
+        my $identifier = $xcvr_info->{'identifier'};
         $params{'form-factor'}         = $xcvr_info->{'identifier'};
         $params{'connector-type'}      = $xcvr_info->{'connector'};
         $params{'ethernet-pmd'}        = $xcvr_info->{'xcvr_class'};
