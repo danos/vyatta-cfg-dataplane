@@ -285,3 +285,12 @@ Breaks: vyatta-interfaces-dataplane-v1-yang (<< 2.52)
 Replaces: vyatta-interfaces-dataplane-v1-yang (<< 2.52)
 Description: vyatta-op-monitor-interfaces-dataplane-traffic-v1 module
  Operational mode integration to monitor captured dataplane traffic
+
+Package: vyatta-interfaces-dataplane-speed-deviations-siad-v1-yang
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-interfaces-dataplane-speed-deviations-siad-yang package
+ Deviations to the dataplane interfaces YANG for interfaces within
+ PM25 interface module on SIAD platform.

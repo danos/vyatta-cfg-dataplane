@@ -1,0 +1,123 @@
+module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-dataplane-speed-deviations-siad:1";
+	prefix vyatta-interfaces-dataplane-speed-deviations-siad-v1;
+
+	import vyatta-interfaces-v1 {
+		prefix if;
+	}
+	import vyatta-interfaces-dataplane-v1 {
+		prefix dp;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+		 Dallas, TX 75202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2020, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Link speed restriction for dataplane interfaces that
+		 are part of the same PM25 module.";
+
+	revision 2020-01-07 {
+		description "Due to hardware limitations restrict link speed
+			on SIAD PM25 interfaces.  Interfaces on the same
+			module must all be either 10g or 25g and must not
+			default to auto i.e. speed is configured.  Two modules
+			are present on this platform with the following groups
+			of interfaces:
+			- dp0xe20, do0xe21, dp0xe22, dp0xe23
+			- dp0xe24, dp0xe25, dp0xe26, dp0xe27";
+	}
+
+	deviation /if:interfaces/dp:dataplane/dp:speed {
+		deviate add {
+			// validate group: dp0xe20, do0xe21, dp0xe22, dp0xe23
+			must "((not((../dp:tagnode = 'dp0xe20') or " +
+				"(../dp:tagnode = 'dp0xe21') or " +
+				"(../dp:tagnode = 'dp0xe22') or " +
+				"(../dp:tagnode = 'dp0xe23'))) or " +
+				"(../dp:disable) or " +
+				"(((current() = '10g') or (current() = '25g')) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe20']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe20']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe20']/dp:speed = current())) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe21']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe21']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe21']/dp:speed = current())) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe22']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe22']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe22']/dp:speed = current())) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe23']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:speed = current()))))" {
+				error-message "Same speed (10g or 25g) required for group dp0xe20,dp0xe21,dp0xe22,dp0xe23";
+			}
+			// validate group: dp0xe24, dp0xe25, dp0xe26, dp0xe27
+			must "((not((../dp:tagnode = 'dp0xe24') or " +
+				"(../dp:tagnode = 'dp0xe25') or " +
+				"(../dp:tagnode = 'dp0xe26') or " +
+				"(../dp:tagnode = 'dp0xe27'))) or " +
+				"(../dp:disable) or " +
+				"(((current() = '10g') or (current() = '25g')) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe24']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe24']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe24']/dp:speed = current())) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe25']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe25']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe25']/dp:speed = current())) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe26']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe26']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe26']/dp:speed = current())) " +
+				"and " +
+				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe27']) or " +
+				  "../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:disable or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = current()))))" {
+				error-message "Same speed (10g or 25g) required for group dp0xe24,dp0xe25,dp0xe26,dp0xe27";
+			}
+		}
+	}
+}
