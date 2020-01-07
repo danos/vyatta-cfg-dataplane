@@ -269,3 +269,19 @@ Architecture: all
 Depends: ${misc:Depends}, ${yang:Depends}
 Description: Dataplane interface YANG deviations for Ufi Apollo NCP1-1 platform
  Deviations to the dataplane interfaces YANG for the Ufi Apollo NCP1-1 platform
+
+Package: vyatta-op-monitor-interfaces-dataplane-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends},
+Breaks: vyatta-interfaces-dataplane-v1-yang (<< 2.52)
+Replaces: vyatta-interfaces-dataplane-v1-yang (<< 2.52)
+Description: vyatta-op-monitor-interfaces-dataplane-v1 module
+ Operational mode integration for monitoring dataplane interfaces
+
+Package: vyatta-op-monitor-interfaces-dataplane-traffic-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends},
+Breaks: vyatta-interfaces-dataplane-v1-yang (<< 2.52)
+Replaces: vyatta-interfaces-dataplane-v1-yang (<< 2.52)
+Description: vyatta-op-monitor-interfaces-dataplane-traffic-v1 module
+ Operational mode integration to monitor captured dataplane traffic

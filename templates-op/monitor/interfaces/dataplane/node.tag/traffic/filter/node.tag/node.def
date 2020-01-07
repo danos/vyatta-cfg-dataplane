@@ -1,4 +1,0 @@
-help: Monitor filtered traffic for the specified ethernet interface
-allowed: echo -e '<capture-filter>'
-run: vyatta-tshark.pl --intf $4 --filter "${@:7}"
-privileged: false

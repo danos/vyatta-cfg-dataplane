@@ -1,2 +1,0 @@
-help: Monitor a dataplane interface
-run: bmon -U -b -r 10 -p dp*,!dp*v*,!dp*.*
