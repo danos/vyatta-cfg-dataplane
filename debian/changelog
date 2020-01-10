@@ -1,3 +1,18 @@
+vplane-config (2.53) unstable; urgency=medium
+
+  [ Mike Manning ]
+  * Display uptime/last clear in "show interface dataplane" output
+
+  [ Paul Carson ]
+  * Prevent perl uninitialized value error (Closes: VRVDR-47646)
+
+  [ Robert Shearman ]
+  * yang: factor out per-interface storm-control container to grouping
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Fri, 10 Jan 2020 17:51:42 +0000
+
 vplane-config (2.52) unstable; urgency=medium
  
   * DANOS Import master
