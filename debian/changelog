@@ -1,3 +1,13 @@
+vplane-config (2.54) unstable; urgency=medium
+
+  [ Mark Gillott ]
+  * Convert "monitor interfaces dataplane traffic" to operational YANG
+    (Fixes: VRVDR-49553)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 15 Jan 2020 12:13:28 +0000
+
 vplane-config (2.53) unstable; urgency=medium
 
   [ Mike Manning ]
