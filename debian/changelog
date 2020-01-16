@@ -1,3 +1,13 @@
+vplane-config (2.55) unstable; urgency=medium
+
+  [ Philip Downey ]
+  * Yang deviation for interface link speed on SIAD platform
+    (Fixes: VRVDR-44331)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 16 Jan 2020 09:45:34 +0000
+
 vplane-config (2.54) unstable; urgency=medium
 
   [ Mark Gillott ]
