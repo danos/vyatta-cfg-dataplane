@@ -58,14 +58,43 @@ module vyatta-op-monitor-interfaces-dataplane-traffic-v1 {
 		Defines the 'monitor interfaces dataplane <if> traffic'
 		operational CLI.";
 
+	revision 2020-01-17 {
+		description "Add support for hardware packet capture";
+	}
+
 	revision 2020-01-06 {
 		description "Initial version";
+	}
+
+	feature monitor-platform-interface {
+		description "Support for hardware packet capture";
 	}
 
 	opd:augment /monitor:monitor/monitor-if:interfaces/monitor-if-dp:dataplane/monitor-if-dp:ifname {
 		opd:command traffic {
 			opd:help "Monitor captured traffic on specified dataplane interface";
-			opd:on-enter "vyatta-tshark.pl --intf $4";
+			opd:repeatable true;
+			opd:inherit "monitor traffic options" {
+				opd:on-enter 'vyatta-tshark.pl --intf $4 "${@:6}"';
+			}
+
+			opd:argument options {
+				type enumeration {
+					enum detail {
+						opd:help "Dissect and display details of the captured traffic";
+					}
+					enum unlimited {
+						opd:help "Continuously monitor captured traffic";
+					}
+				}
+			}
+
+			opd:option capture-size {
+				opd:help "The number of bytes to capture from each frame";
+				type uint32 {
+					range 0..262144;
+				}
+			}
 
 			opd:option filter {
 				opd:help "Monitor filtered traffic for the specified dataplane interface";
@@ -73,49 +102,20 @@ module vyatta-op-monitor-interfaces-dataplane-traffic-v1 {
 					opd:pattern-help "<capture-filter>";
 					opd:help "Standard TSHARK packet filter string";
 				}
-				opd:on-enter 'vyatta-tshark.pl --intf $4 --filter "$7"';
 			}
 
-			opd:command detail {
-				opd:help "Monitor detailed traffic for the specified dataplane interface";
-				opd:on-enter 'vyatta-tshark.pl --intf $4 --detail';
-
-				opd:option filter {
-					opd:help "Monitor filtered traffic for the specified dataplane interface";
-					type string {
-						opd:pattern-help "<capture-filter>";
-						opd:help "Standard TSHARK packet filter string";
-					}
-					opd:on-enter 'vyatta-tshark.pl --intf $4 --detail --filter "$8"';
+			opd:option bandwidth {
+				if-feature monitor-platform-interface;
+				opd:help "Backplane bandwidth, in kilobits-per-second, allocated to copied frames";
+				type uint32 {
+					range 20..1000000;
 				}
-
-				opd:command unlimited {
-					opd:help "Monitor detailed traffic for the specified dataplane interface";
-					opd:on-enter 'vyatta-tshark.pl --intf $4 --detail --unlimited';
-
-					opd:option filter {
-						opd:help "Monitor filtered traffic for the specified interface";
-						type string {
-							opd:pattern-help "<capture-filter>";
-							opd:help "Standard TSHARK packet filter string";
-						}
-						opd:on-enter 'vyatta-tshark.pl --intf $4 --detail --unlimited --filter "$9"';
-					}
-				}
+				units "Kbits/sec";
 			}
 
-			opd:command unlimited {
-				opd:help "Monitor traffic for the specified dataplane interface";
-				opd:on-enter 'vyatta-tshark.pl --intf $4 --unlimited';
-
-				opd:option filter {
-					opd:help "Monitor filtered traffic for the specified dataplane interface";
-					type string {
-						opd:pattern-help "<capture-filter>";
-						opd:help "Standard TSHARK packet filter string";
-					}
-					opd:on-enter 'vyatta-tshark.pl --intf $4 --unlimited --filter "$8"';
-				}
+			opd:option software-only {
+				if-feature monitor-platform-interface;
+				opd:help "Turn off hardware packet capture";
 			}
 
 			opd:option save {
@@ -124,7 +124,9 @@ module vyatta-op-monitor-interfaces-dataplane-traffic-v1 {
 					opd:pattern-help "<name>.pcap";
 					opd:help "Save monitored traffic to the specified file";
 				}
-				opd:on-enter 'vyatta-tshark.pl --intf $4 --save "$7"';
+				opd:inherit "" {
+					opd:on-enter 'vyatta-tshark.pl --intf $4 "${@:6}"';
+				}
 
 				opd:option size {
 					opd:help "Save monitored traffic to a file with max size";
@@ -132,7 +134,6 @@ module vyatta-op-monitor-interfaces-dataplane-traffic-v1 {
 						opd:pattern-help "<number>";
 						opd:help "Maximum file size (e.g., 1 = 1 KiB, 1M = 1 MiB)";
 					}
-					opd:on-enter 'vyatta-tshark.pl --intf $4 --save $7 --size $9';
 
 					opd:option files {
 						opd:help "Save monitored traffic to a set of rotated files";
@@ -140,7 +141,6 @@ module vyatta-op-monitor-interfaces-dataplane-traffic-v1 {
 							opd:pattern-help "<number>";
 							opd:help "Number of files to rotate stored traffic through";
 						}
-						opd:on-enter 'vyatta-tshark.pl --intf $4 --save $7 --size $9 --files ${11}';
 					}
 				}
 			}

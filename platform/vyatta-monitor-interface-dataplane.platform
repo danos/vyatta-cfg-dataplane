@@ -1,0 +1,2 @@
+[Platform ufi.s9500-30xs]
+Features=vyatta-op-monitor-interfaces-dataplane-traffic-v1:monitor-platform-interface
