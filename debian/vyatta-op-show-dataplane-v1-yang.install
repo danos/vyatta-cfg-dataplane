@@ -1,1 +1,2 @@
 yang/vyatta-op-show-dataplane-v1.yang usr/share/configd/yang
+scripts/vyatta-op-dataplane-plugin /opt/vyatta/bin/

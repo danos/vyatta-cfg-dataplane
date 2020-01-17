@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Vyatta::Dataplane;
+use JSON;
+
+my ( $dpids, $dpconns ) = Vyatta::Dataplane::setup_fabric_conns();
+
+my $cmd = 'feat-plugin show';
+
+my @dprsp = vplane_exec_cmd( $cmd, $dpids, $dpconns, 1 );
+
+my %root;
+my @plugin_array = ();
+
+$root{'plugins'} = \@plugin_array;
+
+foreach my $rsp (@dprsp) {
+    foreach my $elem ( @{$rsp} ) {
+        my $decoded = decode_json($elem);
+
+        my $plugins = $decoded->{'feature_plugin'};
+
+        foreach my $plugin ( @{ $decoded->{'feature_plugin'} } ) {
+            my %plugin_info;
+            my @pl_regs = ();
+
+            $plugin_info{'name'} = $plugin->{'feature_name'};
+
+            foreach my $feat_reg ( @{ $plugin->{'feature_registrations'} } ) {
+                my %registration;
+
+                $registration{'node_name'}     = $feat_reg->{'node-name'};
+                $registration{'feature_point'} = $feat_reg->{'feature-point'};
+                $registration{'feature_type'}  = $feat_reg->{'feature-type'};
+                $registration{'visit_after'}   = $feat_reg->{'after'};
+                $registration{'visit_before'}  = $feat_reg->{'before'};
+                if ( defined( $feat_reg->{'case-value'} ) ) {
+                    $registration{'case_value'} = $feat_reg->{'case-value'};
+                } else {
+                    $registration{'case_value'} = 0;
+                }
+                push( @pl_regs, \%registration );
+            }
+
+            $plugin_info{'pipeline_registrations'} = \@pl_regs;
+
+            push( @plugin_array, \%plugin_info );
+        }
+    }
+}
+
+my $json = encode_json( \%root );
+print $json;

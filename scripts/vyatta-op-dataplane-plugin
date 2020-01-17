@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Vyatta::Configd;
+use Vyatta::Dataplane;
+use JSON qw( decode_json );
+
+sub feature_plugin_show {
+    my $client = Vyatta::Configd::Client->new();
+    my $tree =
+      $client->tree_get_full_hash('system dataplane plugin-feature-state');
+    my $plugin_found = 0;
+
+    foreach my $plugin ( @{ $tree->{'plugin-feature-state'}->{'plugins'} } ) {
+        $plugin_found = 1;
+        printf "feature: %s\n", $plugin->{'name'};
+        foreach my $registration ( @{ $plugin->{'pipeline_registrations'} } ) {
+            if ( defined $registration->{'node_name'} ) {
+                printf "    pipeline node: $registration->{'node_name'}\n";
+                printf "    feature_point: $registration->{'feature_point'}\n";
+                printf "    feature_type:  $registration->{'feature_type'}\n";
+                if ( $registration->{'feature_type'} eq 'list' ) {
+                    printf
+                      "    visit_before:  $registration->{'visit_before'}\n"
+                      if ( not $registration->{'visit_before'} eq '' );
+                    printf "    visit_after:   $registration->{'visit_after'}\n"
+                      if ( not $registration->{'visit_after'} eq '' );
+                } elsif ( $registration->{'feature_type'} eq 'case' ) {
+                    printf "    case_value:    $registration->{'case_value'}\n";
+                }
+                printf "\n";
+            }
+        }
+    }
+
+    if ( $plugin_found == 0 ) {
+        print "No plugins installed\n";
+    }
+}
+
+feature_plugin_show();
