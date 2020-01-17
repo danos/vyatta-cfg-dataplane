@@ -102,8 +102,9 @@ sub get_transceiver_info {
 
         #Check the diagnostic monitoring type bit 6.
         #If bit not set then don't show the diag info on CLI.
-        if ( $identifier eq 'SFP' || $identifier eq 'SFP+' ||
-             $identifier eq 'SFP28' ) {
+        if ( (index($identifier, 'SFP' ) != -1)  || 
+             (index($identifier, 'SFP+' ) != -1) ||
+             (index($identifier, 'SFP28' ) != -1) ) {
             my $diag_mon_type = $xcvr_info->{'diag_type'};
             if ( not $diag_mon_type & ( 1 << 6 ) ) {
                 last;
