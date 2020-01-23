@@ -1,3 +1,13 @@
+vplane-config (2.56) unstable; urgency=medium
+
+  [ John Southworth ]
+  * C++ bindings for vplaned client
+  * Go bindings for vplaned client
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 23 Jan 2020 16:40:39 +0000
+
 vplane-config (2.55) unstable; urgency=medium
 
   [ Philip Downey ]
