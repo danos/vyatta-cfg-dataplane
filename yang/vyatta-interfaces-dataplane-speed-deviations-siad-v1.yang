@@ -55,10 +55,14 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 		 Link speed restriction for dataplane interfaces that
 		 are part of the same PM25 module.";
 
+	revision 2020-01-28 {
+		description "Relax speed restriction to allow for backwards 
+			compatibility i.e. allow default speed 'auto'";
+	}
 	revision 2020-01-07 {
 		description "Due to hardware limitations restrict link speed
 			on SIAD PM25 interfaces.  Interfaces on the same
-			module must all be either 10g or 25g and must not
+			module must all be either 10g or 25g and should not
 			default to auto i.e. speed is configured.  Two modules
 			are present on this platform with the following groups
 			of interfaces:
@@ -74,23 +78,28 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 				"(../dp:tagnode = 'dp0xe22') or " +
 				"(../dp:tagnode = 'dp0xe23'))) or " +
 				"(../dp:disable) or " +
+				"(current() = 'auto') or " +
 				"(((current() = '10g') or (current() = '25g')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe20']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe20']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe20']/dp:speed = current())) " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe20']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe20']/dp:speed = 'auto')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe21']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe21']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe21']/dp:speed = current())) " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe21']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe21']/dp:speed = 'auto')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe22']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe22']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe22']/dp:speed = current())) " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe22']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe22']/dp:speed = 'auto')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe23']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:speed = current()))))" {
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:speed = 'auto'))))" {
 				error-message "Same speed (10g or 25g) required for group dp0xe20,dp0xe21,dp0xe22,dp0xe23";
 			}
 			// validate group: dp0xe24, dp0xe25, dp0xe26, dp0xe27
@@ -99,23 +108,28 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 				"(../dp:tagnode = 'dp0xe26') or " +
 				"(../dp:tagnode = 'dp0xe27'))) or " +
 				"(../dp:disable) or " +
+				"(current() = 'auto') or " +
 				"(((current() = '10g') or (current() = '25g')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe24']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe24']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe24']/dp:speed = current())) " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe24']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe24']/dp:speed = 'auto')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe25']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe25']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe25']/dp:speed = current())) " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe25']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe25']/dp:speed = 'auto')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe26']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe26']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe26']/dp:speed = current())) " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe26']/dp:speed = current()) or " +
+				 "(../../dp:dataplane[dp:tagnode = 'dp0xe26']/dp:speed = 'auto')) " +
 				"and " +
 				  "(not(../../dp:dataplane[dp:tagnode = 'dp0xe27']) or " +
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:disable or " +
-				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = current()))))" {
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = current()) or " +
+				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = 'auto'))))" {
 				error-message "Same speed (10g or 25g) required for group dp0xe24,dp0xe25,dp0xe26,dp0xe27";
 			}
 		}
