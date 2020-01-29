@@ -63,9 +63,11 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 		description "Due to hardware limitations restrict link speed
 			on SIAD PM25 interfaces.  Interfaces on the same
 			module must all be either 10g or 25g and should not
-			default to auto i.e. speed is configured.  Two modules
-			are present on this platform with the following groups
-			of interfaces:
+			default to auto i.e. speed is configured.  A warning
+			message will be issued when speed is auto but the
+			commit validation will not fail.
+			Two modules are present on this platform with the
+			following groups of interfaces:
 			- dp0xe20, do0xe21, dp0xe22, dp0xe23
 			- dp0xe24, dp0xe25, dp0xe26, dp0xe27";
 	}
@@ -132,6 +134,8 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = 'auto'))))" {
 				error-message "Same speed (10g or 25g) required for group dp0xe24,dp0xe25,dp0xe26,dp0xe27";
 			}
+			// Output a warning message when speed is set to 'auto'
+			configd:validate 'warn-link-speed --name=$VAR(../@) --warn-speed="auto" --set-speed=$VAR(@) --filter="dp(\d+)xe2([0-7])"';
 		}
 	}
 }

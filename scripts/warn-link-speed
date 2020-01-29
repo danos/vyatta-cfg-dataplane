@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+
+# For interface config validation ONLY.
+# Platform specific deviation to either warn or fail setting link speed.
+
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+
+use Getopt::Long;
+
+# This is a "modulino" (http://www.drdobbs.com/scripts-as-modules/184416165)
+exit __PACKAGE__->main()
+  unless caller();
+
+sub main {
+    my ( $ifp_name, $warn_speed, $set_speed, $ifp_filter, $rep_fail );
+
+    GetOptions(
+        "name=s"              => \$ifp_name,
+        "warn-speed=s"        => \$warn_speed,
+        "set-speed=s"         => \$set_speed,
+        "filter=s"            => \$ifp_filter,
+        "report-fail"         => \$rep_fail,
+    ) or usage();
+
+    validate_link_speed( $ifp_name, $warn_speed, $set_speed, $ifp_filter,
+                         $rep_fail )
+        if ( $ifp_name && $warn_speed && $set_speed );
+
+    exit 0;
+}
+
+sub usage {
+    print <<EOF;
+Usage: $0 --name=<interface> --warn-speed=<speed> --set-speed=<speed> --filter=<regexp> [--report-fail]
+EOF
+    exit 1;
+}
+
+# Generate a warning message if the sspeed matches the wspeed and the
+# interface matches with the filter regex.
+# Exit 1 if there is a match and ret_fail is defined i.e. a validation
+# failure is reported.
+# Exit 0 otherwise (no validation failure).
+sub validate_link_speed {
+    my ( $ifname, $wspeed, $sspeed, $filter, $ret_fail ) = @_;
+
+    if ( $wspeed eq $sspeed && defined($filter) && $ifname =~ /$filter/ ) {
+        printf "Speed %s is not supported on port %s\n", $sspeed,  $ifname;
+        exit 1 if (defined($ret_fail));
+    }
+
+    exit 0;
+}
