@@ -1,3 +1,18 @@
+vplane-config (2.57) unstable; urgency=medium
+
+  [ Ramkumar Ganapathysubramanian ]
+  * transceiver: Fix display of transceivers for copper SFPs. VRVDR-48090 Description: 'show interfaces dataplane dp0xe9 phy' displays an error message 'Failed to process returned data: Error: /transceiver-info/physical-channels/channel/0/output-power/:  is not a decimal64  at /opt/vyatta/share/perl5/Vyatta/Configd.pm line 208.' Root Cause: In the script to fecth the eeprom information for the SFP, the check for identifying the SFP identifier was incorrect and hence even for SFP cards which does not support Diagnostic monitoring support it tries to fecth the diagnostinc information and fails. In this case the identifier was 'SFP/SFP+/SFP28' while in the code we try to check for 'SFP' or 'SFP+' or 'SFP28' rather than searching for a substring. Fix: Modified the check such that indentifier in the EEPROM matches the expected SFP correctly.
+
+  [ Paul Atkins ]
+  * Add a new 'show dataplane feature plugin' commands
+
+  [ Mark Gillott ]
+  * Add support for hardware packet captured (Fixes: VRVDR-40983)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 03 Feb 2020 10:39:11 +0000
+
 vplane-config (2.56) unstable; urgency=medium
 
   [ John Southworth ]
