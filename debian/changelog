@@ -1,3 +1,13 @@
+vplane-config (2.58) unstable; urgency=medium
+
+  [ Philip Downey ]
+  * SIAD: Allow speed 'auto' on PM25 interfaces (Fixes: VRVDR-49705)
+  * SIAD: Link speed restriction validation warning message (Fixes: VRVDR-49705)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 04 Feb 2020 12:31:10 +0000
+
 vplane-config (2.57) unstable; urgency=medium
 
   [ Ramkumar Ganapathysubramanian ]
