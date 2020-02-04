@@ -1,3 +1,5 @@
 yang/vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1.yang lib/vyatta-platform/yang
 platform/vyatta-interfaces-dataplane-ufi-apollo-ncp1-1.platform lib/vyatta-platform/platforms
+scripts/breakout-ufi-apollo-ncp1-1 opt/vyatta/sbin
+share/ufi-apollo-ncp1-1.functions opt/vyatta/share/vyatta-cfg-dataplane
 tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_allowed-ufi-apollo-ncp1-1.sh opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for

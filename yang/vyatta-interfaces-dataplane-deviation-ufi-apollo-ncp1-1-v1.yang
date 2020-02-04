@@ -22,7 +22,7 @@ module vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1 {
           Web: www.att.com";
 
 	description
-		"Copyright (c) 2019, AT&T Intellectual Property.
+		"Copyright (c) 2019-2020, AT&T Intellectual Property.
           All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -56,6 +56,13 @@ module vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1 {
 
          Deviations for dataplane interfaces on the UfiSpace Apollo NCP1-1 platform";
 
+	revision 2020-02-11 {
+		description "Specify the breakout-reserved option to
+			vyatta-interfaces.pl when breaking out
+			interfaces on this platform to indicate which
+			interface has been reserved.";
+	}
+
 	revision 2019-09-05 {
 		description "Initial revision of version 1.";
 	}
@@ -72,6 +79,10 @@ module vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1 {
 			  if port < 20 and port is odd => dest_port must be port + 19
 			  if port >= 20 and port is even => dest_port must be port - 19
 			  if port >= 20 and port is odd => dest_port must be port - 21";
+		deviate delete {
+			configd:update "vyatta-interfaces.pl --dev $VAR(../@) --action SET --breakout $VAR(@)";
+			configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --action DELETE --breakout $VAR(@)";
+		}
 		deviate add {
 			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce0')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce21']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
 				error-message "Interface dp0ce21 needs to be reserved for breaking out this interface into four interfaces";
@@ -193,6 +204,8 @@ module vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1 {
 			must "(current() != 4) or ((not(../dataplane:tagnode = 'dp0ce39')) or (/if:interfaces/dataplane:dataplane[dataplane:tagnode = 'dp0ce18']/dataplane:breakout-reserved-for = ../dataplane:tagnode))" {
 				error-message "Interface dp0ce18 needs to be reserved for breaking out this interface into four interfaces";
 			}
+			configd:update "/opt/vyatta/sbin/breakout-ufi-apollo-ncp1-1 $VAR(../@) SET $VAR(@)";
+			configd:delete "/opt/vyatta/sbin/breakout-ufi-apollo-ncp1-1 $VAR(../@) DELETE $VAR(@)";
 		}
 	}
 

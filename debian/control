@@ -63,7 +63,7 @@ Depends:
  vplane-config (>= ${source:Version}),
  vyatta-cfg ( >= 0.104.32),
  vyatta-dataplane-cfg-breakout-0,
- vyatta-interfaces (>= 1.46),
+ vyatta-interfaces (>= 1.83),
  vyatta-op (>= 0.13),
  vyatta-system,
  vyatta-update-vifs,
@@ -274,7 +274,7 @@ Description: vyatta-optical-transport-types-v1 module
 
 Package: vyatta-interfaces-dataplane-deviation-ufi-apollo-ncp1-1-v1-yang
 Architecture: all
-Depends: ${misc:Depends}, ${yang:Depends}
+Depends: vyatta-cfg, ${misc:Depends}, ${yang:Depends}
 Description: Dataplane interface YANG deviations for Ufi Apollo NCP1-1 platform
  Deviations to the dataplane interfaces YANG for the Ufi Apollo NCP1-1 platform
 

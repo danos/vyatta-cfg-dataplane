@@ -1,0 +1,7 @@
+#! /bin/bash
+
+source /opt/vyatta/share/vyatta-cfg-dataplane/ufi-apollo-ncp1-1.functions
+
+port="$1"
+reserved_if=$(reserved_port_for_breakout_port "$port")
+vyatta-interfaces.pl --dev "$port" --action "$2" --breakout "$3" --breakout-reserved "$reserved_if"
