@@ -1,7 +1,7 @@
 #
 # Module: Vyatta::TransceiverInfo.pm
 #
-# Copyright (c) 2018-2019, AT&T Intellectual Property.
+# Copyright (c) 2018-2020, AT&T Intellectual Property.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
@@ -105,7 +105,7 @@ sub get_transceiver_info {
         if ( (index($identifier, 'SFP' ) != -1)  || 
              (index($identifier, 'SFP+' ) != -1) ||
              (index($identifier, 'SFP28' ) != -1) ) {
-            my $diag_mon_type = $xcvr_info->{'diag_type'};
+            my $diag_mon_type = $params{'diagnostic-monitoring-type'};
             if ( not $diag_mon_type & ( 1 << 6 ) ) {
                 last;
             }
