@@ -51,8 +51,9 @@ sub process_rx_stat {
 
     my %dm_hash;
     my $key;
-    $dm_hash{'BPRxBytes'} = 'bytes';
-    $dm_hash{'BPRxPkts'}  = 'packets';
+
+    $dm_hash{'RxBytes'} = 'bytes';
+    $dm_hash{'RxPkts'}  = 'packets';
 
     $key = $dm_hash{$stat};
     if ( defined($key) ) {
@@ -70,8 +71,9 @@ sub process_tx_stat {
 
     my %dm_hash;
     my $key;
-    $dm_hash{'BPTxBytes'} = 'bytes';
-    $dm_hash{'BPTxPkts'}  = 'packets';
+
+    $dm_hash{'TxBytes'} = 'bytes';
+    $dm_hash{'TxPkts'}  = 'packets';
 
     $key = $dm_hash{$stat};
     if ( defined($key) ) {
