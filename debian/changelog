@@ -1,3 +1,12 @@
+vplane-config (2.60) unstable; urgency=medium
+
+  [ ck487r ]
+  * BCM: Update the backplane stats JSON parser
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 18 Feb 2020 15:41:46 +0000
+
 vplane-config (2.59) unstable; urgency=medium
 
   [ Paul Carson ]
