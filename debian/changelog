@@ -1,3 +1,12 @@
+vplane-config (2.59) unstable; urgency=medium
+
+  [ Paul Carson ]
+  * Prevent reference to undefined diag_type
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 18 Feb 2020 15:40:20 +0000
+
 vplane-config (2.58) unstable; urgency=medium
 
   [ Philip Downey ]
