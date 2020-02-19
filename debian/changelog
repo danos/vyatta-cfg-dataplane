@@ -1,3 +1,12 @@
+vplane-config (2.61) unstable; urgency=medium
+
+  [ Robert Shearman ]
+  * transceiver: fix display of transceiver info for QSFPs (Fixes: VRVDR-50027)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 19 Feb 2020 09:30:28 +0000
+
 vplane-config (2.60) unstable; urgency=medium
 
   [ ck487r ]
