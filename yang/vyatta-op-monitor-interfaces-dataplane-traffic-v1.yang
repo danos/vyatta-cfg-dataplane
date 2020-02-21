@@ -92,7 +92,7 @@ module vyatta-op-monitor-interfaces-dataplane-traffic-v1 {
 			opd:option capture-size {
 				opd:help "The number of bytes to capture from each frame";
 				type uint32 {
-					range 0..262144;
+					range 1..262144;
 				}
 			}
 
