@@ -1,2 +1,4 @@
 [Platform ufi.s9500-30xs]
 Features=vyatta-interfaces-dataplane-v1:breakout
+[Platform accton.as5916-54xks]
+Features=vyatta-interfaces-dataplane-v1:breakout

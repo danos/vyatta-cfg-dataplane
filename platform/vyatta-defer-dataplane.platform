@@ -1,2 +1,4 @@
 [Platform ufi.s9500-30xs]
 Yang=vyatta-deviation-dataplane-defer-v1.yang
+[Platform accton.as5916-54xks]
+Yang=vyatta-deviation-dataplane-defer-v1.yang
