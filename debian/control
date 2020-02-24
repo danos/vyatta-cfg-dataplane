@@ -98,6 +98,7 @@ Package: vyatta-op-dataplane-mpls
 Architecture: all
 Depends:
  vyatta-interfaces-dataplane-v1-yang (>=${source:Version}),
+ vyatta-dataplane-op-mpls-1,
  ${misc:Depends},
  ${perl:Depends}
 Description: vyatta dataplane mpls package

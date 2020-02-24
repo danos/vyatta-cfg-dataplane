@@ -249,7 +249,7 @@ sub show_fec {
 }
 
 sub show_mpls_route {
-    my ( $sock, $route, $ref ) = @_;
+    my ( $sock, $route, $ref, $detail_level ) = @_;
 
     my $next_hops = $route->{next_hop};
     ( my $fec, my $local ) = get_fec( $route, $ref );
@@ -260,11 +260,20 @@ sub show_mpls_route {
         printf " (local)";
     }
     show_fec( $route, $fec );
+    if ( defined( $route->{nhg_platform_state} ) ) {
+        my $pd_state =
+            $sock->format_platform_state( 'route-nhg', encode_json($route) );
+
+        # remove newline since this will be added by the separator
+        # in show_nexthop
+        chomp $pd_state;
+        print "\n\tplatform state:\n" . $pd_state;
+    }
     foreach my $nexthop (@$next_hops) {
         my $labels = $nexthop->{labels};
         if ( $nexthop->{state} eq 'gateway' ) {
             print "\n\tnexthop";
-            show_destination( $sock, $nexthop, " ", 0 );
+            show_destination( $sock, $nexthop, " ", $detail_level );
         } else {
             show_labels($labels) if $labels;
         }
@@ -273,7 +282,7 @@ sub show_mpls_route {
 }
 
 sub show_label_table {
-    my ( $sock, $decoded, $withprefix, $inlabel ) = @_;
+    my ( $sock, $decoded, $withprefix, $detail_level ) = @_;
     my $tables = $decoded->{mpls_tables};
 
     my $ref = label_table_fec_hash($withprefix);
@@ -282,10 +291,7 @@ sub show_label_table {
         my $route = $table->{mpls_routes};
         print "Label Space: $table->{lblspc}\n";
         foreach my $route ( sort { $a->{address} <=> $b->{address} } @$route ) {
-            if ( defined($inlabel) && $route->{address} ne $inlabel ) {
-                next;
-            }
-            show_mpls_route( $sock, $route, $ref );
+            show_mpls_route( $sock, $route, $ref, $detail_level );
         }
     }
 }
@@ -348,8 +354,17 @@ die "Dataplane $fabric is not connected or does not exist\n"
 
 my $af_cmd = 'route';
 $af_cmd .= '6' if $v6;
+my $cmd;
 
-my $cmd = $labeltable ? 'mpls show tables' : $af_cmd;
+if ( $labeltable ) {
+    if ( $inlabel) {
+        $cmd = 'mpls show label ' . $inlabel;
+    } else {
+        $cmd = 'mpls show tables';
+    }
+} else {
+    $cmd = $af_cmd;
+}
 
 if ( $vrf_available and $routing_instance_name ) {
     my $routing_instance_id =
@@ -420,7 +435,7 @@ for my $fid (@$dpids) {
         if ($summary) {
             show_route_summary( $af_cmd, $decoded );
         } elsif ($labeltable) {
-            show_label_table( $sock, $decoded, $withprefix, $inlabel );
+            show_label_table( $sock, $decoded, $withprefix, $inlabel ? 1 : 0 );
         } elsif ($ip) {
             show_route_lookup( $sock, $af_cmd, $decoded );
         } else {
