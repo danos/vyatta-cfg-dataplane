@@ -54,6 +54,10 @@ module vyatta-op-show-platform-dataplane-v1 {
 
 		Defines the 'dataplane' level under 'show platform' for operational CLI";
 
+	revision 2020-02-24 {
+		description "Add command for mpls-route";
+	}
+
 	revision 2019-05-13 {
 		description "added commands for features mroute and mroute6";
 	}
@@ -111,6 +115,12 @@ module vyatta-op-show-platform-dataplane-v1 {
 			opd:command mroute6 {
 				opd:help "Show system platform dataplane IPv6 multicast route";
 				opd:on-enter 'vyatta-show-platform-dataplane.py --obj=mroute6';
+
+				uses dataplane-subset;
+			}
+			opd:command mpls-route {
+				opd:help "Show system platform dataplane MPLS route";
+				opd:on-enter 'vyatta-show-platform-dataplane.py --obj=mpls-route';
 
 				uses dataplane-subset;
 			}

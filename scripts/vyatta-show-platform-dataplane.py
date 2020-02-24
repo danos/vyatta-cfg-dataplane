@@ -155,6 +155,25 @@ def print_mroute_subset_data(subset, data):
                 show_mroute_field(field['ifindex'])
                 show_last_mroute_field(field['ifname'])
 
+def print_mpls_route_subset_data(subset, data):
+    header_needed = False;
+
+    for table in data['objects']:
+        if 'lblspc' not in table or 'mpls_routes' not in table:
+            continue
+
+        table_header = "  label space: {}".format(table['lblspc'])
+        header_needed = True
+
+        # MPLS routes aren't guaranteed to be listed in sorted order,
+        # so sort for display to user
+        for route in sorted(table['mpls_routes'], key=lambda route: route['address']):
+            if header_needed:
+                print(table_header)
+                header_needed = False
+            show_route_prefix(route['address'])
+            show_route_nexthops(route['next_hop'])
+
 def print_subset_data(feat, subset, data):
     if feat == 'route':
         print_route_subset_data(subset, data)
@@ -164,11 +183,13 @@ def print_subset_data(feat, subset, data):
         print_mroute_subset_data(subset, data)
     elif feat == 'mroute6':
         print_mroute_subset_data(subset, data)
+    elif feat == 'mpls-route':
+        print_mpls_route_subset_data(subset, data)
 
 
 def main():
     parser = ArgumentParser()
-    parser.add_argument("--obj", choices=['route', 'route6', 'mroute', 'mroute6'])
+    parser.add_argument("--obj", choices=['route', 'route6', 'mroute', 'mroute6', 'mpls-route'])
     parser.add_argument("--subset", choices=['no_resource', 'no_support', 'not_needed', 'partial', 'error'])
 
     args = parser.parse_args()
