@@ -62,7 +62,6 @@ Architecture: all
 Depends:
  vplane-config (>= ${source:Version}),
  vyatta-cfg ( >= 0.104.32),
- vyatta-dataplane-cfg-breakout-0,
  vyatta-interfaces (>= 1.83),
  vyatta-op (>= 0.13),
  vyatta-system,
