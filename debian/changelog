@@ -1,3 +1,14 @@
+vplane-config (2.63) unstable; urgency=medium
+
+  [ Robert Shearman ]
+  * yang: add breakout-reserved interface to cstore for Apollo NCP1-1 platform
+    (Fixes: VRVDR-49850)
+  * debian: remove vyatta-dataplane-cfg-breakout-0 dependency
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Fri, 28 Feb 2020 12:22:25 +0000
+
 vplane-config (2.62) unstable; urgency=medium
 
   [ Mark Gillott ]
