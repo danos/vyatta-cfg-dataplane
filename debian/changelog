@@ -1,3 +1,13 @@
+vplane-config (2.62) unstable; urgency=medium
+
+  [ Mark Gillott ]
+  * Adjust the minimum capture size from 0 to 1 (Fixes: VRVDR-50066)
+  * The software-only keyword is a command, not an option (Fixes: VRVDR-50122)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Fri, 28 Feb 2020 09:12:22 +0000
+
 vplane-config (2.61) unstable; urgency=medium
 
   [ Robert Shearman ]
