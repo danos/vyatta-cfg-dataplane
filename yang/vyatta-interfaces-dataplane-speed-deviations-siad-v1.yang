@@ -55,9 +55,10 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 		 Link speed restriction for dataplane interfaces that
 		 are part of the same PM25 module.";
 
-	revision 2020-01-28 {
-		description "Relax speed restriction to allow for backwards 
-			compatibility i.e. allow default speed 'auto'";
+	revision 2020-03-10 {
+		description "Relax speed restriction to allow for backwards
+			compatibility i.e. allow default speed 'auto'.
+ 			Use custom function for performance improvement.";
 	}
 	revision 2020-01-07 {
 		description "Due to hardware limitations restrict link speed
@@ -102,6 +103,7 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:disable or " +
 				  "(../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:speed = current()) or " +
 				  "(../../dp:dataplane[dp:tagnode = 'dp0xe23']/dp:speed = 'auto'))))" {
+				configd:must "verify-siad-link-speed(20, 23, .)";
 				error-message "Same speed (10g or 25g) required for group dp0xe20,dp0xe21,dp0xe22,dp0xe23";
 			}
 			// validate group: dp0xe24, dp0xe25, dp0xe26, dp0xe27
@@ -132,6 +134,7 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 				  "../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:disable or " +
 				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = current()) or " +
 				  "(../../dp:dataplane[dp:tagnode = 'dp0xe27']/dp:speed = 'auto'))))" {
+				configd:must "verify-siad-link-speed(24, 27, .)";
 				error-message "Same speed (10g or 25g) required for group dp0xe24,dp0xe25,dp0xe26,dp0xe27";
 			}
 			// Output a warning message when speed is set to 'auto'
