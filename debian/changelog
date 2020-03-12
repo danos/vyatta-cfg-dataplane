@@ -1,3 +1,15 @@
+vplane-config (2.64) unstable; urgency=medium
+
+  [ Robert Shearman ]
+  * platform: add support for breakout on AS5916-54XKS platform
+
+  [ William Ivory ]
+  * Reduce time taken for interface breakout validation (Closes: VRVDR-50258)
+
+  [ Srinivas Narayan ]
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 12 Mar 2020 12:33:45 +0000
+
 vplane-config (2.63) unstable; urgency=medium
 
   [ Robert Shearman ]
