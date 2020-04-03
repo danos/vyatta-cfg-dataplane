@@ -1,3 +1,10 @@
+vplane-config (2.65) unstable; urgency=medium
+
+  [ John Southworth ]
+  * vplaned client go library license information
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Fri, 03 Apr 2020 11:58:01 +0100
+
 vplane-config (2.64) unstable; urgency=medium
 
   [ Robert Shearman ]
