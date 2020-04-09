@@ -99,6 +99,7 @@ sub show_destination {
     print " dynamic"                    if $entry->{dynamic};
     print " static"                     if $entry->{static};
     print " created-by-neighbour-entry" if $entry->{neigh_created};
+    print " backup"                     if $entry->{backup};
 
     if ( $detail_level >= 1 ) {
         print " linked-to-neighbour" if $entry->{neigh_present};
