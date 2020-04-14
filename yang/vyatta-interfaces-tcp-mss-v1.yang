@@ -17,6 +17,9 @@ module vyatta-interfaces-tcp-mss-v1 {
 	import vyatta-interfaces-openvpn-v1 {
 		prefix if-openvpn;
 	}
+	import vyatta-interfaces-pppoe-v1 {
+		prefix if-pppoe;
+	}
 	import vyatta-interfaces-tunnel-v1 {
 		prefix if-tunnel;
 	}
@@ -38,7 +41,7 @@ module vyatta-interfaces-tcp-mss-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2017-2018, AT&T Intellectual Property.
+		"Copyright (c) 2017-2020, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -71,6 +74,10 @@ module vyatta-interfaces-tcp-mss-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 YANG module and scripts for TCP MSS clamping";
+
+	revision 2020-04-14 {
+		description "Add TCP MSS clamping to PPPoE interfaces";
+	}
 
 	revision 2018-01-15 {
 		description "Initial revision of version 1.";
@@ -161,6 +168,12 @@ module vyatta-interfaces-tcp-mss-v1 {
 		uses tcp-mss;
 	}
 	augment /if:interfaces/if-openvpn:openvpn/if-openvpn:ipv6 {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-pppoe:pppoe/if-pppoe:ip {
+		uses tcp-mss;
+	}
+	augment /if:interfaces/if-pppoe:pppoe/if-pppoe:ipv6 {
 		uses tcp-mss;
 	}
 	augment /if:interfaces/if-tunnel:tunnel/if-tunnel:ip {
