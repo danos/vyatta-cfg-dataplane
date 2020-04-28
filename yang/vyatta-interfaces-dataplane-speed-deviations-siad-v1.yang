@@ -55,6 +55,11 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 		 Link speed restriction for dataplane interfaces that
 		 are part of the same PM25 module.";
 
+	revision 2020-04-20 {
+		description "Move warn-link-speed script from being run on
+			each interface separately to being run once, looping
+			over all interfaces.";
+	}
 	revision 2020-03-10 {
 		description "Relax speed restriction to allow for backwards
 			compatibility i.e. allow default speed 'auto'.
@@ -71,6 +76,14 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 			following groups of interfaces:
 			- dp0xe20, do0xe21, dp0xe22, dp0xe23
 			- dp0xe24, dp0xe25, dp0xe26, dp0xe27";
+	}
+
+
+	deviation /if:interfaces {
+                deviate add {
+                        // Output a warning message when speed is set to 'auto'
+                        configd:validate 'warn-link-speed --warn-speed="auto" --filter="dp(\d+)xe2([0-7])"';
+		}
 	}
 
 	deviation /if:interfaces/dp:dataplane/dp:speed {
@@ -137,8 +150,6 @@ module vyatta-interfaces-dataplane-speed-deviations-siad-v1 {
 				configd:must "verify-siad-link-speed(24, 27, .)";
 				error-message "Same speed (10g or 25g) required for group dp0xe24,dp0xe25,dp0xe26,dp0xe27";
 			}
-			// Output a warning message when speed is set to 'auto'
-			configd:validate 'warn-link-speed --name=$VAR(../@) --warn-speed="auto" --set-speed=$VAR(@) --filter="dp(\d+)xe2([0-7])"';
 		}
 	}
 }

@@ -13,6 +13,7 @@ use warnings;
 
 use lib "/opt/vyatta/share/perl5/";
 
+use Vyatta::Config;
 use Getopt::Long;
 
 # This is a "modulino" (http://www.drdobbs.com/scripts-as-modules/184416165)
@@ -20,26 +21,23 @@ exit __PACKAGE__->main()
   unless caller();
 
 sub main {
-    my ( $ifp_name, $warn_speed, $set_speed, $ifp_filter, $rep_fail );
+    my ( $warn_speed, $ifp_filter, $rep_fail );
 
     GetOptions(
-        "name=s"              => \$ifp_name,
-        "warn-speed=s"        => \$warn_speed,
-        "set-speed=s"         => \$set_speed,
-        "filter=s"            => \$ifp_filter,
-        "report-fail"         => \$rep_fail,
+        "warn-speed=s" => \$warn_speed,
+        "filter=s"     => \$ifp_filter,
+        "report-fail"  => \$rep_fail,
     ) or usage();
 
-    validate_link_speed( $ifp_name, $warn_speed, $set_speed, $ifp_filter,
-                         $rep_fail )
-        if ( $ifp_name && $warn_speed && $set_speed );
+    validate_link_speed( $warn_speed, $ifp_filter, $rep_fail )
+      if ($warn_speed);
 
     exit 0;
 }
 
 sub usage {
     print <<EOF;
-Usage: $0 --name=<interface> --warn-speed=<speed> --set-speed=<speed> --filter=<regexp> [--report-fail]
+Usage: $0 --warn-speed=<speed> --filter=<regexp> [--report-fail]
 EOF
     exit 1;
 }
@@ -50,12 +48,22 @@ EOF
 # failure is reported.
 # Exit 0 otherwise (no validation failure).
 sub validate_link_speed {
-    my ( $ifname, $wspeed, $sspeed, $filter, $ret_fail ) = @_;
+    my ( $wspeed, $filter, $ret_fail ) = @_;
+    my $fail   = 0;
+    my $config = Vyatta::Config->new();
 
-    if ( $wspeed eq $sspeed && defined($filter) && $ifname =~ /$filter/ ) {
-        printf "Speed %s is not supported on port %s\n", $sspeed,  $ifname;
-        exit 1 if (defined($ret_fail));
+    foreach my $ifname ( $config->listNodes('interfaces dataplane') ) {
+        next unless ( defined($filter) && $ifname =~ /$filter/ );
+        my $path;
+
+        $path = sprintf "interfaces dataplane %s speed", $ifname;
+        my $sspeed = $config->returnValue($path);
+
+        if ( $wspeed eq $sspeed ) {
+            printf "Speed %s is not supported on port %s\n", $sspeed, $ifname;
+            $fail = 1;
+        }
     }
-
+    exit 1 if ( defined($ret_fail) && $fail );
     exit 0;
 }
