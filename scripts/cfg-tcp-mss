@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #
-# Copyright (c) 2017-2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2017-2020, AT&T Intellectual Property. All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 #
@@ -159,7 +159,7 @@ sub mss_cstore {
     print $fh Dumper \$mss_cmd
       if $debug > 1;
 
-    $cstore->store_pb( $cstore_config, $mss_cmd, "vyatta:tcp-mss", "ALL", $cstore_act );
+    $cstore->store_pb( $cstore_config, $mss_cmd, "vyatta:tcp-mss", $interface, $cstore_act );
 }
 
 # read in and store in %mss_conf, first the existing and then the new config
