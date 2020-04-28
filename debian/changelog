@@ -1,3 +1,11 @@
+vplane-config (2.66) unstable; urgency=medium
+
+  [ Paul Carson ]
+  * Ensure tcp-mss config is replayed (Fixes: VRVDR-43273)
+  * Add tcp-mss to PPPoE interfaces (Closes: VRVDR-43273)
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 28 Apr 2020 18:22:45 +0100
+
 vplane-config (2.65) unstable; urgency=medium
 
   [ John Southworth ]
