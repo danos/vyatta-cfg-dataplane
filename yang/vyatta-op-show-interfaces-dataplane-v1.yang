@@ -20,7 +20,7 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2018-2019, AT&T Intellectual Property.
+		"Copyright (c) 2018-2020, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -54,6 +54,10 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 
 		 Defines the top 'dataplane' level under 'show interfaces' for operational CLI";
 
+	revision 2020-06-15 {
+		description "Add privileged true to allow operator
+		             level users to use the commands";
+	}
 	revision 2019-06-11 {
 		description "Updated the command physical with script";
 	}
@@ -75,11 +79,13 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 				opd:help "Show interface information for a given dataplane interface";
 				opd:on-enter 'vplane-ifconfig.pl "$4"';
 				opd:allowed 'vyatta-interfaces.pl --show dataplane';
+				opd:privileged true;
 				type string;
 
 				opd:command affinity {
 					opd:help "Show device cpu-affinity";
 					opd:on-enter 'vplane-affinity --dev "$4" --show';
+					opd:privileged true;
 				}
 
 				opd:command brief {
@@ -90,16 +96,19 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 				opd:command identify {
 					opd:help "Identify adapter by blinking LED";
 					opd:on-enter 'vplane-blink "$4"';
+					opd:privileged true;
 				}
 
 				opd:command physical {
 					opd:help "Show physical device information for specified ethernet interface";
 					opd:on-enter 'vyatta-op-transceiver --action=xcvr-info -- --port="$4"';
+					opd:privileged true;
 				}
 
 				opd:command slowpath {
 					opd:help "Show specified interface slowpath statistics";
 					opd:on-enter 'vplane-ifconfig.pl "$4" --action=show-slowpath';
+					opd:privileged true;
 				}
 
 				opd:command vif {
