@@ -54,6 +54,9 @@ module vyatta-interfaces-backplane-v1 {
 
          Backplane information for physical interfaces.";
 
+    revision 2020-05-07 {
+        description "Augment interfaces only if if-feature backplane is true";
+    }
     revision 2019-03-06 {
         description "Change the allowed names for backplane interfaces";
     }
@@ -76,8 +79,8 @@ module vyatta-interfaces-backplane-v1 {
     }
 
     augment /if:interfaces {
+	    if-feature backplane;
 	    list backplane {
-		    if-feature backplane;
 		    configd:help "Backplane configuration";
 		    description "Backplane configuration";
 		    key "name";
