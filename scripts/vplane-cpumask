@@ -142,4 +142,3 @@ set_cpumask($cpumask)    if defined($cpumask);
 delete_cpumask($cpumask) if $delete_mask;
 control_cpus()           if $show_control;
 isolated_cpus()          if $show_isolated;
-show_cpumask();
