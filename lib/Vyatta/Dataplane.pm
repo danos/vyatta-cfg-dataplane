@@ -2,7 +2,7 @@
 #
 # Wrapper for accessing dataplane for status commands
 
-# Copyright (c) 2017-2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2017-2020, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All Rights Reserved.
 #
@@ -16,14 +16,19 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our @EXPORT =
-  qw(vplane_exec_cmd get_vplane_info controller_command is_dp_connected);
+  qw(vplane_exec_cmd vplane_exec_pb_cmd get_vplane_info controller_command is_dp_connected);
 
 use Carp;
 use Config::Tiny;
-use ZMQ::Constants qw(ZMQ_REQ ZMQ_RCVMORE ZMQ_POLLIN ZMQ_LINGER ZMQ_IPV4ONLY);
+use ZMQ::Constants
+  qw(ZMQ_REQ ZMQ_RCVMORE ZMQ_POLLIN ZMQ_LINGER ZMQ_IPV4ONLY ZMQ_SNDMORE);
 use ZMQ::LibZMQ3;
 use JSON qw(decode_json);
 use IPC::Run3 qw( run3 );
+
+use Google::ProtocolBuffers;
+use lib "/usr/share/perl5/vyatta/proto";
+use DataplaneEnvelope;
 
 my $CTRL_CFG  = "/etc/vyatta/controller.conf";
 my $LOCAL_IPC = "ipc:///var/run/vplane.socket";
@@ -87,6 +92,25 @@ sub execute {
           if defined($response);
         return;    # undefined
     }
+}
+
+sub execute_pb {
+    my ( $self, $pb ) = @_;
+    my $sock = $$self;
+
+    my $rv = zmq_msg_send( "protobuf", $sock, ZMQ_SNDMORE );
+    croak "zmq_msg_send failed: $!" if ( $rv == -1 );
+
+    my $msg = zmq_msg_init_data($pb);
+    $rv = zmq_msg_send( $msg, $sock );
+    croak "zmq_msg_send failed: $!" if ( $rv == -1 );
+
+    my ($response) = _recv_reply($sock);
+
+    if ( !defined($response) ) {
+        die "Error: no response from dataplane\n";
+    }
+    return $response;
 }
 
 sub _address {
@@ -207,6 +231,29 @@ sub vplane_exec_cmd {
         }
         else {
             $sock->execute($cmd);
+        }
+    }
+
+    return ( \@resp_arr );
+}
+
+sub vplane_exec_pb_cmd {
+    my ( $cmd, $pb, $dp_ids, $dp_conns, $expect_response ) = @_;
+    my @resp_arr = ();
+
+    my $de = 'DataplaneEnvelope'->new( { type => $cmd, msg => $pb->encode } );
+
+    for my $dp_id ( sort @{$dp_ids} ) {
+        my $sock = ${$dp_conns}[$dp_id];
+
+        next unless $sock;
+
+        my $result = $sock->execute_pb( $de->encode );
+
+        my $rde = DataplaneEnvelope->decode($result);
+
+        if ( $expect_response == 1 ) {
+            $resp_arr[$dp_id] = $rde->{msg};
         }
     }
 
