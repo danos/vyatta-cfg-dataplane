@@ -11,3 +11,4 @@ templates-op/monitor/dataplane opt/vyatta/share/vyatta-op/templates/monitor
 templates-op/monitor/interfaces/dataplane opt/vyatta/share/vyatta-op/templates/monitor/interfaces
 platform/vyatta-breakout.platform lib/vyatta-platform/platforms
 platform/vyatta-defer-dataplane.platform lib/vyatta-platform/platforms
+platform/vyatta-pause-interface-dataplane.platform lib/vyatta-platform/platforms

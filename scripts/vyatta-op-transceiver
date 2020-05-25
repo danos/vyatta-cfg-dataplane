@@ -1,5 +1,6 @@
-#! /usr/bin/perl
-# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+#!/usr/bin/perl
+#
+# Copyright (c) 2019-2020, AT&T Intellectual Property. All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 #
@@ -16,6 +17,7 @@ use Vyatta::Dataplane;
 use Vyatta::TransceiverInfo;
 use Readonly;
 use File::Basename;
+use IPC::Run3;
 
 my ( $action, $opt_switch, $opt_port, $opt_mac_addr, $opt_vlan );
 
@@ -32,7 +34,7 @@ my $eeprom_id_fields_fmt   = "  %-44s: %s%s\n";
 my $eeprom_id_fields_h_fmt = "  %-44s: 0x%02X\n";
 my $eeprom_diag_fields_fmt = "    %-42s: %s%s\n";
 my $channel_num_fmt        = "    Channel %s\n";
-
+my $pause_mode             = "        Pause Frame Mode: %s\n";
 
 my %id2desc_hash = (
     'form-factor'      => { 'desc' => 'Identifier' },
@@ -315,8 +317,38 @@ sub show_transceiver_diag_bit_flags($\%) {
     return;
 }
 
-sub action_show_transceiver_info {
+sub action_show_pause_info {
+    my ($port) = @_;
 
+    my $client = Vyatta::Configd::Client->new();
+    my $t_info =
+      $client->call_rpc_hash( "vyatta-interfaces-dataplane-ethernet-info-v1",
+        "eth-info", { 'name' => $port } );
+
+    my $t_info_hash = %$t_info{'ethernet-info'};
+    my $pause_info  = %$t_info_hash{'pause-frame'};
+
+    #print the pause info over here.
+    printf $pause_mode, $pause_info;
+}
+
+sub process_show_cmd {
+    my ($cmd) = $_[0];
+    my @output;
+    my $err;
+
+    if ( !run3( $cmd, undef, \@output, \$err ) ) {
+        die("Failed to run: $err");
+    }
+
+    foreach my $line (@output) {
+        if ( not( $line =~ /( Advertised|Supported ) pause frame use:/ ) ) {
+            print $line ;
+        }
+    }
+}
+
+sub action_show_transceiver_info {
     my $usage = sub {
         printf( "Usage for %s --action=xcvr-info\n", $SCRIPT_NAME );
         printf( "    %s --action=xcvr-info --port=<port-name>\n",
@@ -335,8 +367,11 @@ sub action_show_transceiver_info {
         exit (1);
     }
 
+    action_show_pause_info($port);
+
     #Show interface details
-    system "/sbin/ethtool $port";
+    my @cmd = ('/sbin/ethtool', $port);
+    process_show_cmd(@cmd);
     system "/sbin/ethtool -i $port";
 
     my $client = Vyatta::Configd::Client->new();

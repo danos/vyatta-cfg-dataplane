@@ -1,0 +1,3 @@
+yang/vyatta-interfaces-dataplane-ethernet-info-v1.yang usr/share/configd/yang
+lib/Vyatta/EthernetInfo.pm opt/vyatta/share/perl5/Vyatta
+scripts/vyatta-ethernet-info opt/vyatta/sbin

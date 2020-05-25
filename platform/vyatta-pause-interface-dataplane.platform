@@ -1,0 +1,2 @@
+ [Platform ufi.s9500-30xs]
+ Features=vyatta-interfaces-dataplane-v1:pause-frame-cfg

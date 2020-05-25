@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+#
+# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+use strict;
+use warnings;
+
+use lib "/opt/vyatta/share/perl5/";
+use Getopt::Long;
+use Vyatta::Dataplane;
+use Vyatta::EthernetInfo;
+use JSON;
+use Readonly;
+use File::Basename;
+
+Readonly my $SCRIPT_NAME => basename($0);
+
+sub eth_info_rpc {
+    my $in    = do { local $/; <> };
+    my $input = decode_json($in);
+    my $port  = $input->{'name'};
+    get_eth_info($port);
+}
+
+sub get_eth_info {
+    my ($port) = @_;
+
+    my $t_info      = Vyatta::EthernetInfo->new($port);
+    my %t_info_hash = %{$t_info};
+    print encode_json( \%t_info_hash );
+}
+
+sub call_action_by_name {
+    my ( $actions, $script_name, $opt_name, $usage ) = @_;
+
+    my $usagefn = sub {
+        printf( "Usage for %s %s:\n", $script_name, $usage );
+        printf( "    %s %s --%s=[%s]\n",
+            $script_name, $usage, $opt_name, join( "|", keys( %{$actions} ) ) );
+        exit(1);
+    };
+
+    my ($name);
+    GetOptions( "$opt_name=s" => \$name, ) or $usagefn->();
+    $usagefn->() unless ( defined($name) );
+
+    my $action = $actions->{$name};
+    $usagefn->() unless ( defined($action) );
+
+    return $action->();
+}
+
+my %actions = ( "eth-info" => \&eth_info_rpc, );
+
+call_action_by_name( \%actions, $SCRIPT_NAME, "action", "" );

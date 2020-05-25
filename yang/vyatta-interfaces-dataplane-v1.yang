@@ -178,6 +178,37 @@ module vyatta-interfaces-dataplane-v1 {
 		description "Interface reservation for another broken out interface support";
 	}
 
+	feature pause-frame-cfg {
+		description "PAUSE frames support";
+	}
+
+	typedef pause-mode {
+
+		type enumeration {
+
+			enum none {
+				description "Pause frame RX and TX disabled";
+				configd:help "Pause frame RX and TX disabled";
+			}
+
+			enum rx {
+				description "Pause frame RX enabled";
+				configd:help "Pause frame RX enabled";
+			}
+
+			enum tx {
+				description "Pause frame TX enabled";
+				configd:help "Pause frame TX enabled";
+			}
+
+			enum both {
+				description "Pause frame RX and TX enabled";
+				configd:help "Pause frame RX and TX enabled";
+			}
+
+		}
+	}
+
 	typedef dataplane-ifname {
 		type union {
 			// Onboard device
@@ -458,6 +489,13 @@ module vyatta-interfaces-dataplane-v1 {
 				configd:update "/opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_update.sh";
 				configd:delete "/opt/vyatta/share/tmplscripts/interfaces/dataplane/breakout-reserved-for/configd_delete.sh";
 			}
+
+			leaf pause-frame {
+				if-feature pause-frame-cfg;
+				configd:help "Pause state for flow-control";
+				type pause-mode;
+			}
+
 		}
 	}
 

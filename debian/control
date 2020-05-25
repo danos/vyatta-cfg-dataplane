@@ -322,6 +322,24 @@ Description: vyatta-interfaces-dataplane-speed-deviations-siad-yang package
  Deviations to the dataplane interfaces YANG for interfaces within
  PM25 interface module on SIAD platform.
 
+Package: vyatta-interfaces-dataplane-ethernet-info-v1-yang
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-interfaces-dataplane-ethernet-info package
+ adds pause-frame leaf to the dataplane interfaces YANG for Pause
+ frame feature.
+
+Package: vyatta-interfaces-dataplane-pause-deviations-siad-v1-yang
+Architecture: all
+Depends:
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-interfaces-dataplane-pause-deviations-siad package
+ Deviations to the dataplane interfaces YANG for Pause frame feature on
+ SIAD platform.
+
 Package: libvplaned-client1
 Architecture: any
 Depends:
