@@ -213,7 +213,7 @@ class Controller:
 
         # cmd_name if defined is used to send a protocol buffers form
         # of the command.
-        if (cmd_name is not None):
+        if cmd_name is not None:
             import base64
             import google.protobuf
             import vyatta.proto.DataplaneEnvelope_pb2
@@ -223,17 +223,17 @@ class Controller:
             de = vyatta.proto.DataplaneEnvelope_pb2.DataplaneEnvelope()
             de.type = cmd_name
             de.msg = cmd.SerializeToString()
-            
+
             # Build up the VPlaned Envelope here
             ve = vyatta.proto.VPlanedEnvelope_pb2.VPlanedEnvelope()
             ve.key = path
             ve.interface = interface
-            
-            if (action == "SET"):
+
+            if action == "SET":
                 ve.action = vyatta.proto.VPlanedEnvelope_pb2.VPlanedEnvelope.SET
             else:
                 ve.action = vyatta.proto.VPlanedEnvelope_pb2.VPlanedEnvelope.DELETE
-                
+
             ve.msg = de.SerializeToString()
 
             # Convert to base64
@@ -241,7 +241,7 @@ class Controller:
             temp["__PROTOBUF__"] = True
 
         temp["__" + action + "__"] = cmd
-        
+
         self._store_socket.send_json(msg)
         rc = self._store_socket.recv_string()
         if rc != "OK":
