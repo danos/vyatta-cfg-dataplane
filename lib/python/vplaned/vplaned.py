@@ -209,7 +209,6 @@ class Controller:
         temp = msg
         for item in path.split(" "):
             temp = temp.setdefault(item, {})
-        temp["__" + action + "__"] = cmd
         temp['__INTERFACE__'] = interface
 
         # cmd_name if defined is used to send a protocol buffers form
@@ -238,7 +237,10 @@ class Controller:
             ve.msg = de.SerializeToString()
 
             # Convert to base64
-            temp["__PROTOBUF__"] = base64.b64encode(ve.SerializeToString())
+            cmd = 'protobuf ' + base64.b64encode(ve.SerializeToString()).decode()
+            temp["__PROTOBUF__"] = True
+
+        temp["__" + action + "__"] = cmd
         
         self._store_socket.send_json(msg)
         rc = self._store_socket.recv_string()
