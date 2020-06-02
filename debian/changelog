@@ -1,3 +1,26 @@
+vplane-config (2.68) unstable; urgency=medium
+
+  [ Nachiketa Prachanda ]
+  * yang: guard interfaces backplane with if-feature
+
+  [ Robert Shearman ]
+  * vplane-route: display backup nexthop attribute
+
+  [ Paul Atkins ]
+  * cpumask: don't print the cpu mask after setting the cpus
+
+  [ Robert Shearman ]
+  * vplaned.py: fix use of protobufs in store (Fixes: VRVDR-51327)
+  * vplaned.py: fix style issues
+
+  [ Tom Kiely ]
+  * mac limiting configuration
+
+  [ Nachiketa Prachanda ]
+  * lib: add vplane_exec_pb_cmd
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 02 Jun 2020 13:36:18 +0100
+
 vplane-config (2.67) unstable; urgency=medium
 
   [ Sameer Agrawal ]
