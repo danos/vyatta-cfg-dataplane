@@ -18,11 +18,12 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
     contact
         "AT&T
          Postal: 208 S. Akard Street
-         Dallas, TX 25202
+         Dallas, TX 75202
+         USA
          Web: www.att.com";
 
     description
-        "Copyright (c) 2018-2019, AT&T Intellectual Property.
+        "Copyright (c) 2018-2020, AT&T Intellectual Property.
          All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -64,6 +65,18 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
 
          This module defines configuration and operational state data
          for transceivers (i.e., pluggable optics).";
+
+    revision 2020-06-05 {
+        description "Fix the length of the vendor-rev to allow for
+                     SFF-8472 vendor revisions, which are up to 4
+                     characters longer, instead of up to 2 characters
+                     long.
+
+                     Fix a comment in the vendor-oui field regarding
+                     the separator of the OUI parts to conform with
+                     the dataplane implementation.";
+    }
+
     revision 2019-06-13 {
         description "Refactored YANG model to match with Openconfig";
     }
@@ -431,7 +444,7 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
                  is a 3-byte field that contains the IEEE Company Identifier for
                  the vendor. A value of all zero in the 3-byte field indicates
                  that the Vendor OUI is unspecified. It is represented here as
-                 a hexadecimal string with a ':' between consecutive bytes";
+                 a hexadecimal string with a '.' between consecutive bytes";
             reference
                 "https://en.wikipedia.org/wiki/Organizationally_unique_identifier
                  http://standards-oui.ieee.org/oui/oui.txt";
@@ -450,10 +463,10 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
 
         leaf vendor-rev {
             type string {
-                length 1..2;
+                length 1..4;
             }
             description
-                "Transceiver vendor's revision number. 2-octet field that
+                "Transceiver vendor's revision number. 4-octet field that
                  contains ASCII characters, left-aligned and padded on the
                  right with ASCII spaces (20h)";
         }
