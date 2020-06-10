@@ -16,7 +16,7 @@ use Vyatta::CPUset;
 use Vyatta::VPlaned;
 use Vyatta::Dataplane;
 use Vyatta::Interface;
-use JSON qw( decode_json );
+use JSON;
 use Vyatta::Backplane qw( is_backplane_intf );
 
 # could be part of Interface.pm and use ioctl
@@ -109,10 +109,12 @@ sub update {
     if ( !defined($if) ) {
         if ( is_backplane_intf($dev) ) {
             $path = "interfaces backplane $dev";
-        } else {
+        }
+        else {
             die "Invalid device $dev\n" unless defined($if);
         }
-    } else {
+    }
+    else {
         $path = $if->path();
     }
 
@@ -120,27 +122,49 @@ sub update {
 
     if ( $cfg->exists("cpu-affinity") ) {
         set_cpu_affinity( $dev, $cfg->returnValue("cpu-affinity") );
-    } elsif ( $cfg->exists("receive-cpu-affinity") ) {
+    }
+    elsif ( $cfg->exists("receive-cpu-affinity") ) {
         my @rx_tx_mask = (
             $cfg->returnValue("receive-cpu-affinity"),
             $cfg->returnValue("transmit-cpu-affinity")
         );
         set_rx_tx_cpu_affinity( $dev, @rx_tx_mask );
-    } else {
+    }
+    else {
         delete_cpu_affinity($dev);
     }
 }
 
-sub show_cpu_affinity {
-    my $ifname = shift;
+sub show_affinity_info_rpc {
+    my $in    = do { local $/; <> };
+    my $input = decode_json($in);
+    my $port  = $input->{'name'};
+    get_cpu_affinity($port);
+}
+
+sub show_affinity_info {
+    my ($ifname) = @_;
+
+    if ( defined $ifname ) {
+        get_cpu_affinity($ifname);
+    }
+    else {
+        show_affinity_info_rpc();
+    }
+}
+
+sub get_cpu_affinity {
+    my ($ifname) = @_;
     my $fabric = 0;
+    my ( %output, %params );
 
     my $intf = new Vyatta::Interface($ifname);
     if ( !defined($intf) ) {
         if ( !is_backplane_intf($ifname) ) {
             die "$ifname is not a backplane interface\n";
         }
-    } else {
+    }
+    else {
         die "$ifname is not a dataplane interface\n"
           if ( $intf->type() ne 'dataplane' );
         $fabric = $intf->dpid();
@@ -167,39 +191,46 @@ sub show_cpu_affinity {
       unless $affinity;
 
     my $cpuset = Vyatta::CPUset->new( '0x' . $affinity );
-    print "Cpu-affinity: ", $cpuset->range(), "\n";
+    $params{'cpu-affinity'} = $cpuset->range();
 
     my $rxaffinity = $decoded->{$ifname}->{rx_affinity};
     if ( defined($rxaffinity) ) {
         my $rxcpuset = Vyatta::CPUset->new( '0x' . $rxaffinity );
-        print "Rx cpu-affinity: ", $rxcpuset->range(), "\n";
+        $params{'rx-cpu-affinity'} = $rxcpuset->range();
+    }
+    else {
+        $params{'rx-cpu-affinity'} = '';
     }
 
     my $txaffinity = $decoded->{$ifname}->{tx_affinity};
     if ( defined($txaffinity) ) {
         my $txcpuset = Vyatta::CPUset->new( '0x' . $txaffinity );
-        print "Tx cpu-affinity: ", $txcpuset->range(), "\n";
+        $params{'tx-cpu-affinity'} = $txcpuset->range();
+    }
+    else {
+        $params{'tx-cpu-affinity'} = '';
     }
 
     my $rxcpus  = Vyatta::CPUset->new( '0x' . $decoded->{$ifname}->{rx_cpu} );
     my $rxrange = $rxcpus->range();
-    print "Rx cpu(s):    $rxrange\n" if defined($rxrange);
+    $params{'rx-cpu'} = $rxrange;
 
     my $txcpus  = Vyatta::CPUset->new( '0x' . $decoded->{$ifname}->{tx_cpu} );
     my $txrange = $txcpus->range();
-    print "Tx cpu:       $txrange\n" if defined($txrange);
+    $params{'tx-cpu'} = $txrange;
+
+    $output{'affinity-info'} = \%params;
+    print encode_json( \%output );
 }
 
-my ( $dev, $show_option, $update_option );
+my ( $dev, $action );
 
 GetOptions(
-    'dev=s'  => \$dev,
-    'update' => \$update_option,
-    'show'   => \$show_option,
+    'dev=s'    => \$dev,
+    'action=s' => \$action,
 ) or die "Unknown option\n";
 
-die "Must specify device\n"
-  unless defined($dev);
+die "Must specify device\n" if ( ( $action eq 'update' ) && ( $dev eq '' ) );
 
-update($dev)            if $update_option;
-show_cpu_affinity($dev) if $show_option;
+update($dev)             if $action eq 'update';
+show_affinity_info($dev) if $action eq 'show';

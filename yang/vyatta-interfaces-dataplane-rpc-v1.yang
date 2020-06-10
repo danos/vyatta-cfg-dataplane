@@ -131,7 +131,7 @@ module vyatta-interfaces-dataplane-rpc-v1 {
 	rpc slowpath-info {
 		configd:call-rpc "/opt/vyatta/sbin/vyatta-slowpath --action=slowpath-info";
 
-		description "Slowpath information for a physical interface.";
+		description "Slowpath information for a physical port.";
 
 		input {
 			leaf name {
@@ -144,6 +144,65 @@ module vyatta-interfaces-dataplane-rpc-v1 {
 			container slowpath-info {
 				description "Slowpath information for a port.";
 				uses slowpath-info-state;
+			}
+		}
+	}
+
+	grouping affinity-info-state {
+		description "CPU affinity state data for an port ";
+
+		leaf cpu-affinity {
+			type string {
+				length 1..256;
+			}
+			description "Configured CPU affinity for port";
+		}
+
+		leaf rx-cpu-affinity {
+			type string {
+				length 1..256;
+			}
+			description "Configured CPU affinity for port rx";
+		}
+
+		leaf tx-cpu-affinity {
+			type string {
+				length 1..256;
+			}
+			description "Configured CPU affinity for port tx";
+		}
+
+		leaf tx-cpu {
+			type string {
+				length 1..256;
+			}
+			description "Port tx active CPU";
+		}
+
+		leaf rx-cpu {
+			type string {
+				length 1..256;
+			}
+			description "Port rx active CPU";
+		}
+	}
+
+	rpc affinity-info {
+		configd:call-rpc "/opt/vyatta/sbin/vplane-affinity --action=show";
+
+		description "Affinity information for a physical port";
+
+		input {
+			leaf name {
+				description "Name of the port to get affinity info";
+				mandatory true;
+				type port-name;
+			}
+		}
+		output {
+			container affinity-info {
+				description "CPU Affinity information on a physical port";
+				uses affinity-info-state;
 			}
 		}
 	}
