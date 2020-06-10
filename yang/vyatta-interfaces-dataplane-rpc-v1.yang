@@ -1,0 +1,150 @@
+module vyatta-interfaces-dataplane-rpc-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-interfaces-dataplane-rpc:1";
+	prefix vyatta-interfaces-dataplane-rpc-v1;
+
+	import configd-v1 {
+		prefix configd;
+	}
+
+	import vyatta-types-v1 {
+		prefix types;
+	}
+
+	organization "AT&T Inc.";
+	contact
+		"AT&T
+		 Postal: 208 S. Akard Street
+			 Dallas, TX 75202
+		 Web: www.att.com";
+
+	description
+		"Copyright (c) 2020, AT&T Intellectual Property.
+		 All rights reserved.
+
+		 Redistribution and use in source and binary forms, with or
+		 without modification, are permitted provided that the following
+		 conditions are met:
+
+		 1. Redistributions of source code must retain the above copyright
+			notice, this list of conditions and the following disclaimer.
+		 2. Redistributions in binary form must reproduce the above
+			copyright notice, this list of conditions and the following
+			disclaimer in the documentation and/or other materials provided
+			with the distribution.
+		 3. Neither the name of the copyright holder nor the names of its
+			contributors may be used to endorse or promote products derived
+			from this software without specific prior written permission.
+
+		 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+		 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+		 LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+		 FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+		 COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+		 INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+		 BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+		 LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+		 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+		 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+		 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+		 POSSIBILITY OF SUCH DAMAGE.
+
+		 SPDX-License-Identifier: BSD-3-Clause
+
+		 Defines the RPC for retrieving dataplane per interface info";
+
+	revision 2020-07-21 {
+		description "Initial version";
+	}
+
+	typedef port-name {
+		description "The name of the port";
+		type types:alpha-numeric {
+			configd:help "Port name";
+		}
+	}
+
+	grouping slowpath-info-state {
+		description "Slowpath state data for a port";
+
+		leaf name {
+			type string {
+				length 1..256;
+			}
+			description "Port name";
+		 }
+
+		leaf rx_packet {
+			type uint32;
+			description "Number of packets received on the slowpath";
+		}
+
+		leaf rx_dropped {
+			type uint32;
+			description "Number of Rx dropped packets on the slowpath";
+		}
+
+		leaf rx_errors {
+			type uint32;
+			description "Number of Rx packets errors on the slowpath";
+		}
+
+		leaf rx_overrun {
+			type uint32;
+			description "Number of Rx overrun packets on the slowpath";
+		}
+
+		leaf rx_congested {
+			type uint32;
+			description "Number of Rx packets dropped due to congestion on the slowpath";
+		}
+
+		container rx_ring {
+			description "Rx ring buffer information";
+
+			leaf avail {
+				type uint16;
+				description "Number of buffers available";
+			}
+
+			leaf used {
+				type uint16;
+				description "Number of buffers in use";
+			}
+		}
+
+		leaf tx_packet {
+			type uint32;
+			description "Number of packets transmitted on the slowpath";
+		}
+
+		leaf tx_errors {
+			type uint32;
+			description "Number of Tx packets dropped due to errors on the slowpath";
+		}
+
+		leaf tx_nobufs {
+			type uint32;
+			description "Number of Tx packets dropped due to nobufs on the slowpath";
+		}
+	}
+
+	rpc slowpath-info {
+		configd:call-rpc "/opt/vyatta/sbin/vyatta-slowpath --action=slowpath-info";
+
+		description "Slowpath information for a physical interface.";
+
+		input {
+			leaf name {
+				description "Name of the port to get slowpath info";
+				mandatory true;
+				type port-name;
+			}
+		}
+		output {
+			container slowpath-info {
+				description "Slowpath information for a port.";
+				uses slowpath-info-state;
+			}
+		}
+	}
+}
