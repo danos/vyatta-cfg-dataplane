@@ -92,7 +92,7 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 
 				opd:command identify {
 					opd:help "Identify adapter by blinking LED";
-					opd:on-enter 'vplane-blink "$4"';
+					opd:on-enter 'vyatta-op-blink --port="$4"';
 				}
 
 				opd:command physical {

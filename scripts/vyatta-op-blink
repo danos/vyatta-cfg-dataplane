@@ -1,0 +1,77 @@
+#! /usr/bin/perl
+# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+use strict;
+use warnings;
+
+use lib '/opt/vyatta/share/perl5/';
+
+use Getopt::Long;
+use Vyatta::Configd;
+use Vyatta::Config;
+use Readonly;
+use File::Basename;
+
+my ( $action, $client, $port );
+
+Readonly my $SCRIPT_NAME => basename($0);
+
+sub sig_handler {
+    blink_rpc('off');
+    print("\n");
+    exit 0;
+}
+
+sub blink_rpc {
+    return $client->call_rpc_hash( "vyatta-interfaces-dataplane-rpc-v1",
+        "identify-info", { 'name' => $port, 'action' => @_ } );
+}
+
+sub identify {
+
+    my $usage = sub {
+        printf( "Usage for %s\n",              $SCRIPT_NAME );
+        printf( "    %s --port=<port-name>\n", $SCRIPT_NAME );
+        exit(1);
+    };
+
+    GetOptions( "port=s" => \$port, )
+      or $usage->();
+    $usage->() unless defined $port;
+
+    my $if_dir = "/sys/class/net/$port";
+    if ( !( -d $if_dir ) ) {
+        printf "Interface $port does not exist on system\n";
+        exit(1);
+    }
+
+    $client = Vyatta::Configd::Client->new();
+    my $resp = blink_rpc('on');
+
+    my $resp_hash = %$resp{'response'};
+    if ( $resp_hash->{'msg'} ne 'Ok' ) {
+        print "$resp_hash->{'msg'}: device does not have led support\n";
+        exit 0;
+    }
+
+    # stop blinking early if interrupted
+    $SIG{INT}  = \&sig_handler;
+    $SIG{TERM} = \&sig_handler;
+
+    print "Interface $port should be blinking now.\n";
+    print "Press control-C q to stop..\n";
+    STDOUT->flush();
+
+    sleep(300);
+
+    print "\nTimed out\n";
+
+    blink_rpc("off");
+}
+
+identify();
+
+exit 0;
