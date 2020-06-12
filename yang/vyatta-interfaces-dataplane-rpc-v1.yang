@@ -206,4 +206,38 @@ module vyatta-interfaces-dataplane-rpc-v1 {
 			}
 		}
 	}
+
+	rpc identify-info {
+		configd:call-rpc "/opt/vyatta/sbin/vplane-blink";
+
+		description
+			"Toggle a physical interface LED.";
+
+		input {
+			leaf name {
+				mandatory true;
+				type port-name;
+				description "Name of the port to toggle LED blinking";
+			}
+
+			leaf action {
+				type enumeration {
+					enum  on;
+					enum  off;
+				}
+				description "LED blinking on|off";
+			}
+		}
+
+		output {
+			container response {
+				leaf msg {
+					type string {
+						length 1..256;
+					}
+				description "Response to cmd 'OK|Error'";
+				}
+			}
+		}
+	}
 }

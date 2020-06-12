@@ -11,16 +11,13 @@ use warnings;
 use lib "/opt/vyatta/share/perl5/";
 use Vyatta::Dataplane;
 use Vyatta::Interface;
+use JSON;
 
-# global
-my ( $sock, $ifname );
+my $in     = do { local $/; <> };
+my $input  = decode_json($in);
+my $ifname = $input->{'name'};
+my $action = $input->{'action'};
 
-# callback to stop blink on signal
-sub end_blink {
-    $sock->execute("led $ifname off");
-}
-
-$ifname = shift;
 die "Usage: $0 interface\n"
   unless defined($ifname);
 
@@ -36,23 +33,13 @@ my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
 die "Dataplane $fabric is not connected or does not exist\n"
   unless ( scalar(@$dpids) > 0 );
 
-$sock = ${$dpsocks}[$fabric];
+my $sock = ${$dpsocks}[$fabric];
 die "Can not connect to dataplane $fabric\n"
   unless $sock;
 
-my $resp = $sock->execute("led $ifname on");
+my $resp = $sock->execute("led $ifname $action");
 exit 1 unless defined($resp);
 
-# stop blinking early if interrupted
-$SIG{INT}  = \&sig_handler;
-$SIG{TERM} = \&sig_handler;
-
-print "Interface $ifname should be blinking now.\n";
-print "Press control-C to stop..\n";
-STDOUT->flush();
-
-sleep(300);
-
-print "Timed out\n";
-end_blink();
 Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );
+
+printf $resp;
