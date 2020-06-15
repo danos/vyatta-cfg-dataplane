@@ -11,7 +11,7 @@ scripts/nbr-res-flush.pl opt/vyatta/bin
 scripts/netplug/gratarp etc/netplug/linkup.d
 scripts/vplane-affinity opt/vyatta/sbin
 scripts/vplane-arp.pl opt/vyatta/bin
-scripts/vplane-blink opt/vyatta/bin
+scripts/vplane-blink opt/vyatta/sbin
 scripts/vplane-cpumask opt/vyatta/sbin
 scripts/vplane-gre.pl opt/vyatta/bin
 scripts/vplane-ifconfig.pl opt/vyatta/bin
@@ -21,5 +21,6 @@ scripts/vplane-nd.pl opt/vyatta/bin
 scripts/vplane-power-profile opt/vyatta/sbin
 scripts/vplane-route.pl opt/vyatta/bin
 scripts/vplane-show-memory.pl opt/vyatta/bin
+scripts/vplane-slowpath opt/vyatta/sbin
 scripts/vplane-statistics.pl opt/vyatta/bin
 scripts/vplane-broker-cfg lib/vplane/prestart.d

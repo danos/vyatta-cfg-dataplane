@@ -1,1 +1,4 @@
 yang/vyatta-op-show-interfaces-dataplane-v1.yang usr/share/configd/yang
+scripts/vyatta-op-affinity opt/vyatta/bin
+scripts/vyatta-op-blink opt/vyatta/bin
+scripts/vyatta-op-slowpath opt/vyatta/bin

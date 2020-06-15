@@ -243,6 +243,12 @@ Depends: python3, vyatta-dataplane-cfg-pb-vyatta:maclimit-0, ${misc:Depends},
 Description: vyatta MAC limiting
  YANG module for configuring MAC limiting
 
+Package: vyatta-interfaces-dataplane-rpc-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}, vplane-config, vyatta-interfaces-base
+Description: vyatta-interfaces-dataplane-rpc-v1 module
+ RPC for retrieving per interface dataplane information
+
 Package: vyatta-op-show-interfaces-dataplane-v1-yang
 Architecture: all
 Depends: ${misc:Depends}, ${yang:Depends}, vplane-config, vyatta-interfaces-base
