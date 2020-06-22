@@ -1,3 +1,10 @@
+vplane-config (2.67.3) unstable; urgency=medium
+
+  [ Simon Barber ]
+  * Run cmds at a privileged level
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 22 Jun 2020 14:33:32 +0100
+
 vplane-config (2.67.2) unstable; urgency=medium
 
   [ Robert Shearman ]
