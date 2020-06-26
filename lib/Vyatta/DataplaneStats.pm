@@ -315,20 +315,29 @@ sub show_interface_non_stats {
     print "\n";
 
     my $link = $ifinfo->{link};
-    if (   defined($link)
-        && defined( $link->{speed} )
-        && defined( $link->{duplex} ) )
-    {
-        my $speed = $link->{speed};
-        if ( $speed >= 1000 ) {
-            $speed = ( $speed / 1000 ) . 'G';
-        } else {
-            $speed = $speed . 'M';
+    if ( defined($link) ) {
+        printf "   Link: %s", $link->{up} ? "up" : "down";
+
+        if ( defined( $link->{duplex} ) ) {
+            printf ", duplex %s", $link->{duplex};
         }
 
-        printf "   Link: %s, duplex %s, mtu %u, speed %s\n",
-          $link->{up} ? "up" : "down",
-          $link->{duplex}, $ifinfo->{mtu}, $speed;
+        if ( defined( $ifinfo->{mtu} ) ) {
+            printf ", mtu %u", $ifinfo->{mtu};
+        }
+
+        if ( defined( $link->{speed} ) ) {
+            my $speed = $link->{speed};
+            if ( $speed >= 1000 ) {
+                $speed = ( $speed / 1000 ) . 'G';
+            } else {
+                $speed = $speed . 'M';
+            }
+
+            printf ", speed %s", $speed;
+        }
+
+        printf "\n";
     }
 
     show_interface_uptime($intf);
