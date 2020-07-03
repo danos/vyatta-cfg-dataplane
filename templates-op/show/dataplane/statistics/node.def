@@ -1,1 +1,2 @@
-help: Show dataplane statistics
+# This command is defined by vyatta-op-show-dataplane-v1
+# This template file is retained for backwards compatibility
