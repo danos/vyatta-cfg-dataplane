@@ -216,6 +216,12 @@ Depends: ${misc:Depends}, ${yang:Depends}
 Description: vyatta-op-show-dataplane-v1 module
  The YANG module for show dataplane operational commands
 
+Package: vyatta-op-clear-dataplane-v1-yang
+Architecture: all
+Depends: ${misc:Depends}, ${yang:Depends}
+Description: vyatta-op-clear-dataplane-v1 module
+ The YANG module for clear dataplane operational commands
+
 Package: vyatta-op-show-platform-dataplane-v1-yang
 Architecture: all
 Depends: python3, vyatta-dataplane-op-pd-1, ${misc:Depends}, ${yang:Depends}

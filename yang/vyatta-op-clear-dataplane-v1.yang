@@ -1,12 +1,12 @@
-module vyatta-op-show-dataplane-v1 {
-	namespace "urn:vyatta.com:mgmt:vyatta-op-show-dataplane:1";
-	prefix vyatta-op-show-dataplane-v1;
+module vyatta-op-clear-dataplane-v1 {
+	namespace "urn:vyatta.com:mgmt:vyatta-op-clear-dataplane:1";
+	prefix vyatta-op-clear-dataplane-v1;
 
 	import vyatta-opd-extensions-v1 {
 		prefix opd;
 	}
-	import vyatta-op-show-v1 {
-		prefix show;
+	import vyatta-op-clear-v1 {
+		prefix clear;
 	}
 
 	organization "AT&T Inc.";
@@ -17,7 +17,7 @@ module vyatta-op-show-dataplane-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2019-2020, AT&T Intellectual Property.
+		"Copyright (c) 2020, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -49,39 +49,18 @@ module vyatta-op-show-dataplane-v1 {
 
 		 SPDX-License-Identifier: BSD-3-Clause
 
-		Defines the top 'dataplane' level under 'show' for operational CLI";
+		Defines the top 'dataplane' level under 'clear' for operational CLI";
 
 	revision 2020-07-10 {
-		description "Add a show command for 'dataplane statistics'.";
-	}
-
-	revision 2020-01-17 {
-		description "Add a show command for 'dataplane plugin feature'";
-	}
-
-	revision 2019-05-20 {
 		description "Initial version";
 	}
 
-	opd:augment /show:show {
+	opd:augment /clear:clear {
 		opd:command dataplane {
-			opd:help "Show dataplane information";
-			opd:privileged true;
-			opd:on-enter "vplane-monitor.pl";
-
-			opd:command plugin {
-				opd:help "Show dataplane plugin information";
-				opd:privileged true;
-
-				opd:command feature {
-					opd:help "Show dataplane feature plugin information";
-					opd:privileged true;
-					opd:on-enter "vyatta-op-dataplane-plugin";
-				}
-			}
+			opd:help "Clear dataplane information";
 
 			opd:command statistics {
-				opd:help "Show dataplane statistics";
+				opd:help "Clear dataplane statistics";
 			}
 		}
 	}
