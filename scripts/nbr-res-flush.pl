@@ -3,7 +3,7 @@
 # Script to flush entries in the caches in the dataplane and kernel that are
 # used for neighbor resolution with ARP for IPv4 or with ND for IPv6
 
-# Copyright (c) 2017, AT&T Intellectual Property.  All rights reserved.
+# Copyright (c) 2017-2020, AT&T Intellectual Property.  All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All Rights Reserved.
 #
@@ -23,7 +23,7 @@ sub flush_neighbor {
     my ( $arg, $cmd_opt, $ipv6, $dpids, $dpconns ) = @_;
 
     my $kern_opt = $ipv6 ? "-6" : "-4";
-    system("ip $kern_opt neigh flush $cmd_opt $arg") == 0
+    system( "ip", $kern_opt, "neigh", "flush", $cmd_opt, $arg ) == 0
       or exit 1;
 
     my $dp_cmd = $ipv6 ? "nd6" : "arp";
