@@ -1,3 +1,10 @@
+vplane-config (2.67.4) unstable; urgency=medium
+
+  [ Mike Manning ]
+  * Privilege escalation in "reset ipv6 neighbors" / "reset ip arp" commands
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 22 Jul 2020 13:07:17 +0100
+
 vplane-config (2.67.3) unstable; urgency=medium
 
   [ Simon Barber ]
