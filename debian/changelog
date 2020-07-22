@@ -1,3 +1,21 @@
+vplane-config (2.69) unstable; urgency=medium
+
+  [ Robert Shearman ]
+  * yang: correct transceiver data model to allow SFF-8472 vendor-rev
+    (Fixes: VRVDR-50359)
+
+  [ Charles (Chas) Williams ]
+  * dataplanestats: show link even if down (Bugfix: VRVDR-51949)
+
+  [ Ian Wilson ]
+  * Change "show dataplane statistics" from node.def to yang
+  * Add a "clear dataplane statistics" yang command
+
+  [ Mike Manning ]
+  * Privilege escalation in "reset ipv6 neighbors" / "reset ip arp" commands
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 22 Jul 2020 13:08:25 +0100
+
 vplane-config (2.68) unstable; urgency=medium
 
   [ Nachiketa Prachanda ]
