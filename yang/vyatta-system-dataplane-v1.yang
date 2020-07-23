@@ -56,6 +56,9 @@ module vyatta-system-dataplane-v1 {
 		 Vyatta dataplane interface specific system yang file and related
 		 template scripts.";
 
+	revision 2020-07-28 {
+		description "Correctly marking 'system dataplane' node as config:false/state data.";
+	}
 	revision 2020-01-24 {
 		description "Addition of feature-plugin-state container for show comands.";
 	}
@@ -151,9 +154,8 @@ module vyatta-system-dataplane-v1 {
 		}
 
 		container dataplane {
-
+			config false;
 			container plugin-feature-state {
-				config false;
 				configd:get-state "vyatta-dataplane-plugin-feature-state";
 
 				list plugins {
