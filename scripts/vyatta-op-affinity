@@ -1,0 +1,87 @@
+#! /usr/bin/perl
+# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+use strict;
+use warnings;
+
+use lib '/opt/vyatta/share/perl5/';
+
+use Getopt::Long;
+use Vyatta::Configd;
+use Vyatta::Config;
+use Readonly;
+use File::Basename;
+my $action;
+Readonly my $SCRIPT_NAME => basename($0);
+
+sub action_show_affinity {
+
+    my $usage = sub {
+        printf( "Usage for %s --action=affinity-info\n", $SCRIPT_NAME );
+        printf( "    %s --action=affinity-info --port=<port-name>\n",
+            $SCRIPT_NAME );
+        exit(1);
+    };
+
+    my $port;
+    GetOptions( "port=s" => \$port, )
+      or $usage->();
+    $usage->() unless defined $port;
+
+    my $if_dir = "/sys/class/net/$port";
+    if ( !( -d $if_dir ) ) {
+        printf "Interface $port does not exist on system";
+        exit(1);
+    }
+
+    my $client = Vyatta::Configd::Client->new();
+    my $t_info =
+      $client->call_rpc_hash( "vyatta-interfaces-dataplane-rpc-v1",
+        "affinity-info", { 'name' => $port } );
+    my $info_hash = %$t_info{'affinity-info'};
+
+    my $cpu_affinity = %$info_hash{"cpu-affinity"};
+    print( "Cpu-affinity: ", $cpu_affinity, "\n" );
+
+    my $rx_affinity = %$info_hash{"rx-cpu-affinity"};
+    print( "Rx cpu-affinity: ", $rx_affinity, "\n" ) if $cpu_affinity ne '';
+
+    my $tx_affinity = %$info_hash{"tx-cpu-affinity"};
+    print( "Tx cpu-affinity: ", $tx_affinity, "\n" ) if $tx_affinity ne '';
+
+    my $rx_cpu = %$info_hash{"rx-cpu"};
+    print( "Rx cpu(s):    ", $rx_cpu, "\n" ) if $rx_cpu ne '';
+
+    my $tx_cpu = %$info_hash{"tx-cpu"};
+    print( "Tx cpu(s):    ", $tx_cpu, "\n" ) if $tx_cpu ne '';
+}
+
+sub call_action_by_name {
+    my ( $actions, $script_name, $opt_name, $usage ) = @_;
+
+    my $usagefn = sub {
+        printf( "Usage for %s %s:\n", $script_name, $usage );
+        printf( "  %s %s --%s=[%s]\n",
+            $script_name, $usage, $opt_name, join( "|", keys( %{$actions} ) ) );
+        exit(1);
+    };
+
+    my ($name);
+    GetOptions( "$opt_name=s" => \$name, )
+      or $usagefn->();
+    $usagefn->() unless defined $name;
+
+    my $action = $actions->{$name};
+    $usagefn->() unless defined $name;
+
+    return $action->();
+}
+
+my %actions = ( "affinity-info" => \&action_show_affinity, );
+
+call_action_by_name( \%actions, $SCRIPT_NAME, "action", "" );
+
+exit 0;
