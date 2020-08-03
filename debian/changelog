@@ -1,3 +1,10 @@
+vplane-config (2.70) unstable; urgency=medium
+
+  [ bs775m ]
+  * yang: set system dataplane wrongly shown in CLI.
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 03 Aug 2020 10:20:50 +0100
+
 vplane-config (2.69) unstable; urgency=medium
 
   [ Robert Shearman ]
