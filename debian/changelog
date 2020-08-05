@@ -1,3 +1,17 @@
+vplane-config (2.71) unstable; urgency=medium
+
+  [ Simon Barber ]
+  * Add  slowpath Data model RPC to Yang
+  * Add Backend files to retrieve slowpath info
+  * Add Front end script for slowpath info display
+  * Modify affinity backend script
+  * Add Front end for show int dataplane <bhar> affinity
+  * Add Backend script to blink an interface LED
+  * Add Front end script to blink a port LED
+  * Add installation destination info
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 05 Aug 2020 13:37:17 +0100
+
 vplane-config (2.70) unstable; urgency=medium
 
   [ bs775m ]
