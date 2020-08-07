@@ -152,6 +152,12 @@ Description: vyatta iptables bypass extension
  Vyatta extension to iptables to bypass normal forwarding
  rules.
 
+Package: xtables-addons-bypass-dev
+Architecture: all
+Depends: ${misc:Depends}, ${shlibs:Depends}, xtables-addons-bypass (>=${source:Version})
+Description: vyatta iptables bypass extension headers
+ Vyatta extension header files for the xtables bypass module.
+
 Package: libvyatta-dataplane-perl
 Architecture: all
 Section: contrib/perl
