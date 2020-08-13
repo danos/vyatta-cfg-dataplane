@@ -1,3 +1,10 @@
+vplane-config (2.73) unstable; urgency=medium
+
+  [ bs775m ]
+  * vyatta-cfg :add support for enb/dis pause frame.
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 13 Aug 2020 17:22:35 +0100
+
 vplane-config (2.72) unstable; urgency=medium
 
   [ Simon Barber ]
