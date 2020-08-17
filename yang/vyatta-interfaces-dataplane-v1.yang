@@ -22,11 +22,11 @@ module vyatta-interfaces-dataplane-v1 {
 	contact
 		"AT&T
 		 Postal: 208 S. Akard Street
-		         Dallas, TX 25202
+		         Dallas, TX 75202
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2017-2019, AT&T Intellectual Property.
+		"Copyright (c) 2017-2020, AT&T Intellectual Property.
 		 All rights reserved.
 		 Copyright (c) 2014-2017 by Brocade Communications Systems, Inc.
 		 All rights reserved.
@@ -63,6 +63,9 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
+	revision 2020-08-17 {
+		description "Support for pause frames.";
+	}
 	revision 2019-09-05 {
 		description "Support for interface breakout reservation";
 	}
