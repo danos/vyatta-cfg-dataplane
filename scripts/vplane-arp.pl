@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2019-2020, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -30,10 +30,7 @@ sub show_arp {
 
         next unless $sock;
 
-        if ( !defined($intf) ) {
-            $intf = "";
-        }
-        my $response = $sock->execute("arp show $intf");
+        my $response = $sock->execute( "arp show " . ( $intf // '' ) );
         next unless defined($response);
         my $decoded = decode_json($response);
         my @entries = @{ $decoded->{arp} };
@@ -80,10 +77,7 @@ sub show_arp_all {
     foreach my $dp_id ( @{$dp_ids} ) {
         my $sock = ${$dp_conns}[$dp_id];
         if ($sock) {
-            if ( !defined($intf) ) {
-                $intf = "";
-            }
-            my $response = $sock->execute("arp show $intf");
+            my $response = $sock->execute( "arp show " . ( $intf // '' ) );
             next unless defined($response);
 
             my $decoded = decode_json($response);
