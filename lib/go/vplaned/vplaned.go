@@ -6,7 +6,6 @@ package vplaned
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"os"
 	"runtime"
 	"strings"
@@ -21,6 +20,18 @@ import (
 const (
 	storeEndpoint  = "ipc:///var/run/vyatta/vplaned.socket"
 	configEndpoint = "ipc:///var/run/vyatta/vplaned-config.socket"
+)
+
+type Error string
+
+func (e Error) Error() string {
+	return string(e)
+}
+
+const (
+	ErrNoControllerResponse = Error("No response from controller")
+	ErrConfigStoreFailed = Error("Config store failed")
+	ErrNoCommitAction = Error("COMMIT_ACTION not found")
 )
 
 type Conn struct {
@@ -118,7 +129,7 @@ func (c *Conn) Store(
 	}
 
 	if storeOpts.action == "" {
-		return errors.New("COMMIT_ACTION not found")
+		return ErrNoCommitAction
 	}
 
 	msgData, err := proto.Marshal(msg)
@@ -182,10 +193,10 @@ func (c *Conn) Store(
 		return err
 	}
 	if len(zmsg) == 0 {
-		return errors.New("No response from controller")
+		return ErrNoControllerResponse
 	}
 	if string(zmsg[0]) != "OK" {
-		return errors.New("Config store failed")
+		return ErrConfigStoreFailed
 	}
 	return nil
 }
