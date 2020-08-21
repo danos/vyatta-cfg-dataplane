@@ -60,14 +60,17 @@ sub show_arp_all {
     my ( $intf, $addr ) = @_;
     my %kernel_arp = ();
     my $format     = "%-18s %-17s %-10s %-10s %s\n";
+    my $zero_mac   = "00:00:00:00:00:00";
 
     open( my $arp_output, '-|', "ip -4 neigh " ) or die "show arp failed ";
     while (<$arp_output>) {
         chomp;
         /([^ ]+) dev ([^ ]+) lladdr ([^ ]+) /
-          and $kernel_arp{$1} = [ $2, $3, 1 ], next;
+          and $kernel_arp{$1} = [ $2, $3, "VALID", 1 ], next;
         /([^ ]+) dev ([^ ]+)  FAILED/
-          and $kernel_arp{$1} = [ $2, '0:0:0:0:0:0', 1 ], next;
+          and $kernel_arp{$1} = [ $2, $zero_mac, "FAILED", 1 ], next;
+        /([^ ]+) dev ([^ ]+)  INCOMPLETE/
+          and $kernel_arp{$1} = [ $2, $zero_mac, "PENDING", 1 ], next;
     }
     close($arp_output);
 
@@ -87,10 +90,13 @@ sub show_arp_all {
 
                 my $mac = sprintf "%02s:%02s:%02s:%02s:%02s:%02s",
                   split /\:/, $entry->{mac};
-                if ( exists $kernel_arp{ $entry->{ip} } ) {
-                    printf $format, $entry->{ip},
-                      $mac, $entry->{flags}, $entry->{flags}, $entry->{ifname};
-                    $kernel_arp{ $entry->{ip} }[2] = 0;
+                my $kentry = $kernel_arp{ $entry->{ip} };
+                if ( $kentry
+                    && ( $kentry->[1] eq $mac || $kentry->[1] eq $zero_mac ) )
+                {
+                    printf $format, $entry->{ip}, $mac, $entry->{flags},
+                      $kentry->[2], $entry->{ifname};
+                    $kentry->[3] = 0;
                 } else {
                     printf $format, $entry->{ip},
                       $mac, $entry->{flags}, "", $entry->{ifname};
@@ -101,17 +107,10 @@ sub show_arp_all {
 
     for my $ip ( keys %kernel_arp ) {
         next if ( defined($intf) && $kernel_arp{$ip}[0] ne $intf );
-        next unless $kernel_arp{$ip}[2];
+        next unless $kernel_arp{$ip}[3];
 
-        my $mac   = "0:0:0:0:0:0";
-        my $flags = "PENDING";
-
-        if ( $kernel_arp{$ip}[1] =~ m{:} ) {
-            $mac   = $kernel_arp{$ip}[1];
-            $flags = "VALID";
-        }
-
-        printf $format, $ip, $mac, "", $flags, $kernel_arp{$ip}[0];
+        printf $format, $ip, $kernel_arp{$ip}[1], "", $kernel_arp{$ip}[2],
+          $kernel_arp{$ip}[0];
     }
 }
 
