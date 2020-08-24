@@ -20,9 +20,10 @@ use constant QSFP_CHANNELS => 4;
 sub convert_mW_2_dbm {
     my ($mW) = @_;
 
-    # If no power, return empty string since log(0) = Inf.
+    # If no power, return the lowest value we can represent. See
+    # https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2
     if ( $mW == 0 ) {
-        return 0;
+        return -40.0;
     }
 
     my $dbm = 10 * log10($mW);
