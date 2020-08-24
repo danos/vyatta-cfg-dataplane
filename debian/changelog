@@ -1,3 +1,13 @@
+vplane-config (2.74) unstable; urgency=medium
+
+  [ Daniel Gollub ]
+  * xt-bypass: package header files
+
+  [ bs775m ]
+  * vyatta-cfg :add revision statement for pause feature.
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 24 Aug 2020 16:43:57 +0100
+
 vplane-config (2.73) unstable; urgency=medium
 
   [ bs775m ]
