@@ -1,3 +1,11 @@
+vplane-config (2.72.1) unstable; urgency=medium
+
+  [ Mike Manning ]
+  * Kernel neighbor missing in show arp when there is no dataplane neighbor
+  * Behavior change in show arp output
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 27 Aug 2020 17:09:23 +0100
+
 vplane-config (2.72) unstable; urgency=medium
 
   [ Simon Barber ]
