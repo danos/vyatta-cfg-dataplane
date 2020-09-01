@@ -58,15 +58,24 @@ sub show_arp {
 
 sub show_arp_all {
     my ( $intf, $addr ) = @_;
-    my %kernel_arp = ();
-    my $format     = "%-18s %-17s %-10s %-10s %s\n";
-    my $zero_mac   = "00:00:00:00:00:00";
+    my %kernel_arp   = ();
+    my $format       = "%-18s %-17s %-10s %-10s %s\n";
+    my $zero_mac     = "00:00:00:00:00:00";
+    my %kernel_flags = (
+        'REACHABLE' => 'VALID',
+        'STALE'     => 'VALID',
+        'DELAY'     => 'VALID',
+        'PROBE'     => 'VALID',
+        'PERMANENT' => 'STATIC',
+        'NOARP'     => 'STATIC'
+    );
+    my $kernel_flags_re = join( '|', keys %kernel_flags );
 
     open( my $arp_output, '-|', "ip -4 neigh " ) or die "show arp failed ";
     while (<$arp_output>) {
         chomp;
-        /([^ ]+) dev ([^ ]+) lladdr ([^ ]+) /
-          and $kernel_arp{$1} = [ $2, $3, "VALID", 1 ], next;
+        /([^ ]+) dev ([^ ]+) lladdr ([^ ]+) ($kernel_flags_re)/
+          and $kernel_arp{$1} = [ $2, $3, $kernel_flags{$4}, 1 ], next;
         /([^ ]+) dev ([^ ]+)  FAILED/
           and $kernel_arp{$1} = [ $2, $zero_mac, "FAILED", 1 ], next;
         /([^ ]+) dev ([^ ]+)  INCOMPLETE/
