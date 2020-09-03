@@ -34,7 +34,7 @@ my $eeprom_id_fields_fmt   = "  %-44s: %s%s\n";
 my $eeprom_id_fields_h_fmt = "  %-44s: 0x%02X\n";
 my $eeprom_diag_fields_fmt = "    %-42s: %s%s\n";
 my $channel_num_fmt        = "    Channel %s\n";
-my $pause_mode             = "        Pause Frame Mode: %s\n";
+my $pause_mode             = "Pause Frame Mode: %s\n";
 
 my %id2desc_hash = (
     'form-factor'      => { 'desc' => 'Identifier' },
