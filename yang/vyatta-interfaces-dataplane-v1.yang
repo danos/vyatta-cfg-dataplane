@@ -63,6 +63,9 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
+	revision 2020-09-09 {
+		description "Update the args passed to the vplane-affinity script.";
+	}
 	revision 2020-08-17 {
 		description "Support for pause frames.";
 	}
@@ -348,7 +351,7 @@ module vyatta-interfaces-dataplane-v1 {
 
 			description "Interface CPU affinity in the dataplane";
 			configd:help "Interface CPU affinity";
-			configd:end "vplane-affinity --dev=$VAR(../@) --update";
+			configd:end "vplane-affinity --dev=$VAR(../@) --action=update";
 		}
 		leaf receive-cpu-affinity {
 			type types:cpu-range;
@@ -358,7 +361,7 @@ module vyatta-interfaces-dataplane-v1 {
 			}
 			description "CPU affinity for interface receive processing in the dataplane";
 			configd:help "Interface receive CPU affinity";
-			configd:end "vplane-affinity --dev=$VAR(../@) --update";
+			configd:end "vplane-affinity --dev=$VAR(../@) --action=update";
 		}
 		leaf transmit-cpu-affinity {
 			type types:cpu-range;
@@ -371,7 +374,7 @@ module vyatta-interfaces-dataplane-v1 {
 			}
 			description "CPU affinity for interface transmit processing in the dataplane";
 			configd:help "Interface transmit CPU affinity";
-			configd:end "vplane-affinity --dev=$VAR(../@) --update";
+			configd:end "vplane-affinity --dev=$VAR(../@) --action=update";
 		}
 	}
 
