@@ -125,8 +125,16 @@ sub clear_interface {
         my $ifinfo = $results->[$dp_id];
         next unless defined($ifinfo);
 
-        clear_interface_for_vplane( $ifinfo->{name}, $ifinfo->{statistics},
-            $dp_id, \@statistics );
+        my $statistics  = $ifinfo->{statistics};
+        my $xstatistics = $ifinfo->{xstatistics};
+
+        # Merge the Stats
+        foreach my $key (keys %$xstatistics){
+                $statistics->{$key} = $xstatistics->{$key};
+        }
+
+        clear_interface_for_vplane( $ifinfo->{name}, $statistics,
+            $dp_id );
     }
 }
 
@@ -147,13 +155,37 @@ sub clear_interface_for_vplane {
     print "Clearing $ifname (dataplane)\n";
     print $f $clear_file_magic, "\n";
 
-    foreach my $st ( @{$statistics} ) {
-        my $var = $st->{tag};
-        my $val = $ifstat->{ $st->{tag} };
-        next unless defined($val);
-        next if ( $val eq 0 && $st->{hide} );
+    if (defined $statistics){
+        # Clear only stats defined in $statistics
+        foreach my $st ( @{$statistics} ) {
+            my $var = $st->{tag};
+            my $val = $ifstat->{ $st->{tag} };
+            next unless defined($val);
+            next if ( $val eq 0 && $st->{hide} );
 
-        print $f $var, ",", $val, "\n";
+            print $f $var, ",", $val, "\n";
+        }
+    } else {
+        # Clear all stats
+        foreach my $key (keys %$ifstat){
+            my $val = $ifstat->{ $key };
+            next unless defined($val);
+            next if ( ($key =~ '^[tr]x_[pb]ps') || ($key =~ '^qstats'));
+
+            print $f $key, ",", $val, "\n";
+        }
+
+        # Clear qstats
+        my $qid = 0;
+        foreach my $qstat (@{ $ifstat->{ 'qstats' } }) {
+            foreach my $key (keys %$qstat){
+                my $val = $qstat->{ $key };
+                next unless defined($val);
+                next if ($val eq 0);
+                print $f "q", $qid, "_", $key, ",", $val, "\n";
+            }
+            $qid++;
+        }
     }
 
     close($f);
