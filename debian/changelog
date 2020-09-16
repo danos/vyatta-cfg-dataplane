@@ -1,3 +1,10 @@
+vplane-config (2.78) unstable; urgency=medium
+
+  [ Paul Atkins ]
+  * vplane-affinity: call the affinity script from yang with correct args
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 16 Sep 2020 11:53:58 +0100
+
 vplane-config (2.77) unstable; urgency=medium
 
   [ Mike Manning ]
