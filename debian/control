@@ -50,12 +50,21 @@ Depends:
  vyatta-dataplane-op-affinity-0,
  vyatta-dataplane-op-nd6-2,
  vyatta-dataplane-op-route-1,
+ vyatta-interfaces-dataplane-rpc-v1-yang (>= ${source:Version}),
  ${misc:Depends},
  ${perl:Depends}
 Breaks: vplane-routing (<= 1:10.11.9), vyatta-dataplane (<= 3.4.29)
 Description: vyatta dataplane config
  Vyatta configuration/operational commands for integrated
  dataplane service.
+
+Package: vplane-config-backend
+Architecture: all
+Depends:
+ libvyatta-vplaned-perl (>= ${source:Version}),
+ ${misc:Depends},
+ ${perl:Depends}
+Description: Backend scripts dealing with configd.
 
 Package: vyatta-interfaces-dataplane-v1-yang
 Architecture: all
@@ -245,7 +254,9 @@ Description: vyatta MAC limiting
 
 Package: vyatta-interfaces-dataplane-rpc-v1-yang
 Architecture: all
-Depends: ${misc:Depends}, ${yang:Depends}, vplane-config, vyatta-interfaces-base
+Depends: ${misc:Depends}, ${yang:Depends},
+         vplane-config-backend (>= ${source:Version}),
+         vyatta-interfaces-base
 Description: vyatta-interfaces-dataplane-rpc-v1 module
  RPC for retrieving per interface dataplane information
 
