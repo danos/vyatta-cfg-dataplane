@@ -1,3 +1,13 @@
+vplane-config (2.72.2) unstable; urgency=medium
+
+  [ Mike Manning ]
+  * Output of static entries in ARP table has changed
+
+  [ Paul Atkins ]
+  * vplane-affinity: call the affinity script from yang with correct args
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 21 Sep 2020 13:08:38 +0100
+
 vplane-config (2.72.1) unstable; urgency=medium
 
   [ Mike Manning ]
