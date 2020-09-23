@@ -1,3 +1,13 @@
+vplane-config (2.79) unstable; urgency=medium
+
+  [ bs775m ]
+  * vyatta-cfg : realigning pause mode show output.
+
+  [ Simon Barber ]
+  *  Add rpc yang file dependencies and break circular dependencies
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Wed, 23 Sep 2020 21:39:17 +0100
+
 vplane-config (2.78) unstable; urgency=medium
 
   [ Paul Atkins ]
