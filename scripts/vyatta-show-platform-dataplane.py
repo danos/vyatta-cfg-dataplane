@@ -190,7 +190,7 @@ def print_subset_data(feat, subset, data):
 def main():
     parser = ArgumentParser()
     parser.add_argument("--obj", choices=['route', 'route6', 'mroute', 'mroute6', 'mpls-route'])
-    parser.add_argument("--subset", choices=['no_resource', 'no_support', 'not_needed', 'partial', 'error'])
+    parser.add_argument("--subset", choices=['no_resource', 'no_support', 'not_needed', 'partial', 'error', 'full'])
 
     args = parser.parse_args()
 
