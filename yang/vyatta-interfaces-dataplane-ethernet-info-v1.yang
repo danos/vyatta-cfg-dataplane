@@ -88,11 +88,11 @@ module vyatta-interfaces-dataplane-ethernet-info-v1 {
         configd:call-rpc "/opt/vyatta/sbin/vyatta-ethernet-info --action=eth-info";
 
         description
-            "Retrieve PAUSE frame information for a physical interface.";
+            "Retrieve ethernet information for a physical interface.";
 
         input {
             leaf name {
-                description "Interface for which to get pause info";
+                description "Interface for which to get ethernet info";
                 mandatory true;
                 type port-name;
 
