@@ -59,6 +59,10 @@ module vyatta-interfaces-dataplane-ethernet-info-v1 {
 
         Ethernet information for dataplane interfaces.";
 
+    revision 2020-10-10 {
+        description "Add Platform State to the ethernet info group.";
+    }
+
     revision 2020-09-10 {
         description "Initial revision of version 1.";
     }
@@ -80,6 +84,10 @@ module vyatta-interfaces-dataplane-ethernet-info-v1 {
                     "Enable or Disable TX/RX pause frames on interface.";
                 configd:help "Enable or Disable TX/RX pause frames on interface";
                 type dp:pause-mode;
+            }
+            leaf platform-state {
+                description "Platform state for the given interface";
+                type string;
             }
         }
     }
