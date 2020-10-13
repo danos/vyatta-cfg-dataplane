@@ -47,16 +47,16 @@ sub action_show_affinity {
     print( "Cpu-affinity: ", $cpu_affinity, "\n" );
 
     my $rx_affinity = %$info_hash{"rx-cpu-affinity"};
-    print( "Rx cpu-affinity: ", $rx_affinity, "\n" ) if $cpu_affinity ne '';
+    print( "Rx cpu-affinity: ", $rx_affinity, "\n" );
 
     my $tx_affinity = %$info_hash{"tx-cpu-affinity"};
-    print( "Tx cpu-affinity: ", $tx_affinity, "\n" ) if $tx_affinity ne '';
+    print( "Tx cpu-affinity: ", $tx_affinity, "\n" );
 
     my $rx_cpu = %$info_hash{"rx-cpu"};
-    print( "Rx cpu(s):    ", $rx_cpu, "\n" ) if $rx_cpu ne '';
+    print( "Rx cpu(s):    ", $rx_cpu, "\n" );
 
     my $tx_cpu = %$info_hash{"tx-cpu"};
-    print( "Tx cpu(s):    ", $tx_cpu, "\n" ) if $tx_cpu ne '';
+    print( "Tx cpu(s):    ", $tx_cpu, "\n" )
 }
 
 sub call_action_by_name {

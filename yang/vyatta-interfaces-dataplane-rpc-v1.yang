@@ -52,6 +52,11 @@ module vyatta-interfaces-dataplane-rpc-v1 {
 
 		 Defines the RPC for retrieving dataplane per interface info";
 
+
+	revision 2020-10-13 {
+		description "Update affinity return string sizes";
+	}
+
 	revision 2020-07-21 {
 		description "Initial version";
 	}
@@ -153,35 +158,35 @@ module vyatta-interfaces-dataplane-rpc-v1 {
 
 		leaf cpu-affinity {
 			type string {
-				length 1..256;
+				length 0..256;
 			}
 			description "Configured CPU affinity for port";
 		}
 
 		leaf rx-cpu-affinity {
 			type string {
-				length 1..256;
+				length 0..256;
 			}
 			description "Configured CPU affinity for port rx";
 		}
 
 		leaf tx-cpu-affinity {
 			type string {
-				length 1..256;
+				length 0..256;
 			}
 			description "Configured CPU affinity for port tx";
 		}
 
 		leaf tx-cpu {
 			type string {
-				length 1..256;
+				length 0..256;
 			}
 			description "Port tx active CPU";
 		}
 
 		leaf rx-cpu {
 			type string {
-				length 1..256;
+				length 0..256;
 			}
 			description "Port rx active CPU";
 		}
