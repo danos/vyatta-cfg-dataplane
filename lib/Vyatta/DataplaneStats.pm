@@ -129,9 +129,7 @@ sub clear_interface {
         my $xstatistics = $ifinfo->{xstatistics};
 
         # Merge the Stats
-        foreach my $key (keys %$xstatistics){
-                $statistics->{$key} = $xstatistics->{$key};
-        }
+        %$statistics = ( %$statistics, %$xstatistics );
 
         clear_interface_for_vplane( $ifinfo->{name}, $statistics,
             $dp_id );
@@ -393,7 +391,12 @@ sub adjust_stats {
         my $ifinfo = $results->[$dp_id];
         next unless defined($ifinfo);
 
-        my $ifstat = $ifinfo->{statistics};
+        my $ifstat  = $ifinfo->{statistics};
+        my $xifstat = $ifinfo->{xstatistics};
+
+        # Merge the Stats
+        %$ifstat = ( %$ifstat, %$xifstat ); 
+
         my %clear =
           get_dataplane_clear_stats( $ifinfo->{name}, $dp_id, $ifstat );
 
