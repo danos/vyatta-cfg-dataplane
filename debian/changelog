@@ -1,3 +1,13 @@
+vplane-config (2.80) unstable; urgency=medium
+
+  [ Karthik Murugesan ]
+  * vyatta-cfg-dataplane: Clear dataplane ext counters
+
+  [ Simon Barber ]
+  * Allow affinity rpc yang to return null strings
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 19 Oct 2020 08:17:31 +0100
+
 vplane-config (2.79) unstable; urgency=medium
 
   [ bs775m ]
