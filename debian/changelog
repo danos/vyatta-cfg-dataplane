@@ -1,3 +1,13 @@
+vplane-config (2.82) unstable; urgency=medium
+
+  [ Robert Shearman ]
+  * vplane-route: use dataplane command for showing one MPLS route
+  * yang: add observability for mpls-route object state counts
+    (Closes: VRVDR-53194)
+  * scripts: accept full filter in show-platform-dataplane
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Fri, 23 Oct 2020 14:46:22 +0100
+
 vplane-config (2.81) unstable; urgency=medium
 
   [ Karthik Murugesan ]
