@@ -33,6 +33,18 @@ sub get_ether_info {
         next unless defined($eth_info);
         my $pause = $eth_info->{'pause-mode'};
         $params{'pause-frame'} = $pause;
+
+        if ( defined( $eth_info->{'l2_intf_platform_state'} ) ) {
+            my $sock = ${$dpsocks}[$dpid];
+
+            my $platform_state =
+              $sock->format_platform_state( 'l2-intf',
+                encode_json( $eth_info->{'l2_intf_platform_state'} ) );
+
+            if ( defined $platform_state and length $platform_state ) {
+                $params{'platform-state'} = $platform_state;
+            }
+        }
     }
     Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );
     my $output = { 'ethernet-info' => \%params, };
