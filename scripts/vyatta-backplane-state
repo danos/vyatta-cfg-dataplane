@@ -117,8 +117,8 @@ sub process_backplane {
         $backplane_info{'receive-statistics'}  = \%rx_stats;
         $backplane_info{'transmit-statistics'} = \%tx_stats;
         $backplane_info{'port_stats'}          = \@port_stats;
+        push( @backplanes, \%backplane_info );
     }
-    push( @backplanes, \%backplane_info );
 }
 
 foreach my $rsp (@dprsp) {
