@@ -319,7 +319,7 @@ sub show_transceiver_diag_bit_flags($\%) {
     return;
 }
 
-sub action_show_pause_info {
+sub action_get_eth_info {
     my ($port) = @_;
 
     my $client = Vyatta::Configd::Client->new();
@@ -328,10 +328,8 @@ sub action_show_pause_info {
         "eth-info", { 'name' => $port } );
 
     my $t_info_hash = %$t_info{'ethernet-info'};
-    my $pause_info  = %$t_info_hash{'pause-frame'};
 
-    #print the pause info over here.
-    printf $pause_mode, $pause_info;
+    return $t_info_hash;
 }
 
 sub process_show_cmd {
@@ -493,7 +491,9 @@ sub action_show_transceiver_info {
         exit(1);
     }
 
-    action_show_pause_info($port);
+    my $eth_info   = action_get_eth_info($port);
+    my $pause_info = %$eth_info{'pause-frame'};
+    printf $pause_mode, $pause_info;
 
     #Show interface details
     my @cmd = ( '/sbin/ethtool', $port );
