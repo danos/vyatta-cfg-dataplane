@@ -14,7 +14,7 @@ use warnings;
 use JSON;
 use Vyatta::Dataplane qw(vplane_exec_cmd);
 
-sub get_pause_info {
+sub get_ether_info {
 
     my ( $port_name, $objref ) = @_;
     my %params = %{$objref};
@@ -48,7 +48,7 @@ sub new {
     my ( $class, $port_name, $debug ) = @_;
     my $objref = {};
 
-    $objref = get_pause_info( $port_name, $objref );
+    $objref = get_ether_info( $port_name, $objref );
 
     bless $objref, $class;
     return $objref;
