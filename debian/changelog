@@ -1,3 +1,10 @@
+vplane-config (2.83) unstable; urgency=medium
+
+  [ Shweta Choudaha ]
+  * backplane: Push to report only if populated
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 03 Nov 2020 13:49:58 +0000
+
 vplane-config (2.82) unstable; urgency=medium
 
   [ Robert Shearman ]
