@@ -54,6 +54,9 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 
 		 Defines the top 'dataplane' level under 'show interfaces' for operational CLI";
 
+	revision 2020-11-05 {
+		description "add action show-plat to command to show a vif";
+	}
 	revision 2020-08-05 {
 		description "Add privileged true to allow operator
 		             level users to use the commands";
@@ -123,8 +126,9 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 							range 1..99999;
 						}
 						opd:help "Virtual interface (VIF) Id";
-						opd:on-enter 'vyatta-show-interfaces.pl --intf="$4.$6"';
+						opd:on-enter 'vyatta-show-interfaces.pl --intf="$4.$6" --action=show-plat';
 						opd:allowed 'vyatta-interfaces.pl --show dataplane --vif "$4"';
+						opd:privileged true;
 
 						opd:command brief {
 							opd:help "Show summary of specified virtual network interface (vif) information";

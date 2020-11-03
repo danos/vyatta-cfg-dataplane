@@ -17,7 +17,7 @@ use strict;
 use warnings;
 
 use File::Slurp;
-use JSON qw( decode_json );
+use JSON qw( decode_json encode_json );
 
 use lib "/opt/vyatta/share/perl5/";
 use Time::Duration;
@@ -30,7 +30,7 @@ use Vyatta::InterfaceStats;
 use base 'Exporter';
 
 our @EXPORT =
-  qw(clear_dataplane_interfaces show_dataplane_interfaces_slowpath show_dataplane_interfaces show_dataplane_interfaces_per_vplane get_dataplane_clear_stats clear_interface_for_vplane);
+  qw(clear_dataplane_interfaces show_dataplane_interfaces_slowpath show_dataplane_interfaces show_dataplane_interfaces_per_vplane get_dataplane_clear_stats clear_interface_for_vplane show_dataplane_interfaces_platform);
 
 my @statistics = (
     { tag => 'rx_bytes',          display => 'Input   bytes' },
@@ -190,6 +190,18 @@ sub clear_interface_for_vplane {
     close($f);
 }
 
+sub show_interface_platform_state {
+    my $ifinfo = shift;
+    my $sock   = shift;
+
+    if ( defined( $ifinfo->{router_intf_platform_state} ) ) {
+        print "  Platform state:\n";
+        my $pd_state =
+          $sock->format_platform_state( 'router-intf', encode_json($ifinfo) );
+        print $pd_state;
+    }
+}
+
 # Dataplane interface: fabric 0 pci-slot 0 port 0
 #   Interface port: 1 ifIndex: 3
 #   Mac: 01:02:03:04:05
@@ -206,6 +218,7 @@ sub clear_interface_for_vplane {
 sub show_interface {
     my $results = shift;
     my $intf    = shift;
+    my $sock    = shift;
 
     my $dp_id  = $intf->dpid();
     my $ifinfo = $results->[$dp_id];
@@ -218,6 +231,8 @@ sub show_interface {
     aggregate_stats( $results, $dp_id );
 
     show_interface_stats($ifinfo);
+
+    show_interface_platform_state( $ifinfo, $sock );
 }
 
 sub show_interface_slowpath {
@@ -241,6 +256,18 @@ sub show_interface_slowpath {
             printf "%s\n", $val;
         }
     }
+}
+
+sub show_interface_dp_platform_state {
+    my $results = shift;
+    my $intf    = shift;
+    my $sock    = shift;
+
+    my $dp_id  = $intf->dpid();
+    my $ifinfo = $results->[$dp_id];
+    return unless defined($ifinfo);
+
+    show_interface_platform_state( $ifinfo, $sock );
 }
 
 # similar to the above, but show stats per-vplane
@@ -583,6 +610,13 @@ sub show_dataplane_interfaces_per_vplane {
     my $intf_list_ref = shift;
 
     &iterate_dataplanes( $intf_list_ref, \&show_interface_per_vplane,
+        "ifconfig" );
+}
+
+sub show_dataplane_interfaces_platform {
+    my $intf_list_ref = shift;
+
+    &iterate_dataplanes( $intf_list_ref, \&show_interface_dp_platform_state,
         "ifconfig" );
 }
 
