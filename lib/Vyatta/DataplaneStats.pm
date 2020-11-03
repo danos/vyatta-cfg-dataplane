@@ -553,7 +553,7 @@ sub iterate_dataplanes {
         die "interface $ifname does not exist on system\n"
           if ( $#results < 0 );
 
-        &$func( \@results, $intf );
+        &$func( \@results, $intf, ${$dp_conns}[0] );
     }
 
     Vyatta::Dataplane::close_fabric_conns( $dp_ids, $dp_conns );
