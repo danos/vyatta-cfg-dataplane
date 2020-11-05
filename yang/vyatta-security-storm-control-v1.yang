@@ -33,11 +33,12 @@ module vyatta-security-storm-control-v1 {
 	contact
 		"AT&T
 		 Postal: 208 S. Akard Street
-		         Dallas, TX 25202
+		         Dallas, TX 75202.
+		         USA
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2018-2019, AT&T Intellectual Property.
+		"Copyright (c) 2018-2020, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -71,6 +72,10 @@ module vyatta-security-storm-control-v1 {
 
 		 YANG module and scripts for Vyatta storm control";
 
+	revision 2020-11-05 {
+		description "Add ability to configure profile on a vif";
+	}
+
 	revision 2019-12-02 {
 		description "Move per-interface container to grouping";
 	}
@@ -96,6 +101,10 @@ module vyatta-security-storm-control-v1 {
 	}
 	revision 2018-08-23 {
 		description "Initial version.";
+	}
+
+	feature storm-control-vif {
+		description "Storm control on VLAN subinterface support";
 	}
 
 	grouping bandwidth-threshold {
@@ -297,6 +306,33 @@ module vyatta-security-storm-control-v1 {
 		}
 	}
 
+	grouping storm-control-vif-cfg {
+		container storm-control {
+			description "Traffic storm control parameters on this interface";
+			configd:help "Traffic storm control parameters on this interface";
+
+			if-feature storm-control-vif;
+
+			leaf profile {
+				description "Storm control profile name";
+				configd:help "Storm control profile name";
+				type leafref {
+					path "/security:security/vyatta-security-storm-control-v1:storm-control/vyatta-security-storm-control-v1:profile/vyatta-security-storm-control-v1:profile-name";
+				}
+				configd:update "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../../@).$VAR(../../@) --action SET --profile $VAR(@)";
+				configd:delete "/opt/vyatta/sbin/vplane-storm-control --dev $VAR(../../../@).$VAR(../../@) --action DELETE --profile $VAR(@)";
+
+				must "not(../../../storm-control/profile)" {
+					error-message "Storm control cannot be enabled at interface and vif levels at the same time";
+				}
+				must "not(../../../storm-control/vlan)" {
+					error-message "Storm control cannot be enabled at vlan and vif levels at the same time";
+				}
+
+			}
+		}
+	}
+
 	grouping storm-control-intf-cfg-vlan {
 		list vlan {
 			description "Storm control for traffic on specified vlan";
@@ -331,6 +367,10 @@ module vyatta-security-storm-control-v1 {
 
 	augment /if:interfaces/interfaces-dataplane:dataplane {
 		uses storm-control-intf-cfg;
+	}
+
+	augment /if:interfaces/interfaces-dataplane:dataplane/interfaces-dataplane:vif {
+		uses storm-control-vif-cfg;
 	}
 
 	augment /if:interfaces/interfaces-dataplane:dataplane/storm-control {
