@@ -57,8 +57,11 @@ module vyatta-interfaces-dataplane-ethernet-info-v1 {
         Licensed under the Apache License, Version 2.0 (the License) which is available at
         http://www.apache.org/licenses/LICENSE-2.0
 
-        Ethernet information configuration of datapath interface. Adding Pause frame feature
-        restriction now for dataplane interfaces.";
+        Ethernet information for dataplane interfaces.";
+
+    revision 2020-09-10 {
+        description "Initial revision of version 1.";
+    }
 
     typedef port-name {
         description "The name of the port";
