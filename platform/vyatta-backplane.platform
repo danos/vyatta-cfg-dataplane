@@ -6,3 +6,12 @@ Features=vyatta-interfaces-backplane-v1:backplane
 
 [Platform att.flexware-l]
 Features=vyatta-interfaces-backplane-v1:backplane
+
+[Platform ipi.osde.sm2]
+Features=vyatta-interfaces-backplane-v1:backplane
+
+[Platform ipi.osde.sm3]
+Features=vyatta-interfaces-backplane-v1:backplane
+
+[Platform ipi.osde.sm4]
+Features=vyatta-interfaces-backplane-v1:backplane
