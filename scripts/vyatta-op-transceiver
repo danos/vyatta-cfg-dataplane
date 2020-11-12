@@ -55,7 +55,7 @@ my %id2desc_hash = (
 
 my %link2desc_hash = (
     'smf-km' => { 'desc' => 'Single mode fiber link length', 'unit' => ' km' },
-    'smf' => {
+    'smf'    => {
         'desc'       => 'Single mode fiber link length',
         'unit'       => ' m',
         'multiplier' => 100
@@ -84,8 +84,8 @@ my %mv2desc_temp_volt_hash = (
 );
 
 my %mv2desc_sfp_hash = (
-    'output-power'       => { 'desc' => 'Tx power', 'unit' => ' dBm' },
-    'input-power'        => { 'desc' => 'Rx power', 'unit' => ' dBm' },
+    'output-power'       => { 'desc' => 'Tx power',      'unit' => ' dBm' },
+    'input-power'        => { 'desc' => 'Rx power',      'unit' => ' dBm' },
     'laser-bias-current' => { 'desc' => 'Laser Tx Bias', 'unit' => ' mA' },
 );
 
@@ -157,8 +157,10 @@ my %temp_thresh2desc_hash = (
         'desc' => 'High temperature warning threshold',
         'unit' => ' degrees C'
     },
-    'temperature-low-warning' =>
-      { 'desc' => 'Low  temperature warning threshold', 'unit' => ' degrees C' },
+    'temperature-low-warning' => {
+        'desc' => 'Low  temperature warning threshold',
+        'unit' => ' degrees C'
+    },
 );
 
 my %volt_thresh2desc_hash = (
@@ -289,11 +291,11 @@ sub show_transceiver_diag_info($\%) {
         my $v = $t_info->{$key};
         my $d = diag2desc( $key, %$hash );
         my $u = diag2unit( $key, %$hash );
-        if( $key eq 'index' ) {
-            printf $channel_num_fmt, defined ($v) ? $v : "";
+        if ( $key eq 'index' ) {
+            printf $channel_num_fmt, defined($v) ? $v : "";
         } else {
             printf $eeprom_diag_fields_fmt, $d, defined($v) ? $v : "",
-                defined($v) ? $u : "";
+              defined($v) ? $u : "";
         }
     }
 
@@ -362,15 +364,15 @@ sub action_show_transceiver_info {
     $usage->() unless defined $port;
 
     my $if_dir = "/sys/class/net/$port";
-    if( ! ( -d $if_dir ) ) {
+    if ( !( -d $if_dir ) ) {
         printf "Interface $port does not exist on system";
-        exit (1);
+        exit(1);
     }
 
     action_show_pause_info($port);
 
     #Show interface details
-    my @cmd = ('/sbin/ethtool', $port);
+    my @cmd = ( '/sbin/ethtool', $port );
     process_show_cmd(@cmd);
     system "/sbin/ethtool -i $port";
 
@@ -435,7 +437,6 @@ sub action_show_transceiver_info {
         $thresholds_hash = %$t_info_hash{'laser-bias-current-thresholds'};
         show_transceiver_diag_info( $thresholds_hash, %bias_thresh2desc_hash );
 
-
         #Measured Values
         printf $eeprom_mv_hdr;
         for ( my $ch = 0 ; $ch < QSFP_CHANNELS ; $ch++ ) {
@@ -453,11 +454,13 @@ sub action_show_transceiver_info {
         printf $eeprom_alw_hdr;
         if ( $eeprom_id eq "QSFP28" ) {
             my $alarm_hash = $$t_info_hash{'physical-channels'}{'alarm-status'};
-            show_transceiver_diag_bit_flags( $alarm_hash, %alw2desc_alarm_hash );
+            show_transceiver_diag_bit_flags( $alarm_hash,
+                %alw2desc_alarm_hash );
             my $warn_hash =
               $$t_info_hash{'physical-channels'}{'warning-status'};
             show_transceiver_diag_bit_flags( $warn_hash, %alw2desc_warn_hash );
             for ( my $ch = 0 ; $ch < QSFP_CHANNELS ; $ch++ ) {
+
                 #Display channel number
                 my $ch_hash =
                   $$t_info_hash{'physical-channels'}{'channel'}[$ch];
@@ -476,20 +479,21 @@ sub action_show_transceiver_info {
             }
         } else {
             my $alarm_hash = $$t_info_hash{'physical-channels'}{'alarm-status'};
-            show_transceiver_diag_bit_flags( $alarm_hash, %alw2desc_alarm_hash );
-	    my $warn_hash =
+            show_transceiver_diag_bit_flags( $alarm_hash,
+                %alw2desc_alarm_hash );
+            my $warn_hash =
               $$t_info_hash{'physical-channels'}{'warning-status'};
             show_transceiver_diag_bit_flags( $warn_hash, %alw2desc_warn_hash );
 
             my $ch_alarm_hash =
               $$t_info_hash{'physical-channels'}{'channel'}[0]{'alarm-status'};
             show_transceiver_diag_bit_flags( $ch_alarm_hash,
-                    %alw2desc_ch_alarm_hash_sfp );
+                %alw2desc_ch_alarm_hash_sfp );
             my $ch_warn_hash =
               $$t_info_hash{'physical-channels'}{'channel'}[0]
-	        {'warning-status'};
+              {'warning-status'};
             show_transceiver_diag_bit_flags( $ch_warn_hash,
-                    %alw2desc_ch_warn_hash_sfp );
+                %alw2desc_ch_warn_hash_sfp );
         }
 
     }
