@@ -1,3 +1,10 @@
+vplane-config (2.81.1) unstable; urgency=medium
+
+  [ Paul Atkins ]
+  * yang: add an initial revision statement to the ethernet-info file
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 12 Nov 2020 13:38:23 +0000
+
 vplane-config (2.81) unstable; urgency=medium
 
   [ Karthik Murugesan ]
