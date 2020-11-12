@@ -131,8 +131,7 @@ sub clear_interface {
         # Merge the Stats
         %$statistics = ( %$statistics, %$xstatistics );
 
-        clear_interface_for_vplane( $ifinfo->{name}, $statistics,
-            $dp_id );
+        clear_interface_for_vplane( $ifinfo->{name}, $statistics, $dp_id );
     }
 }
 
@@ -153,7 +152,8 @@ sub clear_interface_for_vplane {
     print "Clearing $ifname (dataplane)\n";
     print $f $clear_file_magic, "\n";
 
-    if (defined $statistics){
+    if ( defined $statistics ) {
+
         # Clear only stats defined in $statistics
         foreach my $st ( @{$statistics} ) {
             my $var = $st->{tag};
@@ -164,22 +164,23 @@ sub clear_interface_for_vplane {
             print $f $var, ",", $val, "\n";
         }
     } else {
+
         # Clear all stats
-        foreach my $key (keys %$ifstat){
-            my $val = $ifstat->{ $key };
+        foreach my $key ( keys %$ifstat ) {
+            my $val = $ifstat->{$key};
             next unless defined($val);
-            next if ( ($key =~ '^[tr]x_[pb]ps') || ($key =~ '^qstats'));
+            next if ( ( $key =~ '^[tr]x_[pb]ps' ) || ( $key =~ '^qstats' ) );
 
             print $f $key, ",", $val, "\n";
         }
 
         # Clear qstats
         my $qid = 0;
-        foreach my $qstat (@{ $ifstat->{ 'qstats' } }) {
-            foreach my $key (keys %$qstat){
-                my $val = $qstat->{ $key };
+        foreach my $qstat ( @{ $ifstat->{'qstats'} } ) {
+            foreach my $key ( keys %$qstat ) {
+                my $val = $qstat->{$key};
                 next unless defined($val);
-                next if ($val eq 0);
+                next if ( $val eq 0 );
                 print $f "q", $qid, "_", $key, ",", $val, "\n";
             }
             $qid++;
@@ -395,7 +396,7 @@ sub adjust_stats {
         my $xifstat = $ifinfo->{xstatistics};
 
         # Merge the Stats
-        %$ifstat = ( %$ifstat, %$xifstat ); 
+        %$ifstat = ( %$ifstat, %$xifstat );
 
         my %clear =
           get_dataplane_clear_stats( $ifinfo->{name}, $dp_id, $ifstat );
