@@ -350,32 +350,8 @@ sub process_show_cmd {
     }
 }
 
-sub action_show_transceiver_info {
-    my $usage = sub {
-        printf( "Usage for %s --action=xcvr-info\n", $SCRIPT_NAME );
-        printf( "    %s --action=xcvr-info --port=<port-name>\n",
-            $SCRIPT_NAME );
-        exit(1);
-    };
-
-    my $port;
-    GetOptions( "port=s" => \$port, )
-      or $usage->();
-    $usage->() unless defined $port;
-
-    my $if_dir = "/sys/class/net/$port";
-    if ( !( -d $if_dir ) ) {
-        printf "Interface $port does not exist on system";
-        exit(1);
-    }
-
-    action_show_pause_info($port);
-
-    #Show interface details
-    my @cmd = ( '/sbin/ethtool', $port );
-    process_show_cmd(@cmd);
-    system "/sbin/ethtool -i $port";
-
+sub show_transceiver_info {
+    my $port   = shift;
     my $client = Vyatta::Configd::Client->new();
     my $t_info =
       $client->call_rpc_hash( "vyatta-interfaces-dataplane-transceiver-v1",
@@ -495,8 +471,37 @@ sub action_show_transceiver_info {
             show_transceiver_diag_bit_flags( $ch_warn_hash,
                 %alw2desc_ch_warn_hash_sfp );
         }
-
     }
+}
+
+sub action_show_transceiver_info {
+    my $usage = sub {
+        printf( "Usage for %s --action=xcvr-info\n", $SCRIPT_NAME );
+        printf( "    %s --action=xcvr-info --port=<port-name>\n",
+            $SCRIPT_NAME );
+        exit(1);
+    };
+
+    my $port;
+    GetOptions( "port=s" => \$port, )
+      or $usage->();
+    $usage->() unless defined $port;
+
+    my $if_dir = "/sys/class/net/$port";
+    if ( !( -d $if_dir ) ) {
+        printf "Interface $port does not exist on system";
+        exit(1);
+    }
+
+    action_show_pause_info($port);
+
+    #Show interface details
+    my @cmd = ( '/sbin/ethtool', $port );
+    process_show_cmd(@cmd);
+    system "/sbin/ethtool -i $port";
+
+    show_transceiver_info($port);
+
     return;
 }
 
