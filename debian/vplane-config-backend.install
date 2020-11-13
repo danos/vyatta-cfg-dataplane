@@ -1,4 +1,3 @@
-scripts/nbr-res-cfg.pl opt/vyatta/sbin
 scripts/vplane-affinity opt/vyatta/sbin
 scripts/vplane-blink opt/vyatta/sbin
 scripts/vplane-cpumask opt/vyatta/sbin
