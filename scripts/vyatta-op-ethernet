@@ -480,10 +480,10 @@ sub show_platform_state {
     printf $platform_state_hdr . $platform_state if defined($platform_state);
 }
 
-sub action_show_transceiver_info {
+sub action_show_ethernet_info {
     my $usage = sub {
-        printf( "Usage for %s --action=xcvr-info\n", $SCRIPT_NAME );
-        printf( "    %s --action=xcvr-info --port=<port-name>\n",
+        printf( "Usage for %s --action=ethernet-info\n", $SCRIPT_NAME );
+        printf( "    %s --action=ethernet-info --port=<port-name>\n",
             $SCRIPT_NAME );
         exit(1);
     };
@@ -535,7 +535,7 @@ sub call_action_by_name {
     return $action->();
 }
 
-my %actions = ( "xcvr-info" => \&action_show_transceiver_info, );
+my %actions = ( "ethernet-info" => \&action_show_ethernet_info, );
 
 call_action_by_name( \%actions, $SCRIPT_NAME, "action", "" );
 

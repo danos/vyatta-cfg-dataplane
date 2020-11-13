@@ -107,7 +107,7 @@ module vyatta-op-show-interfaces-dataplane-v1 {
 
 				opd:command physical {
 					opd:help "Show physical device information for specified ethernet interface";
-					opd:on-enter 'vyatta-op-transceiver --action=xcvr-info -- --port="$4"';
+					opd:on-enter 'vyatta-op-ethernet --action=ethernet-info -- --port="$4"';
 				opd:privileged true;
 				}
 
