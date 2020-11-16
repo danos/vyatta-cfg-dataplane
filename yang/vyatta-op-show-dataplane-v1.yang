@@ -51,6 +51,10 @@ module vyatta-op-show-dataplane-v1 {
 
 		Defines the top 'dataplane' level under 'show' for operational CLI";
 
+	revision 2020-11-16 {
+		description "Add a show command for 'dataplane feature'.";
+	}
+
 	revision 2020-07-10 {
 		description "Add a show command for 'dataplane statistics'.";
 	}
@@ -77,6 +81,44 @@ module vyatta-op-show-dataplane-v1 {
 					opd:help "Show dataplane feature plugin information";
 					opd:privileged true;
 					opd:on-enter "vyatta-op-dataplane-plugin";
+				}
+			}
+
+			opd:command feature {
+				opd:help "Show dataplane feature information";
+
+				opd:repeatable true;
+				opd:inherit "" {
+					opd:on-enter "vyatta-op-dataplane-feature ${@:4}";
+				}
+				opd:option interface {
+					opd:help "Show features for a specific interface";
+					opd:allowed "echo all; vyatta-interfaces.pl --show dataplane";
+					type string;
+				}
+				opd:option vrf {
+					opd:help "Show features for a specific routing-instance";
+					opd:allowed 'echo all; echo default; getvrflist --name-only';
+					type string;
+				}
+				opd:command global {
+					opd:help "Show global features";
+				}
+				opd:command ip {
+					opd:help "Show IP features";
+				}
+ 				opd:command ip6 {
+					opd:help "Show IPv6 features";
+				}
+				opd:command l2 {
+					opd:help "Show layer 2 features";
+				}
+				opd:command sparse {
+					opd:help "Do not show empty feature node points";
+				}
+				opd:option filter {
+					opd:help "Show features matching a sub-string";
+					type string;
 				}
 			}
 

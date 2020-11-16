@@ -1,0 +1,275 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2020, AT&T Intellectual Property.
+# All rights reserved.
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+
+from collections import deque
+from collections import OrderedDict
+import sys
+import vplaned
+
+#
+# node_list is used as a template to fetch each feature list from the
+# dataplane
+#
+# 'interface', 'vrf' and 'global' reflect the feature node attach point.  For
+# example, separate 'ipv4_validate' feature nodes exist for each interface.
+#
+# 'ipv4', 'ipv6' and 'l2' are simply a convenience to help with the grouping
+# and filtering of the show output.
+#
+# The node names here (e.g. 'ipv4_validate') are simply the op-mode command
+# keyword that has been used in the relevant dataplane PL_REGISTER_OPCMD
+# registration.  e.g. "show features ipv4_validate".
+#
+# These have been derived from the name parameter in the node PL_REGISTER_NODE
+# registration, e.g. .name = "vyatta:ipv4-validate".
+#
+NODE_LIST = {
+    'interface':
+    {
+        'ipv4': ['ipv4_validate', 'ipv4_out', 'ipv4_encap', 'ipv4_out_spath'],
+        'ipv6': ['ipv6_validate', 'ipv6_out', 'ipv6_encap', 'ipv6_out_spath'],
+        'l2': ['ether_lookup']
+    },
+    'vrf':
+    {
+        'ipv4': ['ipv4_route_lookup'],
+        'ipv6': ['ipv6_route_lookup']
+    },
+    'global':
+    {
+        'ipv4': ['ipv4_l4', 'ipv4_udp_in', 'ipv4_drop'],
+        'ipv6': ['ipv6_l4', 'ipv6_udp_in', 'ipv6_drop'],
+        'l2': ['l2_local', 'l2_consume']
+    },
+}
+
+
+#
+# Parse options and store results in the 'ctx' dictionary
+#
+def parse_options(options):
+    #
+    # Convert list to a 'deque' list from 'collections' module.  This allows
+    # us to efficiently pop items of the front of the list.
+    #
+    options = deque(sys.argv[1:])
+
+    ctx = {}
+    ctx['ipv4'] = False
+    ctx['ipv6'] = False
+    ctx['l2'] = False
+    ctx['interface'] = None
+    ctx['vrf'] = None
+    ctx['global'] = False
+    ctx['sparse'] = False
+    ctx['filter'] = None
+
+    while options:
+        opt = options.popleft()
+
+        if opt == "ip":
+            ctx['ipv4'] = True
+        elif opt == "ip6":
+            ctx['ipv6'] = True
+        elif opt == "l2":
+            ctx['l2'] = True
+        elif opt == "sparse":
+            ctx['sparse'] = True
+        elif opt == "global":
+            ctx['global'] = True
+        elif opt == "interface":
+            ctx['interface'] = options.popleft()
+        elif opt == "vrf":
+            ctx['vrf'] = options.popleft()
+        elif opt == "filter":
+            ctx['filter'] = options.popleft()
+
+    if not ctx['ipv4'] and not ctx['ipv6'] and not ctx['l2']:
+        ctx['ipv4'] = True
+        ctx['ipv6'] = True
+        ctx['l2'] = True
+
+    if not ctx['interface'] and not ctx['vrf'] and not ctx['global']:
+        ctx['interface'] = 'all'
+        ctx['vrf'] = 'all'
+        ctx['global'] = True
+
+    return ctx
+
+
+#
+# Fetch the feature lists from the dataplane, re-arrange order, and return a
+# new dictionary
+#
+def get_features(dp, ctx):
+
+    #
+    # Rearrange order of values
+    #
+    def update_feat_dict(d, ap, af, node, inst, feat):
+        if not inst:
+            inst = '-'
+        if ap not in d:
+            d[ap] = {}
+        if inst not in d[ap]:
+            d[ap][inst] = {}
+        if af not in d[ap][inst]:
+            d[ap][inst][af] = {}
+        if node not in d[ap][inst][af]:
+            d[ap][inst][af][node] = []
+        if feat:
+            d[ap][inst][af][node].append(feat)
+        return d
+
+    base_cmd = "pipeline show features"
+    filters = ""
+
+    new = {}
+
+    for ap in NODE_LIST:
+        if not ctx[ap]:
+            continue
+
+        if ap == 'interface' and ctx['interface']:
+            filters += " interface {}".format(ctx['interface'])
+
+        if ap == 'vrf' and ctx['vrf']:
+            filters += " vrf {}".format(ctx['vrf'])
+
+        for af in NODE_LIST[ap]:
+            if not ctx[af]:
+                continue
+
+            for node in NODE_LIST[ap][af]:
+                cmd = "{} {}{}".format(base_cmd, node, filters)
+                data = dp.json_command(cmd)
+
+                #
+                # The global dict does not have a list of instances, so handle
+                # separately
+                #
+                if ap == 'global':
+                    feat_list = data['features'][ap]
+                    # print(json.dumps(feat_list, sort_keys=False, indent=4))
+
+                    if not feat_list:
+                        if not ctx['sparse']:
+                            new = update_feat_dict(new, ap, af, node,
+                                                   None, None)
+                        continue
+
+                    # For each enabled feature ...
+                    for feat in feat_list:
+                        new = update_feat_dict(new, ap, af, node, None, feat)
+                    continue
+
+                #
+                # interface and vrf dicts contain dicts of 'instances'
+                # (e.g. interface names)
+                #
+                for inst_dict in data['features'][ap]:
+                    for inst in inst_dict:
+                        feat_list = inst_dict[inst]
+
+                        if not feat_list:
+                            if not ctx['sparse']:
+                                new = update_feat_dict(new, ap, af, node,
+                                                       inst, None)
+                            continue
+
+                        # For each enabled feature ...
+                        for feat in feat_list:
+                            new = update_feat_dict(new, ap, af, node,
+                                                   inst, feat)
+
+    # Sort the interface dictionary by interface name
+    if 'interface' in new:
+        new['interface'] = OrderedDict(sorted(new['interface'].items(),
+                                              key=lambda t: t[0]))
+
+    return new
+
+
+#
+# Display table of features
+#
+def show_features(data, ctx):
+    fmt = "{:<10}{:<16}{:<8}{:<14}{:<26}"
+
+    print(fmt.format("Attach Pt", "Instance", "Type", "Node", "Features"))
+    print("{:-<9} {:-<15} {:-<7} {:-<13} {:-<25}".format("", "", "", "", ""))
+
+    # print(json.dumps(data, sort_keys=False, indent=4))
+
+    # Column 1 is 'interface', 'vrf', or 'global'
+    for ap in data:
+        col1 = ap
+
+        # Column 2 is the instance of interface or vrf, e.g. interface name
+        for inst in data[ap]:
+            col2 = inst
+
+            # Column 3 is 'ipv4', 'ipv6' or 'l2'
+            for af in data[ap][inst]:
+                col3 = af
+
+                # Column 4 is the feature node name, e.g. 'validate'
+                for node in data[ap][inst][af]:
+
+                    # If the af name (e.g. 'ipv4_' prefixes the node name then
+                    # remove it
+                    col4 = node.replace(af + '_', '')
+
+                    feat_list = data[ap][inst][af][node]
+
+                    #
+                    # If feat_list is empty and 'sparse' has not been
+                    # specified then add a dummy value so the line is
+                    # displayed
+                    #
+                    if not feat_list and not ctx['sparse']:
+                        feat_list.append("-")
+
+                    # Column 5 is the features enabled fon this node
+                    for feat in feat_list:
+                        # Remove the 'vyatta:' prefix, if present
+                        col5 = feat.replace('vyatta:', '')
+
+                        #
+                        # Only print the line if a filter is *not* specified,
+                        # or a filter is specified and it matches a substring
+                        # of the feature or node
+                        #
+                        if ctx['filter'] and col4.find(ctx['filter']) == -1 \
+                           and col5.find(ctx['filter']) == -1:
+                            continue
+
+                        print(fmt.format(col1, col2, col3, col4, col5))
+
+                        # Reset columns for the next line if filter a is *not*
+                        # specified (since we may have filtered the line
+                        # containing columns 1-4)
+                        if not ctx['filter']:
+                            col1 = ""
+                            col2 = ""
+                            col3 = ""
+                            col4 = ""
+
+
+def main():
+    ctx = parse_options(sys.argv[1:])
+
+    with vplaned.Controller() as controller:
+        for dp in controller.get_dataplanes():
+            with dp:
+                data = get_features(dp, ctx)
+                show_features(data, ctx)
+
+
+if __name__ == '__main__':
+    main()

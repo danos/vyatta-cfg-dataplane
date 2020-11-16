@@ -228,7 +228,7 @@ Description: vyatta-op-monitor-dataplane-v1 module
 
 Package: vyatta-op-show-dataplane-v1-yang
 Architecture: all
-Depends: ${misc:Depends}, ${yang:Depends}
+Depends: ${misc:Depends}, ${yang:Depends}, python3
 Description: vyatta-op-show-dataplane-v1 module
  The YANG module for show dataplane operational commands
 
