@@ -105,7 +105,11 @@ sub get_dataplane_clear_stats {
         # sanity check: if unknown stats field is in the clear file,
         # or clear value is greater than current one then don't trust the file,
         # shouldn't need to worry about wrap with 64bit counters
-        if ( !defined( $ifstat->{$var} ) || $val > $ifstat->{$var} ) {
+        # skip qstats, they are in clear file for future use.
+
+        if (($var !~ 'q([0-9]|[1-9][0-9]+)_\w+') &&
+            (!defined( $ifstat->{$var} ) ||
+             ($val > $ifstat->{$var} ))) {
             print "bad stat [$var, $intf]\n";
             close($f);
             unlink $filename;
