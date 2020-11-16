@@ -77,7 +77,7 @@ module vyatta-op-storm-control-v1 {
 				opd:on-enter "vplane-op-storm-control --action show --object policies ";
 
 				opd:option interface {
-					opd:help "Show storm-control statistics on specified interface";
+					opd:help "Show storm-control policies on specified interface";
 					opd:allowed "vyatta-interfaces.pl --show=dataplane";
 					opd:on-enter "vplane-op-storm-control --action show --object policies --dev $5";
 					type union {
