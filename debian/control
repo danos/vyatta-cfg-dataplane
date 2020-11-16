@@ -277,7 +277,8 @@ Description: vyatta-op-show-interfaces-dataplane-v1 module
 
 Package: vyatta-op-storm-control-v1-yang
 Architecture: all
-Depends: vyatta-dataplane-op-storm-ctl-2, ${misc:Depends}, ${yang:Depends}
+Depends: vyatta-dataplane-op-storm-ctl-2, ${misc:Depends}, ${yang:Depends},
+         libvyatta-interface-perl
 Description: vyatta storm control op mode
  Operational commands for traffic storm control
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2018-2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2018-2020, AT&T Intellectual Property. All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 #
@@ -11,6 +11,7 @@ use lib "/opt/vyatta/share/perl5/";
 use Getopt::Long;
 use Vyatta::Configd;
 use Vyatta::Dataplane;
+use Vyatta::Interface;
 use JSON qw( decode_json );
 
 sub main {
@@ -78,7 +79,11 @@ sub show_storm_ctl_policies {
 
         next if ( defined($dev) && ( $dev ne $ifname ) );
 
+        my $intf_obj = new Vyatta::Interface($ifname);
+
         $vlan = "";
+        $vlan = $intf_obj->vlan() if defined $intf_obj;
+
         show_storm_ctl_traffic_thresholds( $ifname, $vlan,
             \@{ $intf->{'storm-control-interface-state'} } );
 
@@ -140,7 +145,10 @@ sub show_storm_ctl_stats {
 
         next if ( defined($dev) && ( $dev ne $ifname ) );
 
+        my $intf_obj = new Vyatta::Interface($ifname);
+
         $vlan = "";
+        $vlan = $intf_obj->vlan() if defined $intf_obj;
         show_storm_ctl_traffic_stats( $ifname, $vlan,
             \@{ $intf->{'storm-control-interface-state'} } );
 
