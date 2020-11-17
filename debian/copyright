@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 
 Files: yang/*
-Copyright: 2017-2019, AT&T Intellectual Property
+Copyright: 2017-2020, AT&T Intellectual Property
 License: BSD-3-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
@@ -29,7 +29,7 @@ License: BSD-3-clause
  THE POSSIBILITY OF SUCH DAMAGE.
 
 Files: *
-Copyright: 2017-2019 AT&T Intellectual Property.  All rights reserved.
+Copyright: 2017-2020 AT&T Intellectual Property.  All rights reserved.
            2011-2017 Brocade Communications Systems, Inc.
 License: LGPL-2.1
  This library is free software; you can redistribute it
