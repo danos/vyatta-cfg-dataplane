@@ -1,3 +1,17 @@
+vplane-config (2.86) unstable; urgency=medium
+
+  [ Paul Atkins ]
+  * debian: set dependency on vyatta-interfaces-base
+
+  [ Robert Shearman ]
+  * yang: add support for configuring per-vif storm control
+  * yang: add support for operational commands for per-vif storm control
+    (Closes: VRVDR-53560)
+  * yang: fix help string for storm control policies interface op-mode command
+  * debian: update copyrights
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 19 Nov 2020 13:36:23 +0000
+
 vplane-config (2.85) unstable; urgency=medium
 
   [ Paul Atkins ]
