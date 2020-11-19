@@ -269,7 +269,9 @@ Description: vyatta-interfaces-dataplane-rpc-v1 module
 
 Package: vyatta-op-show-interfaces-dataplane-v1-yang
 Architecture: all
-Depends: ${misc:Depends}, ${yang:Depends}, vplane-config, vyatta-interfaces-base
+Depends: ${misc:Depends}, ${yang:Depends},
+	 vplane-config,
+	 vyatta-interfaces-base (>= 1.100)
 Description: vyatta-op-show-interfaces-dataplane-v1 module
  Operational mode integration for viewing dataplane interface configuration
 
