@@ -1,3 +1,21 @@
+vplane-config (2.85) unstable; urgency=medium
+
+  [ Paul Atkins ]
+  * yang: clarify the description of the eth-info rpc
+  * yang: add a platform-state leaf to the eth-info-grp
+  * EthernetInfo: rename get_pause_into to get_ether_info
+  * EthernetInfo: Add platform state to the ether_info
+  * vyatta-op-transceiver: run perltidy -ce on file
+  * vyatta-op-transceiver: pull the code to show transceiver into new routine
+  * vyatta-op-transceiver: rename action_show_pause_info
+  * vyatta-op-transceiver: show the platform state
+  * DataplaneStats: run perltidy -ce on file
+  * DataplaneStats: pass $sock to the dataplane if iterator cb funcs
+  * Add the platform State to the dataplane vif interface output
+  * vyatta-op-transceiver: rename to vyatta-op-ethernet
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 19 Nov 2020 11:42:42 +0000
+
 vplane-config (2.84) unstable; urgency=medium
 
   [ Paul Atkins ]
