@@ -15,3 +15,7 @@ Features=vyatta-interfaces-backplane-v1:backplane
 
 [Platform ipi.osde.sm4]
 Features=vyatta-interfaces-backplane-v1:backplane
+
+[Platform ufi.s9500-30xs]
+Yang=vyatta-interfaces-backplane-deviation-s9500-30xs-v1.yang
+Features=vyatta-interfaces-backplane-v1:backplane
