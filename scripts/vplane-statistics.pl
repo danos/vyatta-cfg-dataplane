@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# Copyright (c) 2018, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2018-2020, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -43,6 +43,12 @@ sub show_arp {
     }
     if ( defined( $stat->{mpool_fail} ) ) {
         printf $fmt, $stat->{mpool_fail},   'Mbuf pool limit hits';
+    }
+    if ( defined( $stat->{mem_fail} ) ) {
+        printf $fmt, $stat->{mem_fail}, 'Out of memory hits';
+    }
+    if ( defined( $stat->{cache_limit} ) ) {
+        printf $fmt, $stat->{cache_limit}, 'Cache limit hits';
     }
 }
 
