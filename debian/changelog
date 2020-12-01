@@ -1,3 +1,10 @@
+vplane-config (2.81.3) unstable; urgency=medium
+
+  [ Pooja Chauhan ]
+  * Platform: Support for IPI Model platforms
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Tue, 01 Dec 2020 08:38:45 +0000
+
 vplane-config (2.81.2) unstable; urgency=medium
 
   [ Karthik Murugesan ]
