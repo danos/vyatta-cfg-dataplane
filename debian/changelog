@@ -1,3 +1,10 @@
+vplane-config (2.89) unstable; urgency=medium
+
+  [ Shweta Choudaha ]
+  * backplane: show command support for s9500-30xs
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Thu, 03 Dec 2020 09:23:52 +0000
+
 vplane-config (2.88) unstable; urgency=medium
 
   [ Pooja Chauhan ]
