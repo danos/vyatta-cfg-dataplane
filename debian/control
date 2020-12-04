@@ -290,6 +290,12 @@ Description: Backplane management
  Backplane interface configuration. Commands to bind dataplane interfaces to
  backplane interfaces, configure cpu affinity for backplane interfaces, etc.
 
+Package: vyatta-interfaces-backplane-deviation-s9500-30xs-v1.yang
+Architecture: all
+Depends: vyatta-cfg, ${misc:Depends}, ${yang:Depends}
+Description: Backplane interface YANG deviations for s9500-30xs platform
+ Deviations to the backplane interfaces YANG for s9500-30xs platform
+
 Package: vyatta-op-interfaces-backplane-v1-yang
 Architecture: all
 Depends: ${misc:Depends}, ${yang:Depends}
