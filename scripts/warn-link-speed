@@ -58,8 +58,10 @@ sub validate_link_speed {
 
         $path = sprintf "interfaces dataplane %s speed", $ifname;
         my $sspeed = $config->returnValue($path);
+        $path = sprintf "interfaces dataplane %s disable", $ifname;
+        my $disable = $config->exists($path);
 
-        if ( $wspeed eq $sspeed ) {
+        if ( $wspeed eq $sspeed && !defined($disable) ) {
             printf "Speed %s is not supported on port %s\n", $sspeed, $ifname;
             $fail = 1;
         }
