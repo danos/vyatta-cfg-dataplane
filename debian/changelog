@@ -1,3 +1,12 @@
+vplane-config (2.90) unstable; urgency=medium
+
+  [ Shweta Choudaha ]
+  * backplane: Add s9500-30xs yang deviation package
+  * control : Fix pkg name to use '-' correctly
+  * backplane: Fix the install package name
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Sat, 05 Dec 2020 00:09:46 +0000
+
 vplane-config (2.89) unstable; urgency=medium
 
   [ Shweta Choudaha ]
