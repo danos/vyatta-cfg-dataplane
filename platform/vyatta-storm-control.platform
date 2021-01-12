@@ -1,0 +1,2 @@
+[Platform ufi.s9700-53dx]
+Features=vyatta-security-storm-control-v1:storm-control-vif

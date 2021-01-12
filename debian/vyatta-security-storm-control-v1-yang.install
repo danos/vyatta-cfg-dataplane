@@ -1,3 +1,4 @@
 yang/vyatta-security-storm-control-v1.yang usr/share/configd/yang/
 scripts/vplane-storm-control /opt/vyatta/sbin/
 scripts/vyatta-storm-ctl-state /opt/vyatta/sbin/
+platform/vyatta-storm-control.platform lib/vyatta-platform/platforms
