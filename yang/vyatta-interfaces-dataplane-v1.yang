@@ -63,6 +63,9 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
+	revision 2021-01-17 {
+		description "Allow MTU to be set to industry standard of 9216 bytes.";
+	}
 	revision 2020-09-09 {
 		description "Update the args passed to the vplane-affinity script.";
 	}
@@ -407,7 +410,7 @@ module vyatta-interfaces-dataplane-v1 {
 			uses vif:vlan-proto-group;
 			leaf mtu {
 				type uint32 {
-					range 68..9000;
+					range 68..9216;
 				}
 				configd:priority "381";
 				configd:help "Maximum Transmission Unit (MTU)";
