@@ -334,11 +334,11 @@ sub action_get_eth_info {
 }
 
 sub process_show_cmd {
-    my ($cmd) = $_[0];
+    my (@cmd) = @_;
     my @output;
     my $err;
 
-    if ( !run3( $cmd, undef, \@output, \$err ) ) {
+    if ( !run3( \@cmd, undef, \@output, \$err ) ) {
         die("Failed to run: $err");
     }
 
