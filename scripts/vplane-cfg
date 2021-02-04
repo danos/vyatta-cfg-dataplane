@@ -1,0 +1,74 @@
+#! /usr/bin/perl
+# Copyright (c) 2018-2021, AT&T Intellectual Property.  All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+# Script to add a Rib and xfrm_client section to the dataplane.conf file as
+# this is not overwritten on image upgrade as files in /etc/vyatta are not
+# modified
+#
+#[Rib]
+#control=ipc:///var/run/routing/rib.control
+#
+#[xfrm_client]
+#pull=ipc:///var/run/vyatta/xfrm_pull.ipc
+#push=ipc:///var/run/vyatta/xfrm_push.ipc
+
+
+use strict;
+use warnings;
+use File::Slurp;
+use lib "/opt/vyatta/share/perl5/";
+use Vyatta::FeatureConfig qw(get_cfg);
+
+my $file = "/etc/vyatta/dataplane.conf";
+
+my $rib_section = "Rib";
+my $rib_var = "control";
+my $rib_val = "ipc:///var/run/routing/rib.control";
+
+my $xfrm_section = "xfrm_client";
+my $xfrm_pull_var = "pull";
+my $xfrm_pull_val = "ipc:///var/run/vyatta/xfrm_pull.ipc";
+my $xfrm_push_var = "push";
+my $xfrm_push_val = "ipc:///var/run/vyatta/xfrm_push.ipc";
+
+# Don't use the version of set_cfg from FeatureConfig as that adds a
+# [Defaults] section which we don't want here.
+sub set_cfg {
+    my ( $cfg_file, $section, $var, $value ) = @_;
+    my ( $fh, $success );
+
+    $success = open( $fh, "+<", $cfg_file );
+    die "Could not open config file $cfg_file" unless $success;
+
+    my $cfg = Config::IniFiles->new(
+        -file          => $fh,
+        -allowcontinue => 1,
+        -allowempty    => 1
+    );
+    die
+"Could not create ini instance for $cfg_file : @Config::IniFiles::errors\n"
+      unless defined($cfg);
+
+    $cfg->newval( $section, $var, $value );
+    $cfg->RewriteConfig();
+    close($fh);
+}
+
+
+# Rib
+
+if (!defined get_cfg($file, $rib_section, $rib_var)) {
+    set_cfg($file, $rib_section, $rib_var, $rib_val);
+}
+
+# xfrm_client
+
+if (!defined get_cfg($file, $xfrm_section, $xfrm_pull_var)) {
+    set_cfg($file, $xfrm_section, $xfrm_pull_var, $xfrm_pull_val);
+}
+
+if (!defined get_cfg($file, $xfrm_section, $xfrm_push_var)) {
+    set_cfg($file, $xfrm_section, $xfrm_push_var, $xfrm_push_val);
+}

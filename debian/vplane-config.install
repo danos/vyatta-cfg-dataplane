@@ -17,4 +17,4 @@ scripts/vplane-nd.pl opt/vyatta/bin
 scripts/vplane-route.pl opt/vyatta/bin
 scripts/vplane-show-memory.pl opt/vyatta/bin
 scripts/vplane-statistics.pl opt/vyatta/bin
-scripts/vplane-broker-cfg lib/vplane/prestart.d
+scripts/vplane-cfg lib/vplane/prestart.d
