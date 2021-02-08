@@ -1,3 +1,10 @@
+vplane-config (2.81.4) unstable; urgency=medium
+
+  [ Sameer Agrawal ]
+  * Fix to display the physical settings of the interface. Fixes VRVDR-54161
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 08 Feb 2021 18:37:36 +0000
+
 vplane-config (2.81.3) unstable; urgency=medium
 
   [ Pooja Chauhan ]
