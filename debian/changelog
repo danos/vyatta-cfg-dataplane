@@ -1,3 +1,19 @@
+vplane-config (2.92) unstable; urgency=medium
+
+  [ Daniel Gollub ]
+  * xfrm: add default ZMQ IPC sockets for XFRM interface
+
+  [ Thomas Kiely ]
+  * Storm Ctl J2: Add feature enable
+
+  [ Daniel Gollub ]
+  * vplane-cfg: update xfrm_section on image upgrades
+
+  [ Sameer Agrawal ]
+  * Fix to display the physical settings of the interface. Fixes VRVDR-54161
+
+ -- Srinivas Narayan <narayan@mail.eng.vyatta.net>  Mon, 08 Feb 2021 18:34:14 +0000
+
 vplane-config (2.91) unstable; urgency=medium
 
   [ Ramkumar Ganapathysubramanian ]
