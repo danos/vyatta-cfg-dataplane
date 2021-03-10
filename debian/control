@@ -180,13 +180,6 @@ Breaks: vplane-config (<< 2.10)
 Replaces: vplane-config(<< 2.10)
 Description: Module for accessing dataplane for status commands.
 
-Package: libvyatta-dataplanepunt-perl
-Architecture: all
-Section: contrib/perl
-Depends: xtables-addons-bypass, ${misc:Depends}, ${perl:Depends}
-Description: Module for installing iptables rules for punting traffic
- from the kernel to the dataplane
-
 Package: libvyatta-vplaned-perl
 Architecture: all
 Section: contrib/perl

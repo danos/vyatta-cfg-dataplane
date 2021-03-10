@@ -1,4 +1,4 @@
-SUBDIRS = . tests
+SUBDIRS = .
 
 libxtables_LTLIBRARIES = lib/libxt_BYPASS.la
 libxtablesdir = /lib/xtables/

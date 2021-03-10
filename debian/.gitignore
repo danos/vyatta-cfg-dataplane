@@ -10,6 +10,5 @@ tmp
 vplane-config
 vyatta-routing-instance-dataplane
 xtables-addons-bypass
-libvyatta-dataplanepunt-perl
 python3-vplaned
 vyatta-*-yang
