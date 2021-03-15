@@ -11,7 +11,7 @@ Build-Depends:
  dh-python,
  dh-yang,
  dh-exec,
- iptables-dev (>= 1.4.21-2),
+ libxtables-dev,
  libtool,
  python3-all,
  python3-setuptools,
