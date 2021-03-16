@@ -38,7 +38,7 @@ module vyatta-security-storm-control-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2018-2020, AT&T Intellectual Property.
+		"Copyright (c) 2018-2021, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -70,7 +70,11 @@ module vyatta-security-storm-control-v1 {
 
 		 SPDX-License-Identifier: BSD-3-Clause
 
-		 YANG module and scripts for Vyatta storm control";
+		 YANG module for Vyatta storm control";
+
+	revision 2021-03-16 {
+		description "Updated description.";
+	}
 
 	revision 2020-11-05 {
 		description "Add ability to configure profile on a vif";
