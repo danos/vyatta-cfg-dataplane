@@ -1,3 +1,16 @@
+vplane-config (2.93) unstable; urgency=medium
+
+  [ Nicholas Brown ]
+  * Build-depend on libxtables-dev instead of iptables-dev
+
+  [ Daniel Gollub ]
+  * Drop unused DataplanePunt perl module
+
+  [ Paul Aitken ]
+  * Fix incorrect YANG descriptions
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Fri, 19 Mar 2021 20:03:07 +0000
+
 vplane-config (2.92) unstable; urgency=medium
 
   [ Daniel Gollub ]
