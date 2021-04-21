@@ -63,6 +63,9 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
+	revision 2021-04-21 {
+		description "Added configd:must for improved VIF validation.";
+	}
 	revision 2021-01-17 {
 		description "Allow MTU to be set to industry standard of 9216 bytes.";
 	}
@@ -420,6 +423,13 @@ module vyatta-interfaces-dataplane-v1 {
 			}
 			uses if-parameters;
 			uses vif:vif-group;
+			must "true()" {
+				configd:must "validate-vif-vlan-settings(.)";
+				error-message
+					"Either one or more VIFs share the same VLAN ID without
+					different inner vlans, or one or more VIFs without explicit
+					VLAN ID set match the VLAN ID on another VIF.";
+			}
 			leaf-list address {
 				type if:address-dhcp;
 				ordered-by "user";
