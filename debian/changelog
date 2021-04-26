@@ -1,3 +1,10 @@
+vplane-config (2.95) unstable; urgency=medium
+
+  [ William Ivory ]
+  * Add more efficient VIF VLAN validation
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Mon, 26 Apr 2021 10:50:43 +0100
+
 vplane-config (2.94) unstable; urgency=medium
 
   [ Pim van Pelt ]
