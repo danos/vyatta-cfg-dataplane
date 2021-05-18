@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# Copyright (c) 2018-2020, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2018-2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -25,6 +25,12 @@ sub show_arp {
     my $fmt  = "    %u %s\n";
 
     print "arp:\n";
+    if ( defined( $stat->{total_added} ) ) {
+        printf $fmt, $stat->{total_added}, 'Valid dynamic or static ARP entries added';
+    }
+    if ( defined( $stat->{total_deleted} ) ) {
+        printf $fmt, $stat->{total_deleted}, 'Valid dynamic or static ARP entries deleted';
+    }
     printf $fmt, $stat->{tx_request},   'ARP requests sent';
     printf $fmt, $stat->{tx_reply},     'ARP replies sent';
     printf $fmt, $stat->{rx_request},   'ARP requests received';
