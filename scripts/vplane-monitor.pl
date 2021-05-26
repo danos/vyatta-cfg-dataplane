@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# Copyright (c) 2017,2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2017,2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -19,7 +19,7 @@ use lib "/opt/vyatta/share/perl5/";
 use Vyatta::Dataplane;
 
 my $CTRL_CFG    = "/etc/vyatta/controller.conf";
-my $oneshot_fmt = "%-10s %16s %-5s %16s %-5s %9s %9s\n";
+my $oneshot_fmt = "%-10s %16s %-5s %16s %-5s %9s %9s %5s %5s\n";
 my ( $dp_ids, $dp_conns, $local_controller );
 
 # condense pps value
@@ -170,9 +170,12 @@ sub sum_cores {
             if ($intf) {
                 $intf->{rx_packets} += $rx->{packets};
                 $intf->{rx_rate}    += $rx->{rate};
+                $intf->{rxq}        += 1;
             } else {
                 $intf->{rx_packets} = $rx->{packets};
                 $intf->{rx_rate}    = $rx->{rate};
+                $intf->{rxq}        = 1;
+                $intf->{txq}        = $rx->{directpath} eq "yes" ? "  >" : 0;
                 $sum->{$name}       = $intf;
             }
         }
@@ -184,9 +187,11 @@ sub sum_cores {
             if ($intf) {
                 $intf->{tx_packets} += $tx->{packets};
                 $intf->{tx_rate}    += $tx->{rate};
+                $intf->{txq}        += 1;
             } else {
                 $intf->{tx_packets} = $tx->{packets};
                 $intf->{tx_rate}    = $tx->{rate};
+                $intf->{txq}        = 1;
                 $sum->{$name}       = $intf;
             }
 
@@ -250,11 +255,11 @@ sub driver_stats {
 
 sub show_oneshot_hdr {
     print
-"                    RX                     TX                   Slow Path\n";
+"                    RX                     TX                   Slow Path     RXQs  TXQs \n";
     printf $oneshot_fmt, "Interface", "Packets", "Rate", "Packets", "Rate",
-      "In", "Out";
+      "In", "Out", " ", " ";
     print
-"------------------------------------------------------------------------------\n";
+"-----------------------------------------------------------------------------------------\n";
 }
 
 sub show_oneshot_single {
@@ -282,8 +287,15 @@ sub show_oneshot_single {
         printf $oneshot_fmt, $ifname,
           fmt_undef( $stats->{rx_packets} ), fmt_pps( $stats->{rx_rate} ),
           fmt_undef( $stats->{tx_packets} ), fmt_pps( $stats->{tx_rate} ),
-          fmt_undef( $stats->{slow_in} ),    fmt_undef( $stats->{slow_out} );
+          fmt_undef( $stats->{slow_in} ),    fmt_undef( $stats->{slow_out} ),
+          fmt_undef( $stats->{rxq} ),        fmt_undef( $stats->{txq} );
     }
+}
+
+sub show_oneshot_key {
+    print "\n\nkey:\n";
+    print " > the interface is using directpath forwarding.\n";
+    STDOUT->flush();
 }
 
 sub show_oneshot {
@@ -297,6 +309,8 @@ sub show_oneshot {
             show_oneshot_single($sock);
         }
     }
+
+    show_oneshot_key();
 }
 
 my ( $fabric, $refresh, $count );
