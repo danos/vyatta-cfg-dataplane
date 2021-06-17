@@ -54,6 +54,13 @@ sub show_route_summary {
     printf "Nexthop: %u used %u free\n", $hop->{used}, $hop->{free};
 }
 
+sub show_next_hop_summary {
+    my ( $af_cmd, $decoded, $nexthop ) = @_;
+    my $entry = $decoded->{ $af_cmd . '_nexthop_stats' };
+
+    printf "Nexthop: %s count %u\n", $entry->{gateway}, $entry->{count};
+}
+
 sub show_label_decode {
     my ($label) = @_;
 
@@ -304,7 +311,7 @@ sub function_exists {
 }
 
 my ( $fabric, $table, $v6, $summary, $ip, $routing_instance_name );
-my ( $labeltable, $withprefix, $inlabel, $all );
+my ( $labeltable, $nexthop, $withprefix, $inlabel, $all );
 
 sub usage {
 
@@ -320,6 +327,7 @@ sub usage {
     print "       $0 --lookup <ADDR>" . $ri_opt_str . "[--v6]\n";
     print "       $0 --label-table [--with-prefix]\n";
     print "       $0 --in-label <NUM>\n";
+    print "       $0 --next-hop <ADDR>\n";
 }
 
 if ($vrf_available) {
@@ -331,6 +339,7 @@ if ($vrf_available) {
         "summary"            => \$summary,
         "lookup=s"           => \$ip,
         "label-table"        => \$labeltable,
+        "next-hop=s"         => \$nexthop,
         "with-prefix"        => \$withprefix,
         "in-label=s"         => \$inlabel,
         "all"                => \$all,
@@ -344,6 +353,7 @@ if ($vrf_available) {
         "summary"     => \$summary,
         "lookup=s"    => \$ip,
         "label-table" => \$labeltable,
+        "next-hop=s"  => \$nexthop,
         "with-prefix" => \$withprefix,
         "in-label=s"  => \$inlabel,
         "all"         => \$all,
@@ -397,6 +407,8 @@ if (    $table
     $cmd .= " table $table" if $table;
 }
 
+$cmd .= " nexthop " . $nexthop if $nexthop;
+
 $cmd .= " summary" if $summary;
 
 $cmd .= " all" if $all;
@@ -414,7 +426,7 @@ if ($ip) {
     $cmd .= " $depth" if defined $depth;
 }
 
-if ( !$table && !$summary && !$ip ) {
+if ( !$table && !$summary && !$ip && !$nexthop ) {
     $cmd .= " show $route_segment_cnt";
 }
 
@@ -436,6 +448,8 @@ for my $fid (@$dpids) {
 
         if ($summary) {
             show_route_summary( $af_cmd, $decoded );
+        } elsif ($nexthop) {
+            show_next_hop_summary( $af_cmd, $decoded, $nexthop );
         } elsif ($labeltable) {
             show_label_table( $sock, $decoded, $withprefix, $inlabel ? 1 : 0 );
         } elsif ($ip) {
