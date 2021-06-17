@@ -2,6 +2,9 @@ module vyatta-op-show-dataplane-v1 {
 	namespace "urn:vyatta.com:mgmt:vyatta-op-show-dataplane:1";
 	prefix vyatta-op-show-dataplane-v1;
 
+	import vyatta-types-v1 {
+		prefix types;
+	}
 	import vyatta-opd-extensions-v1 {
 		prefix opd;
 	}
@@ -17,7 +20,7 @@ module vyatta-op-show-dataplane-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2019-2020, AT&T Intellectual Property.
+		"Copyright (c) 2019-2021, AT&T Intellectual Property.
 		 All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -51,6 +54,10 @@ module vyatta-op-show-dataplane-v1 {
 
 		Defines the top 'dataplane' level under 'show' for operational CLI";
 
+	revision 2021-08-23 {
+		description "Add show dataplane route next-hop statistics.";
+	}
+
 	revision 2021-06-24 {
 		description "Add a show command for 'dataplane arp'.";
 	}
@@ -69,6 +76,28 @@ module vyatta-op-show-dataplane-v1 {
 
 	revision 2019-05-20 {
 		description "Initial version";
+	}
+
+	grouping route-nexthop-group {
+		opd:command next-hop {
+			opd:help "Show IP route next hop statistics";
+			opd:argument address {
+				opd:help "Show IP route next hop statistics";
+				opd:on-enter "vplane-route.pl --next-hop $5";
+				type types:ipv4-address;
+			}
+		}
+	}
+
+	grouping route6-nexthop-group {
+		opd:command next-hop {
+			opd:help "Show IPv6 route next hop statistics";
+			opd:argument address {
+				opd:help "Show IPv6 route next hop statistics";
+				opd:on-enter "vplane-route.pl --v6 --next-hop $5";
+				type types:ip-address;
+			}
+		}
 	}
 
 	opd:augment /show:show {
@@ -123,6 +152,40 @@ module vyatta-op-show-dataplane-v1 {
 				opd:option filter {
 					opd:help "Show features matching a sub-string";
 					type string;
+				}
+			}
+
+			opd:command route {
+				opd:help "Show dataplane FIB table";
+				opd:on-enter "vplane-route.pl";
+				uses route-nexthop-group;
+				opd:option routing-instance {
+					opd:help "Show dataplane routing-instance information";
+					opd:allowed 'getvrflist --name-only';
+					opd:on-enter "";
+					type string;
+					uses route-nexthop-group {
+						refine next-hop/address {
+							opd:on-enter "vplane-route.pl --next-hop $7 --routing-instance $5";
+						}
+					}
+				}
+			}
+
+			opd:command route6 {
+				opd:help "Show dataplane FIB IPv6 table";
+				opd:on-enter "vplane-route.pl --v6";
+				uses route6-nexthop-group;
+				opd:option routing-instance {
+					opd:help "Show dataplane routing-instance information";
+					opd:allowed 'getvrflist --name-only';
+					opd:on-enter "";
+					type string;
+					uses route6-nexthop-group {
+						refine next-hop/address {
+							opd:on-enter "vplane-route.pl --v6 --next-hop $7 --routing-instance $5";
+						}
+					}
 				}
 			}
 
