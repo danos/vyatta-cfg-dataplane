@@ -143,6 +143,17 @@ Depends:
 Description: vyatta-system-hugepages-v1 module
  The YANG module for hugepages configuration
 
+Package: vyatta-system-sfp-v1-yang
+Architecture: all
+Section: contrib/admin
+Depends:
+ python3,
+ vyatta-dataplane,
+ vyatta-cfg ( >= 0.104.32),
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-system-sfp modules
+
 Package: vyatta-system-dataplane-v1-yang
 Architecture: all
 Depends:
