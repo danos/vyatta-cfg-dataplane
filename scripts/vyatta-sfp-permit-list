@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2021 AT&T Intellectual Property. All Rights Reserved.
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# This is run if there has been a change under "interfaces" vlan-modify policy
+# or if vlan-modify policy is changed where it looks for vlan-modify policies
+# attached  to interfaces
+#
+
+import argparse
+import logging
+import subprocess
+import sys
+
+from argparse import ArgumentParser
+from vplaned import Controller
+from vyatta import configd
+from vyatta.proto import SFPMonitor_pb2
+
+from collections import defaultdict
+from vyatta.interfaces.interfaces import getInterfaceConfig as gid
+
+CONFIG_CANDIDATE = configd.Client.CANDIDATE
+CONFIG_RUNNING = configd.Client.RUNNING
+client = None
+dbg = logging.debug
+err = logging.error
+
+
+def sfp_permit_mismatch():
+    global client
+
+    try:
+        client = configd.Client()
+    except Exception as exc:
+        err("Cannot establish client session: '{}'".format(str(exc).strip()))
+        return 1
+
+    status = client.node_get_status(
+        CONFIG_CANDIDATE, "system sfp permit mismatch-action")
+
+    tree = client.tree_get_dict("system sfp permit mismatch-action")
+    entries = tree['mismatch-action']
+
+    cfg = SFPMonitor_pb2.SfpPermitConfig()
+    cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
+
+    if entries['logging'] == 'enabled' and status != client.DELETED:
+        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.ENABLE
+    else:
+        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
+
+    enforcement = entries['enforcement']
+
+    if enforcement['state'] == 'enabled' and status != client.DELETED:
+        cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
+    else:
+        cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+
+    cfg.mismatch.delay = enforcement['activation-delay']
+
+    key = "sfp permit mismatch-action"
+
+    if status == client.DELETED:
+        ctrl_action = 'DELETE'
+    else:
+        ctrl_action = 'SET'
+    controller.store(key, cfg, "ALL", ctrl_action,
+                     cmd_name="vyatta:sfppermitlist")
+
+    return 0
+
+
+def sfp_permit_list(policy):
+    global client
+
+    try:
+        client = configd.Client()
+    except Exception as exc:
+        err("Cannot establish client session: '{}'".format(str(exc).strip()))
+        return 1
+
+    status = client.node_get_status(
+        CONFIG_CANDIDATE, "system sfp permit list " + policy)
+    if status == client.DELETED:
+        dbg("Delete list {}".format(policy))
+        cfg = SFPMonitor_pb2.SfpPermitConfig()
+        cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
+        cfg.list.name = policy
+
+        key = "sfp permit list {}".format(policy)
+
+        controller.store(key, cfg, "ALL", 'DELETE',
+                         cmd_name="vyatta:sfppermitlist")
+        return 0
+
+    dbg("sfp permit {} changed ".format(policy))
+    tree = client.tree_get_dict("system sfp permit list {}".format(policy))
+    dbg("sfp permit list {} {} ".format(policy, tree))
+
+    cfg = SFPMonitor_pb2.SfpPermitConfig()
+    cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.SET
+    cfg.list.name = policy
+
+    if 'vendor' in tree:
+        vendor_list = tree['vendor']
+        for vendor in vendor_list:
+            vendor_cfg = cfg.list.vendors.add()
+            if 'name' in vendor:
+                vendor_cfg.name = vendor['name']
+            if 'oui' in vendor:
+                vendor_cfg.oui = vendor['oui']
+            parts_list = vendor['part']
+            for part in parts_list:
+                part_cfg = vendor_cfg.parts.add()
+                if 'id' in part:
+                    part_cfg.part = part['id']
+                    if 'revision' in part:
+                        revs = part['revision']
+                        for rev in revs:
+                            rev_cfg = part_cfg.revs.add()
+                            rev_cfg.rev = rev
+            dbg(vendor)
+    key = "sfp permit list {}".format(policy)
+    controller.store(key, cfg, "ALL", 'SET',
+                     cmd_name="vyatta:sfppermitlist")
+
+    return 0
+
+
+if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO,
+                        format='sfp permit list: %(message)s')
+    parser = argparse.ArgumentParser(
+        description='Vyatta sfp permit list command')
+    parser.add_argument('-l', '--list', help='sfp-permit-list permit list')
+    parser.add_argument('-m', '--mismatch',
+                        help='sfp-permit-list permit mismatch')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='Enable debug output')
+
+    with Controller() as controller:
+
+        args = parser.parse_args()
+
+        log = logging.getLogger()
+        if args.debug:
+            log.setLevel(logging.DEBUG)
+        if args.list:
+            ret = sfp_permit_list(args.list)
+        elif args.mismatch:
+            ret = sfp_permit_mismatch()
+        else:
+            parser.print_help()
+            ret = 1
+
+    sys.exit(ret)
