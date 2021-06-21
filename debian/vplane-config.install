@@ -8,7 +8,7 @@ del-pbr-tablemap opt/vyatta/etc/vrf-manager-del-table.d
 scripts/0400-vplane opt/vyatta/share/vyatta-op/functions/tech-support.d
 scripts/nbr-res-flush.pl opt/vyatta/bin
 scripts/netplug/gratarp etc/netplug/linkup.d
-scripts/vplane-arp.pl opt/vyatta/bin
+scripts/vplane-arp opt/vyatta/bin
 scripts/vplane-gre.pl opt/vyatta/bin
 scripts/vplane-ifconfig.pl opt/vyatta/bin
 scripts/vplane-monitor-cmd.pl opt/vyatta/bin

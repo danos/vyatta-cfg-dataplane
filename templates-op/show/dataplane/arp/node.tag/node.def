@@ -1,3 +1,3 @@
 help: Show dataplane ARP table for a specific interface
 allowed: ${vyatta_sbindir}/vyatta-interfaces.pl --show dataplane,vhost,bonding,bridge,switch
-run: vplane-arp.pl --show-intf "$4" arp
+run: vplane-arp --show-intf "$4" arp

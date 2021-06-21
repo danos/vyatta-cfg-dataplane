@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2021, AT&T Intellectual Property.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+from argparse import ArgumentParser
+from vplaned import Controller
+import subprocess
+from re import search
+from json import dumps
+import socket
+
+func_arp = "arp"
+func_arp_all = "arp-all"
+PLATFORM_STATE_CMD = "/opt/vyatta/bin/vyatta-platform-util"
+
+arg_parser = ArgumentParser()
+arg_parser.add_argument("function_choice", choices=[
+                        func_arp, func_arp_all], help="ARP function")
+arg_parser.add_argument("--show-intf", required=False, help="Interface name")
+arg_parser.add_argument("--addr", required=False, help="IP address")
+args = arg_parser.parse_args()
+
+
+def get_interfaces():
+    """
+    Returns a list of network interfaces in the system. Excludes hidden 
+    interfaces starting with '.' and vrf interfaces.
+    """
+
+    interfaces = socket.if_nameindex()
+    valid_interfaces = [x[1] for x in interfaces if (
+        not x[1].startswith("vrf") or not x[1].startswith("."))]
+    return valid_interfaces
+
+
+def show_arp(intf, addr):
+    """
+    Show dataplane arp entries.
+    """
+
+    output_format = "{:20} {:10} {:17} {}"
+    mac_format = "{}:{}:{}:{}:{}:{}"
+    intf_found = False
+    intf_cmd = ""
+
+    for dp in controller.get_dataplanes():
+        with dp:
+            if intf is not None:
+                if intf in get_interfaces():
+                    intf_found = True
+                    intf_cmd = intf
+                else:
+                    continue
+            if (intf is None) or (addr is None):
+                print(output_format.format("IP Address",
+                                           "Flags", "HW address", "Device"))
+            try:
+                data = dp.json_command("arp show {}".format(intf_cmd))
+            except:
+                continue
+            for entry in data["arp"]:
+                if (addr is not None) and (addr != entry["ip"]):
+                    continue
+                mac = mac_format.format(*tuple(x.zfill(2)
+                                               for x in entry["mac"].split(':')))
+                if (intf is None) or (addr is None):
+                    print(output_format.format(
+                        entry["ip"], entry["flags"], mac, entry["ifname"]))
+                else:
+                    print("{} {}".format(entry["ip"], entry["ifname"]))
+                    print("    Flags: {}".format(entry["flags"]))
+                    print("    HW Address: {}".format(entry["mac"]))
+                    if "platform_state" in entry:
+                        print("    Platform state:")
+                        platform_state_process = subprocess.run(
+                            [PLATFORM_STATE_CMD, "--format-platform-state", "ip-neigh"],
+                            stdout=subprocess.PIPE, input=dumps(entry),
+                            encoding='ascii', text=True)
+                        if platform_state_process.returncode == 0:
+                            print(platform_state_process.stdout)
+                        else:
+                            print(platform_state_process.stderr)
+
+    if (intf is not None) and not intf_found:
+        print("interface " + intf + " does not exist on system")
+
+
+def show_arp_all(intf, addr):
+    """
+    Show both kernel and dataplane arp entries.
+    """
+
+    zero_mac = "00:00:00:00:00:00"
+    kernel_flags = {
+        "REACHABLE": "VALID",
+        "STALE": "VALID",
+        "DELAY": "VALID",
+        "PROBE": "VALID",
+        "PERMANENT": "STATIC",
+        "NOARP": "STATIC"
+    }
+    output_format = "{:18} {:17} {:10} {:10} {}"
+    mac_format = "{}:{}:{}:{}:{}:{}"
+    intf_found = False
+    intf_cmd = ""
+
+    kernel_flags_re = "|".join(list(kernel_flags))
+
+    arp_output = subprocess.run(
+        ["ip", "-4", "neigh"], stdout=subprocess.PIPE, text=True)
+    if arp_output.returncode != 0:
+        print("show arp failed")
+        return
+    lines = arp_output.stdout.splitlines()
+
+    kernel_arp = {}
+
+    for line in lines:
+        match = search(
+            "([^ ]+) dev ([^ ]+) lladdr ([^ ]+) (" + kernel_flags_re + ")", line)
+        if(match):
+            kernel_arp[match.group(1)] = [match.group(
+                2), match.group(3), kernel_flags[match.group(4)], 1]
+        else:
+            match = search("([^ ]+) dev ([^ ]+)  FAILED", line)
+            if match:
+                kernel_arp[match.group(1)] = [
+                    match.group(2), zero_mac, "FAILED", 1]
+            else:
+                match = search("([^ ]+) dev ([^ ]+)  INCOMPLETE", line)
+                if match:
+                    kernel_arp[match.group(1)] = [match.group(
+                        2), zero_mac, "PENDING", 1]
+                else:
+                    print("Unknown kernel arp format")
+                    return
+
+    print(output_format.format("IP Address", "HW address",
+                               "Dataplane", "Controller", "Device"))
+
+    for dp in controller.get_dataplanes():
+        with dp:
+            if intf is not None:
+                intf_cmd = intf
+                if intf in get_interfaces():
+                    intf_found = True
+                else:
+                    continue
+            try:
+                data = dp.json_command("arp show {}".format(intf_cmd))
+            except:
+                continue
+            for entry in data["arp"]:
+                if (addr is not None) and (addr != entry["ip"]):
+                    continue
+                mac = mac_format.format(*tuple(x.zfill(2)
+                                               for x in entry["mac"].split(":")))
+                kentry = kernel_arp[entry["ip"]
+                                    ] if entry["ip"] in kernel_arp else None
+                if kentry and (kentry[1] == mac or kentry[1] == zero_mac):
+                    print(output_format.format(
+                        entry["ip"], mac, entry["flags"], kentry[2], entry["ifname"]))
+                    kentry[3] = 0
+                else:
+                    print(output_format.format(
+                        entry["ip"], mac, entry["flags"], "", entry["ifname"]))
+
+    for ip in kernel_arp:
+        if (intf is not None):
+            if (kernel_arp[ip][0] != intf):
+                continue
+            else:
+                intf_found = True
+        if kernel_arp[ip][3] == 0:
+            continue
+        if (addr is not None) and (addr != ip):
+            continue
+        print(output_format.format(
+            ip, kernel_arp[ip][1], "", kernel_arp[ip][2], kernel_arp[ip][0]))
+
+    if (intf is not None) and not intf_found:
+        print("interface " + intf + " does not exist on system")
+
+
+with Controller() as controller:
+    if args.function_choice == func_arp_all:
+        show_arp_all(args.show_intf, args.addr)
+    elif args.function_choice == func_arp:
+        show_arp(args.show_intf, args.addr)
+    else:
+        print("Incorrect function choice")

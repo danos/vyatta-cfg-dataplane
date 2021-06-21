@@ -1,2 +1,2 @@
 help: Show dataplane arp table
-run: vplane-arp.pl arp
+run: vplane-arp arp
