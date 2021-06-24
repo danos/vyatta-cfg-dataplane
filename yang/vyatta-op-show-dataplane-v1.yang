@@ -125,6 +125,26 @@ module vyatta-op-show-dataplane-v1 {
 			opd:command statistics {
 				opd:help "Show dataplane statistics";
 			}
+			
+		    opd:command arp {
+			    opd:help "Show dataplane ARP table";
+		        opd:on-enter "vplane-arp arp";
+			
+			    opd:argument ifname {
+                    opd:help "Show dataplane ARP table for a specific interface";
+                    opd:allowed "vyatta-interfaces.pl --show dataplane,vhost,bonding,bridge,switch";
+                    type string;
+                    opd:on-enter "vplane-arp --show-intf $4 arp";
+
+                    opd:argument address {
+                            opd:help "Show dataplane ARP entry for a specific address";
+                            type string{
+                                opd:pattern-help "<x.x.x.x>";
+                            }
+                            opd:on-enter "vplane-arp --show-intf $4 --addr $5 arp";
+                    }
+                }
+			}
 		}
 	}
 }

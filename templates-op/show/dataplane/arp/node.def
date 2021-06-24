@@ -1,2 +1,0 @@
-help: Show dataplane arp table
-run: vplane-arp arp

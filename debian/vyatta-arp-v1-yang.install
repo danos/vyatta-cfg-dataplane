@@ -1,0 +1,2 @@
+yang/vyatta-arp-v1.yang usr/share/configd/yang/
+scripts/vyatta-op-arp /opt/vyatta/bin/

@@ -1,3 +1,0 @@
-help: Show dataplane ARP entry for a specific address
-allowed: echo -n '<x.x.x.x>'
-run: vplane-arp --show-intf "$4" --addr "$5" arp
