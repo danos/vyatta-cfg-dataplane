@@ -1,3 +1,12 @@
+vplane-config (2.96) unstable; urgency=medium
+
+  [ ck407g ]
+  * Added 'Valid dynamic or static ARP entries added|deleted' to dataplane arp statistics
+  * Added directpath forwarding and number of RXQ and TXQ info to 'show dataplane' output.
+  * Python conversion of legacy code in vplane-arp.pl
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Fri, 25 Jun 2021 14:23:03 +0100
+
 vplane-config (2.95) unstable; urgency=medium
 
   [ William Ivory ]
