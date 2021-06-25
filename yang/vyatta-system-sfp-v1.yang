@@ -5,6 +5,12 @@ module vyatta-system-sfp-v1 {
 	import vyatta-system-v1 {
 		prefix system;
 	}
+	import vyatta-types-v1 {
+		prefix types;
+	}
+	import configd-v1 {
+		prefix configd;
+	}
 
 	organization "AT&T Inc.";
 	contact
@@ -48,18 +54,169 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
+	revision 2021-07-06 {
+		description "Add SFP permit-list configuration";
+	}
 	revision 2021-06-20 {
 		description "Initial revision of SFP monitoring
-			     and configuration";
+				and configuration";
+	}
+
+	feature sfp-permit-list {
+		description "Enable SFP permit lists of inserted transceiver modules";
 	}
 
 	augment /system:system {
 		container sfp {
 			presence "Enable SFP features";
 			configd:help "SFP monitoring parameters";
-			description "SFP monitoring and permit list
-				     configuration and control";
+			description "SFP monitoring and permit list configuration and control";
+
+			container permit{
+				if-feature sfp-permit-list;
+				configd:help "Configure allowed SFPs and action taken in case of a mismatch";
+				description
+					"Network platforms can support a wide variety SFP transceiver modules.
+					However sometimes it is prefered that only certified or validated SFP
+					transceiver modules are installed on certain network platforms. SFP permit
+					lists allow the configuration of lists of SFP transceiver modules that
+                                        are supported in the system.";
+
+				list list {
+					configd:help "List of allowed SFP transceiver modules";
+					configd:end "vyatta-sfp-permit-list --list $VAR(@)";
+					description
+						"This list contains details about SFP transceiver modules that are
+						certified or validated on this platform.";
+					key "name";
+
+					leaf name {
+						type types:alpha-numeric {
+							configd:help "Name of the permit list";
+						}
+                                                description
+							"Name given to the permit list";
+					}
+
+					list vendor {
+						key "name";
+						configd:help "Name of the SFP vendor";
+						description "SFP vendor name";
+
+						leaf name {
+							configd:help "Full name of SFP transceiver vendor";
+							type string {
+								length 1..16;
+						        }
+							description
+								"Full name of SFP transceiver vendor. This SFP field is 16-octets
+								ASCII characters, left-aligned and padded on the right with ASCII spaces (20h)";
+						}
+
+						leaf oui {
+							configd:help "The vendor organizationally unique identifier field (vendor OUI)";
+							type string {
+								pattern '[0-9a-f]{2,2}\.[0-9a-f]{2,2}\.[0-9a-f]{2,2}';
+							}
+							description
+								"The vendor organizationally unique identifier field (vendor OUI)
+								is a 3-byte field that contains the IEEE Company Identifier for
+								the vendor. A value of all zero in the 3-byte field indicates
+								that the Vendor OUI is unspecified. It is represented here as
+								a hexadecimal string with a '.' between consecutive bytes";
+							reference
+								"https://en.wikipedia.org/wiki/Organizationally_unique_identifier
+								http://standards-oui.ieee.org/oui/oui.txt";
+						}
+
+						list part {
+							key "id";
+
+							leaf id {
+								type string {
+									pattern '[0-9a-zA-Z_\-]{1,15}[0-9a-zA-Z_\-\*]{0,1}';
+								}
+								configd:help "SFP Vendor-Part ID";
+								description
+									"Transceiver vendor's part number. the SFP field is 16-octets
+									that contains ASCII characters, left-aligned and padded on the
+									right with ASCII spaces (20h). If part number is undefined,
+									all 16 octets = '0'. For configuration a  wildcard '*' is
+									allowed as the right most octet entered";
+							}
+							leaf-list revision {
+								configd:help "Transceiver vendor's revision number";
+								type string {
+									length 1..4;
+								}
+								description
+									"Transceiver vendor's revision number. The SFP field is 4-octets
+									that contains ASCII characters, left-aligned and padded on the
+									right with ASCII spaces (20h)";
+								max-elements 20;
+								ordered-by "user";
+							}
+
+							min-elements 1;
+							max-elements 20;
+							ordered-by "user";
+
+						}
+					}
+				}
+
+				container mismatch-action {
+					configd:end "vyatta-sfp-permit-list --mismatch $VAR(@)";
+					description "Permit list validation failure control";
+					configd:help "Action on permit list failure.";
+
+					leaf logging {
+						description "Logging preference";
+						configd:help "Logging preference";
+						type enumeration {
+							enum "disabled" {
+								description "Disable insertion SFP logging";
+								configd:help "Disable insertion SFP logging";
+							}
+							enum "enabled" {
+								description "Enable insertion SFP logging";
+								configd:help "Enable insertion SFP logging";
+							}
+						}
+						default "enabled";
+					}
+
+					container enforcement {
+						leaf state {
+							configd:help "Toggle SFP permit list activation";
+							description
+								"Enable or disable SFP permit lists. If enabled inserted SFP will be
+								validated against the configured permit lists.";
+							type enumeration {
+								enum disabled {
+									description "Disable SFP enforcement";
+								}
+								enum "enabled" {
+									description "Enable SFP enforcement";
+								}
+							}
+							default "disabled";
+						}
+
+						leaf activation-delay {
+							description
+								"Delay after boot to the activation of the SFP permit lists
+								 if they are enabled";
+							configd:help "Activation delay after boot";
+							type uint32 {
+								range 1..32000;
+							}
+							units "seconds";
+							default 900;
+						}
+					}
+				}
+			}
 		}
 	}
 }
-
