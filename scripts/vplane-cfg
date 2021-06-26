@@ -13,6 +13,10 @@
 #[xfrm_client]
 #pull=ipc:///var/run/vyatta/xfrm_pull.ipc
 #push=ipc:///var/run/vyatta/xfrm_push.ipc
+#
+#[sfpd_update]
+#file=/var/run/vyatta/sfpd-presence
+#url=ipc:///var/run/vyatta/sfp_monitor.socket
 
 
 use strict;
@@ -32,6 +36,12 @@ my $xfrm_pull_var = "pull";
 my $xfrm_pull_val = "ipc:///var/run/vyatta/xfrm_pull.ipc";
 my $xfrm_push_var = "push";
 my $xfrm_push_val = "ipc:///var/run/vyatta/xfrm_push.ipc";
+
+my $sfpd_section = "sfpd_update";
+my $sfpd_file_var = "file";
+my $sfpd_file_val = "/var/run/vyatta/sfpd-presence";
+my $sfpd_url_var = "url";
+my $sfpd_url_val = "url=ipc:///var/run/vyatta/sfp_monitor.socket";
 
 # Don't use the version of set_cfg from FeatureConfig as that adds a
 # [Defaults] section which we don't want here.
@@ -71,4 +81,14 @@ if (!defined get_cfg($file, $xfrm_section, $xfrm_pull_var)) {
 
 if (!defined get_cfg($file, $xfrm_section, $xfrm_push_var)) {
     set_cfg($file, $xfrm_section, $xfrm_push_var, $xfrm_push_val);
+}
+
+# sfpd_update
+
+if (!defined get_cfg($file, $sfpd_section, $sfpd_file_var)) {
+    set_cfg($file, $sfpd_section, $sfpd_file_var, $sfpd_file_val );
+}
+
+if (!defined get_cfg($file, $sfpd_section, $sfpd_url_var)) {
+    set_cfg($file, $sfpd_section, $sfpd_url_var, $sfpd_url_val );
 }
