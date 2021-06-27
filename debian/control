@@ -148,11 +148,12 @@ Architecture: all
 Section: contrib/admin
 Depends:
  python3,
- vyatta-dataplane,
- vyatta-cfg ( >= 0.104.32),
+ vyatta-cfg ( >= 1.29),
+ vyatta-dataplane-cfg-pb-vyatta:sfppermitlist-0,
  ${misc:Depends},
  ${yang:Depends}
 Description: vyatta-system-sfp modules
+ Vyatta SFP monitoring configuration.
 
 Package: vyatta-system-dataplane-v1-yang
 Architecture: all
