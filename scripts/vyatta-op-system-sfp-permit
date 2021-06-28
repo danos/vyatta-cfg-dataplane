@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2021, AT&T Intellectual Property.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+from argparse import ArgumentParser
+from vplaned import Controller
+import json
+import socket
+import time
+
+arg_parser = ArgumentParser()
+arg_parser.add_argument("--status", help="Get device status",
+                    action="store_true")
+args = arg_parser.parse_args()
+
+def sfp_approved(device):
+    if device['approved']:
+        return "Approved"
+    else:
+        return "Unapproved"
+
+def sfp_enabled(device):
+    if device['disabled']:
+        return "Disabled"
+    else:
+        return "Monitor"
+
+def sfp_mode(obj):
+    if obj:
+        return "Enforcement"
+    else:
+        return "Monitor"
+
+output_format = "{:20}{:16}{:16}{:10}{:6}{:12}{:10}"
+
+def print_device(device):
+    print(output_format.format(device['intf_name'],
+                               device['part_id'],
+                               device['vendor_name'],
+                               device['vendor_oui'],
+                               device['vendor_rev'],
+                               sfp_approved(device),
+                               sfp_enabled(device)))
+
+def show_sfp_permit_status():
+    """
+    Show sfp permit-list status.
+    """
+    for dp in controller.get_dataplanes():
+        with dp:
+            str_data = dp.json_command("sfp-permit-list dump devices")
+            obj = str_data.get('sfp-permit-list-devices')
+            sec = obj['up-time']
+            uptime = time.gmtime(sec)
+
+            print()
+            print("Mode: [{}]".format(sfp_mode(obj['enforcement-mode'])))
+            print("Time since boot: {} days".format(sec // (60 * 60 * 24)),
+                  time.strftime("%H:%M:%S",uptime))
+            print()
+            print(output_format.format("Interface", "Part-id", "Vendor",
+                                       "OUI", "Rev", "Status", "Action"))
+            print()
+            devices = obj['devices']
+            for device in devices:
+                print_device(device)
+
+with Controller() as controller:
+    show_sfp_permit_status()
+
