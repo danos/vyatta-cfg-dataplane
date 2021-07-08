@@ -94,8 +94,7 @@ module vyatta-system-sfp-v1 {
 						type types:alpha-numeric {
 							configd:help "Name of the permit list";
 						}
-                                                description
-							"Name given to the permit list";
+						description "Name given to the permit list";
 					}
 
 					list vendor {
