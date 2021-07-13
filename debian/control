@@ -155,6 +155,17 @@ Depends:
 Description: vyatta-system-sfp modules
  Vyatta SFP monitoring configuration.
 
+Package: vyatta-op-system-sfp-v1-yang
+Architecture: all
+Section: contrib/admin
+Depends:
+ python3,
+ vyatta-dataplane-op-sfp-permit-list-0,
+ ${misc:Depends},
+ ${yang:Depends}
+Description: vyatta-op-system-sfp modules
+ Vyatta SFP monitoring operational commands.
+
 Package: vyatta-system-dataplane-v1-yang
 Architecture: all
 Depends:
