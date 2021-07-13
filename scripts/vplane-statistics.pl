@@ -114,13 +114,13 @@ sub show_icmp {
     my $fmt  = "    %u %s\n";
 
     print "icmp:\n";
-    printf "    %u ICMP messages received\n",     $stat->{InMsgs};
-    printf "    %u input ICMP message failed.\n", $stat->{InErrors};
+    printf $fmt, $stat->{InMsgs},    "ICMP messages received";
+    printf $fmt, $stat->{InErrors},  "input ICMP message failed";
     print "    ICMP received message types:\n";
     icmp_msg_types( $stat, 'In' );
 
-    printf "    %u ICMP messages sent\n",   $stat->{OutMsgs};
-    printf "    %u ICMP messages failed\n", $stat->{OutErrors};
+    printf $fmt, $stat->{OutMsgs},   "ICMP messages sent";
+    printf $fmt, $stat->{OutErrors}, "ICMP messages failed";
     print "    ICMP sent message types:\n";
     icmp_msg_types( $stat, 'Out' );
 }
@@ -190,13 +190,13 @@ sub show_icmp6 {
     my $fmt  = "    %u %s\n";
 
     print "icmp6:\n";
-    printf "    %u ICMP messages received\n",     $stat->{InMsgs};
-    printf "    %u input ICMP message failed.\n", $stat->{InErrors};
+    printf $fmt, $stat->{InMsgs},    "ICMP messages received";
+    printf $fmt, $stat->{InErrors},  "input ICMP message failed";
     print "    ICMP received message types:\n";
     icmp6_msg_types( $stat, 'In' );
 
-    printf "    %u ICMP messages sent\n",   $stat->{OutMsgs};
-    printf "    %u ICMP messages failed\n", $stat->{OutErrors};
+    printf $fmt, $stat->{OutMsgs},   "ICMP messages sent";
+    printf $fmt, $stat->{OutErrors}, "ICMP messages failed";
     print "    ICMP sent message types:\n";
     icmp6_msg_types( $stat, 'Out' );
 }
