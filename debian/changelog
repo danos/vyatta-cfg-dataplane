@@ -1,3 +1,21 @@
+vplane-config (2.97) unstable; urgency=medium
+
+  [ Simon Barber ]
+  * Yang: system sfp root container
+  * Add SFP permit-list yang
+  * SFP permit list config processing script
+  * sfp permit list  installation script
+  * sfp permit list dataplane.conf config
+  * Add dataplane dependency on sfp yang package
+  * Add SFP yang opd file
+  * OPD: Add output processing script
+  * Add platform deviation for sfp-permit-list
+
+  [ kalaivani vinothkumar ]
+  * Add op mode yang package for SFP permit list
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Tue, 13 Jul 2021 13:37:26 +0100
+
 vplane-config (2.96) unstable; urgency=medium
 
   [ ck407g ]
