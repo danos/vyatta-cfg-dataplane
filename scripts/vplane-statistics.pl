@@ -78,8 +78,10 @@ sub show_ip {
     printf $fmt, $stat->{FragCreates},      'fragments created';
 }
 
-sub icmp_hist {
+# Output the count for each message type
+sub icmp_msg_types {
     my ( $stat, $dir ) = @_;
+    my $msg_exists = 0;
     my %types = (
         'DestUnreachs'  => 'destination unreachable',
         'TimeExcds'     => 'timeout in transit',
@@ -98,7 +100,12 @@ sub icmp_hist {
         my $val = $stat->{"$dir$key"};
 
         next if ( $val eq 0 );
+        $msg_exists = 1;
         printf "        %s: %u\n", $types{$key}, $val;
+    }
+
+    if (!$msg_exists) {
+        print "        none\n"
     }
 }
 
@@ -109,13 +116,13 @@ sub show_icmp {
     print "icmp:\n";
     printf "    %u ICMP messages received\n",     $stat->{InMsgs};
     printf "    %u input ICMP message failed.\n", $stat->{InErrors};
-    print "    ICMP input histogram:\n";
-    icmp_hist( $stat, 'In' );
+    print "    ICMP received message types:\n";
+    icmp_msg_types( $stat, 'In' );
 
     printf "    %u ICMP messages sent\n",   $stat->{OutMsgs};
     printf "    %u ICMP messages failed\n", $stat->{OutErrors};
-    print "    ICMP output histogram:\n";
-    icmp_hist( $stat, 'Out' );
+    print "    ICMP sent message types:\n";
+    icmp_msg_types( $stat, 'Out' );
 }
 
 sub show_ip6 {
@@ -143,8 +150,10 @@ sub show_ip6 {
     printf $fmt, $stat->{OutMcastPkts},     'outgoing multicast packets';
 }
 
-sub icmp6_hist {
+# Output the count for each message type
+sub icmp6_msg_types {
     my ( $stat, $dir ) = @_;
+    my $msg_exists = 0;
     my %types = (
         'DestUnreachs'           => 'destination unreachable',
         'PktTooBigs'             => 'packets too big',
@@ -167,7 +176,12 @@ sub icmp6_hist {
 
         next unless defined($val);
         next if ( $val eq 0 );
+        $msg_exists = 1;
         printf "        %s: %u\n", $types{$key}, $val;
+    }
+
+    if (!$msg_exists) {
+        print "        none\n"
     }
 }
 
@@ -178,13 +192,13 @@ sub show_icmp6 {
     print "icmp6:\n";
     printf "    %u ICMP messages received\n",     $stat->{InMsgs};
     printf "    %u input ICMP message failed.\n", $stat->{InErrors};
-    print "    ICMP input histogram:\n";
-    icmp6_hist( $stat, 'In' );
+    print "    ICMP received message types:\n";
+    icmp6_msg_types( $stat, 'In' );
 
     printf "    %u ICMP messages sent\n",   $stat->{OutMsgs};
     printf "    %u ICMP messages failed\n", $stat->{OutErrors};
-    print "    ICMP outut histogram:\n";
-    icmp6_hist( $stat, 'Out' );
+    print "    ICMP sent message types:\n";
+    icmp6_msg_types( $stat, 'Out' );
 }
 
 sub show_nd6 {
