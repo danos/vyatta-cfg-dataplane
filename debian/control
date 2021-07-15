@@ -6,7 +6,7 @@ Build-Depends:
  autoconf,
  automake,
  autotools-dev,
- debhelper (>= 9),
+ debhelper (>= 11),
  dh-autoreconf,
  dh-python,
  dh-yang,
