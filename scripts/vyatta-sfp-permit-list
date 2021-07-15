@@ -122,25 +122,21 @@ def sfp_permit_list(policy):
     cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.SET
     cfg.list.name = policy
 
-    if 'vendor' in tree:
-        vendor_list = tree['vendor']
-        for vendor in vendor_list:
-            vendor_cfg = cfg.list.vendors.add()
-            if 'name' in vendor:
-                vendor_cfg.name = vendor['name']
-            if 'oui' in vendor:
-                vendor_cfg.oui = vendor['oui']
-            parts_list = vendor['part']
-            for part in parts_list:
-                part_cfg = vendor_cfg.parts.add()
-                if 'id' in part:
-                    part_cfg.part = part['id']
-                    if 'revision' in part:
-                        revs = part['revision']
-                        for rev in revs:
-                            rev_cfg = part_cfg.revs.add()
-                            rev_cfg.rev = rev
-            dbg(vendor)
+    if 'index' in tree:
+        index_list = tree['index']
+        for index in index_list:
+            sfp_cfg = cfg.list.SFPs.add()
+            if 'index' in index:
+                sfp_cfg.index = index['index']
+            if 'part' in index:
+                sfp_cfg.part = index['part']
+            if 'vendor' in index:
+                sfp_cfg.vendor = index['vendor']
+            if 'oui' in index:
+                sfp_cfg.oui = index['oui']
+            if 'revision' in index:
+                sfp_cfg.rev = index['revision']
+            dbg(index)
     key = "sfp permit list {}".format(policy)
     controller.store(key, cfg, "ALL", 'SET', cmd_name="vyatta:sfppermitlist")
 

@@ -72,7 +72,7 @@ module vyatta-system-sfp-v1 {
 			configd:help "SFP monitoring parameters";
 			description "SFP monitoring and permit list configuration and control";
 
-			container permit{
+			container permit {
 				if-feature sfp-permit-list;
 				configd:help "Configure allowed SFPs and action taken in case of a mismatch";
 				description
@@ -80,7 +80,7 @@ module vyatta-system-sfp-v1 {
 					However sometimes it is prefered that only certified or validated SFP
 					transceiver modules are installed on certain network platforms. SFP permit
 					lists allow the configuration of lists of SFP transceiver modules that
-                                        are supported in the system.";
+					are supported in the system.";
 
 				list list {
 					configd:help "List of allowed SFP transceiver modules";
@@ -97,69 +97,61 @@ module vyatta-system-sfp-v1 {
 						description "Name given to the permit list";
 					}
 
-					list vendor {
-						key "name";
-						configd:help "Name of the SFP vendor";
-						description "SFP vendor name";
+					list index {
+						key "index";
+						leaf index {
+							configd:help "Identifier for entry";
+							description "Identifier for entry";
+							type uint32 {
+								range 1..1000;
+								configd:help "Identifier for entry";
+							}
+						}
 
 						leaf name {
 							configd:help "Full name of SFP transceiver vendor";
 							type string {
 								length 1..16;
-						        }
+							}
 							description
-								"Full name of SFP transceiver vendor. This SFP field is 16-octets
-								ASCII characters, left-aligned and padded on the right with ASCII spaces (20h)";
+								"The full name of the SFP transceiver vendor, up to 16 ASCII characters";
 						}
 
 						leaf oui {
-							configd:help "The vendor organizationally unique identifier field (vendor OUI)";
+							configd:help "Vendor organizationally unique identifier field (vendor OUI)";
 							type string {
 								pattern '[0-9a-f]{2,2}\.[0-9a-f]{2,2}\.[0-9a-f]{2,2}';
 							}
 							description
-								"The vendor organizationally unique identifier field (vendor OUI)
-								is a 3-byte field that contains the IEEE Company Identifier for
-								the vendor. A value of all zero in the 3-byte field indicates
-								that the Vendor OUI is unspecified. It is represented here as
-								a hexadecimal string with a '.' between consecutive bytes";
+								"The SFP transceiver vendor's organizationally unique identifier 
+								field (vendor OUI) is a 3-byte field that contains the IEEE Company 
+								Identifier for the vendor. A value of all zero in the 3-byte field 
+								indicates that the Vendor OUI is unspecified. It is represented here 
+								as a hexadecimal string with a '.' between consecutive bytes";
 							reference
 								"https://en.wikipedia.org/wiki/Organizationally_unique_identifier
 								http://standards-oui.ieee.org/oui/oui.txt";
 						}
 
-						list part {
-							key "id";
-
-							leaf id {
-								type string {
-									pattern '[0-9a-zA-Z_\-]{1,15}[0-9a-zA-Z_\-\*]{0,1}';
-								}
-								configd:help "SFP Vendor-Part ID";
-								description
-									"Transceiver vendor's part number. the SFP field is 16-octets
-									that contains ASCII characters, left-aligned and padded on the
-									right with ASCII spaces (20h). If part number is undefined,
-									all 16 octets = '0'. For configuration a  wildcard '*' is
-									allowed as the right most octet entered";
+						leaf part {
+							type string {
+								pattern '[0-9a-zA-Z_\-]{1,15}[0-9a-zA-Z_\-\*]{0,1}';
 							}
-							leaf-list revision {
-								configd:help "Transceiver vendor's revision number";
-								type string {
-									length 1..4;
-								}
-								description
-									"Transceiver vendor's revision number. The SFP field is 4-octets
-									that contains ASCII characters, left-aligned and padded on the
-									right with ASCII spaces (20h)";
-								max-elements 20;
-								ordered-by "user";
+							configd:help "SFP Vendor-Part ID";
+							description
+								"The SFP transceiver vendor's part number, up to 16 ASCII characters
+								 A wildcard character ('*'), is allowed as the last (right-most) 
+								 character";
+							mandatory true;
+						}
+
+						leaf revision {
+							configd:help "SFP Transceiver vendor's revision number";
+							type string {
+								length 1..4;
 							}
-
-							min-elements 1;
-							max-elements 20;
-							ordered-by "user";
-
+							description
+								"The SFP transceiver vendor's revision number, up to 4 ASCII characters";
 						}
 					}
 				}
