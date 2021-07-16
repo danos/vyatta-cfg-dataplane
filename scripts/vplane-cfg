@@ -41,7 +41,7 @@ my $sfpd_section = "sfpd_update";
 my $sfpd_file_var = "file";
 my $sfpd_file_val = "/var/run/vyatta/sfpd-presence";
 my $sfpd_url_var = "url";
-my $sfpd_url_val = "url=ipc:///var/run/vyatta/sfp_monitor.socket";
+my $sfpd_url_val = "ipc:///var/run/vyatta/sfp_monitor.socket";
 
 # Don't use the version of set_cfg from FeatureConfig as that adds a
 # [Defaults] section which we don't want here.
