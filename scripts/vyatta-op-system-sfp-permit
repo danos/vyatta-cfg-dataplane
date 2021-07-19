@@ -57,7 +57,7 @@ def show_sfp_permit_status():
             uptime = time.gmtime(sec)
 
             print()
-            print("Mode: [{}]".format(sfp_mode(obj['enforcement-mode'])))
+            print("Mode: {}".format(sfp_mode(obj['enforcement-mode'])))
             print("Time since boot: {} days".format(sec // (60 * 60 * 24)),
                   time.strftime("%H:%M:%S",uptime))
             print()
