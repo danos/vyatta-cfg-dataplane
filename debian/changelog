@@ -1,3 +1,18 @@
+vplane-config (2.98) unstable; urgency=medium
+
+  [ Thomas Kiely ]
+  * Remove spurious "url=" prefix for sfpd_monitor
+
+  [ Cian O'Sullivan ]
+  * Remove square braces from SFP mode output
+  * Remove histogram output line
+  * Respect ICMP statistics output format
+
+  [ ck407g ]
+  * YANG conversion of ARP operational commands
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Mon, 19 Jul 2021 13:41:06 +0100
+
 vplane-config (2.97) unstable; urgency=medium
 
   [ Simon Barber ]
