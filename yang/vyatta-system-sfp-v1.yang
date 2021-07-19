@@ -54,7 +54,7 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
-	revision 2021-07-06 {
+	revision 2021-07-19 {
 		description "Add SFP permit-list configuration";
 	}
 	revision 2021-06-20 {
@@ -186,6 +186,8 @@ module vyatta-system-sfp-v1 {
 					}
 
 					container enforcement {
+						description "SFP enforcement mode parameters";
+						configd:help "SFP enforcement mode parameters";
 						leaf state {
 							configd:help "Toggle SFP permit list activation";
 							description
@@ -194,9 +196,11 @@ module vyatta-system-sfp-v1 {
 							type enumeration {
 								enum disabled {
 									description "Disable SFP enforcement";
+									configd:help "Disable SFP enforcement";
 								}
 								enum "enabled" {
 									description "Enable SFP enforcement";
+									configd:help "Enable SFP enforcement";
 								}
 							}
 							default "disabled";
