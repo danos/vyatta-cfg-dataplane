@@ -53,6 +53,10 @@ def show_sfp_permit_status():
         with dp:
             str_data = dp.json_command("sfp-permit-list dump devices")
             obj = str_data.get('sfp-permit-list-devices')
+
+            if obj is None:
+                return
+
             sec = obj['up-time']
             uptime = time.gmtime(sec)
 

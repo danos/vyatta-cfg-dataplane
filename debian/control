@@ -160,7 +160,7 @@ Architecture: all
 Section: contrib/admin
 Depends:
  python3,
- vyatta-dataplane-op-sfp-permit-list-0,
+ vyatta-dataplane-op-sfp-permit-list-1,
  ${misc:Depends},
  ${yang:Depends}
 Description: vyatta-op-system-sfp modules
