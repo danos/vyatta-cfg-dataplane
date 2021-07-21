@@ -51,6 +51,10 @@ module vyatta-op-show-dataplane-v1 {
 
 		Defines the top 'dataplane' level under 'show' for operational CLI";
 
+	revision 2021-06-24 {
+		description "Add a show command for 'dataplane arp'.";
+	}
+
 	revision 2020-11-16 {
 		description "Add a show command for 'dataplane feature'.";
 	}
