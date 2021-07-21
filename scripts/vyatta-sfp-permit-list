@@ -24,6 +24,7 @@ from vyatta.interfaces.interfaces import getInterfaceConfig as gid
 
 CONFIG_CANDIDATE = configd.Client.CANDIDATE
 CONFIG_RUNNING = configd.Client.RUNNING
+DEFAULT_ENFORCEMENT_DELAY = 900
 client = None
 dbg = logging.debug
 err = logging.error
@@ -38,28 +39,39 @@ def sfp_permit_mismatch():
         err("Cannot establish client session: '{}'".format(str(exc).strip()))
         return 1
 
-    status = client.node_get_status(
-        CONFIG_CANDIDATE, "system sfp permit mismatch-action")
+    node = "system sfp permit mismatch-action"
 
-    tree = client.tree_get_dict("system sfp permit mismatch-action")
-    entries = tree['mismatch-action']
+    if client.node_exists(client.AUTO, node):
+        status = client.node_get_status(
+            CONFIG_CANDIDATE, node)
+    else:
+        status = client.DELETED
 
     cfg = SFPMonitor_pb2.SfpPermitConfig()
     cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
 
-    if entries['logging'] == 'enabled' and status != client.DELETED:
-        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.ENABLE
-    else:
+    if status == client.DELETED:
         cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
-
-    enforcement = entries['enforcement']
-
-    if enforcement['state'] == 'enabled' and status != client.DELETED:
-        cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
-    else:
         cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+        cfg.mismatch.delay = DEFAULT_ENFORCEMENT_DELAY
 
-    cfg.mismatch.delay = enforcement['activation-delay']
+    else:
+        tree = client.tree_get_dict(node)
+        entries = tree['mismatch-action']
+
+        if entries['logging'] == 'enabled':
+            cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.ENABLE
+        else:
+            cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
+
+        enforcement = entries['enforcement']
+
+        if enforcement['state'] == 'enabled':
+            cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
+        else:
+            cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+
+        cfg.mismatch.delay = enforcement['activation-delay']
 
     key = "sfp permit mismatch-action"
 
@@ -82,8 +94,14 @@ def sfp_permit_list(policy):
         err("Cannot establish client session: '{}'".format(str(exc).strip()))
         return 1
 
-    status = client.node_get_status(
-        CONFIG_CANDIDATE, "system sfp permit list " + policy)
+    node = "system sfp permit list " + policy
+
+    if client.node_exists(client.AUTO, node):
+        status = client.node_get_status(
+            CONFIG_CANDIDATE, node)
+    else:
+        status = client.DELETED
+
     if status == client.DELETED:
         dbg("Delete list {}".format(policy))
         cfg = SFPMonitor_pb2.SfpPermitConfig()
@@ -97,7 +115,7 @@ def sfp_permit_list(policy):
         return 0
 
     dbg("sfp permit {} changed ".format(policy))
-    tree = client.tree_get_dict("system sfp permit list {}".format(policy))
+    tree = client.tree_get_dict(node)
     dbg("sfp permit list {} {} ".format(policy, tree))
 
     cfg = SFPMonitor_pb2.SfpPermitConfig()
@@ -124,8 +142,7 @@ def sfp_permit_list(policy):
                             rev_cfg.rev = rev
             dbg(vendor)
     key = "sfp permit list {}".format(policy)
-    controller.store(key, cfg, "ALL", 'SET',
-                     cmd_name="vyatta:sfppermitlist")
+    controller.store(key, cfg, "ALL", 'SET', cmd_name="vyatta:sfppermitlist")
 
     return 0
 
