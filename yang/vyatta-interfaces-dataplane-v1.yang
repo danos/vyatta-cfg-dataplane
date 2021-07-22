@@ -26,7 +26,7 @@ module vyatta-interfaces-dataplane-v1 {
 		 Web: www.att.com";
 
 	description
-		"Copyright (c) 2017-2020, AT&T Intellectual Property.
+		"Copyright (c) 2017-2021, AT&T Intellectual Property.
 		 All rights reserved.
 		 Copyright (c) 2014-2017 by Brocade Communications Systems, Inc.
 		 All rights reserved.
@@ -63,6 +63,9 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
+	revision 2021-07-22 {
+		description "Add constraint to disallow MTU less than 1280 on interfaces with any IPv6 configuration";
+	}
 	revision 2021-04-21 {
 		description "Added configd:must for improved VIF validation.";
 	}
@@ -420,6 +423,9 @@ module vyatta-interfaces-dataplane-v1 {
 				default "1500";
 				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu $VAR(@) --action ${COMMIT_ACTION}";
 				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu 1500 --action ${COMMIT_ACTION}";
+				must "not((current() < 1280) and ((../address[contains(., ':')]) or (../address = 'dhcpv6') or (../ipv6)))" {
+					error-message "MTU less than 1280 not permitted on interfaces with any IPv6 configuration";
+				}
 			}
 			uses if-parameters;
 			uses vif:vif-group;
