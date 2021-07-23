@@ -24,6 +24,7 @@ override_dh_auto_configure: setup.py
 override_dh_auto_build: setup.py
 	make
 	make -C lib/c++
+	scripts/check_scripts
 	dh_auto_build
 
 override_dh_auto_install:

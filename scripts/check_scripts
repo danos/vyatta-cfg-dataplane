@@ -1,0 +1,33 @@
+#!/bin/bash
+
+error=0
+files=`find scripts -type f`
+for f in $files
+do
+    mime=`file -b --mime-type $f`
+    case $mime in
+	text/x-python)
+	    flake8 -j1 $f >& $f.err.txt
+	    if [ -s $f.err.txt ]; then
+		echo -----------------------------------------------------------
+		echo "flake8 error in $f"
+		echo -----------------------------------------------------------
+		cat $f.err.txt
+		error=1
+	    fi
+	    rm $f.err.txt;;
+	text/x-perl)
+	    perltidy -ce $f
+	    diff $f $f.tdy > $f.diff
+	    if [ -s $f.diff ]; then
+		echo -----------------------------------------------------------
+		echo "perltidy error in $f"
+		echo -----------------------------------------------------------
+		cat $f.diff
+		error=1
+	    fi
+	    rm $f.tdy $f.diff
+    esac
+done
+
+exit $error
