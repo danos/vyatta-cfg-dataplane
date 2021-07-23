@@ -85,31 +85,31 @@ my $fabric;
 
 GetOptions( 'fabric=s' => \$fabric, ) or usage();
 
-my ($dpids, $dpsocks) = Vyatta::Dataplane::setup_fabric_conns($fabric);
-if (scalar(@$dpids) < 1) {
-	if (defined($fabric)) {
-		die "Dataplane $fabric is not connected or does not exist\n";
-	} else {
-		die "No active dataplanes found\n";
-	}
+my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
+if ( scalar(@$dpids) < 1 ) {
+    if ( defined($fabric) ) {
+        die "Dataplane $fabric is not connected or does not exist\n";
+    } else {
+        die "No active dataplanes found\n";
+    }
 }
 
 for my $fid (@$dpids) {
-	my $sock = ${$dpsocks}[$fid];
-	die "Can not connect to dataplane $fid\n"
-		unless defined ($sock);
+    my $sock = ${$dpsocks}[$fid];
+    die "Can not connect to dataplane $fid\n"
+      unless defined($sock);
 
-	my $response = $sock->execute('memory');
-	die "No response from dataplane $fid\n"
-		unless (defined($response));
+    my $response = $sock->execute('memory');
+    die "No response from dataplane $fid\n"
+      unless ( defined($response) );
 
-	my $decoded = decode_json($response);
+    my $decoded = decode_json($response);
 
-	print "\nvplane $fid:\n\n"
-		unless ($fid == 0);
-	show_mempool( $decoded->{mempool} );
-	show_memzone( $decoded->{memzone} );
-	show_rte_malloc( $decoded->{rte_malloc} );
-	show_malloc( $decoded->{malloc} );
+    print "\nvplane $fid:\n\n"
+      unless ( $fid == 0 );
+    show_mempool( $decoded->{mempool} );
+    show_memzone( $decoded->{memzone} );
+    show_rte_malloc( $decoded->{rte_malloc} );
+    show_malloc( $decoded->{malloc} );
 }
 Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );

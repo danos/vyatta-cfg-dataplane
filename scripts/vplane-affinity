@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 #
-# Copyright (c) 2017,2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2017,2019,2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -109,12 +109,10 @@ sub update {
     if ( !defined($if) ) {
         if ( is_backplane_intf($dev) ) {
             $path = "interfaces backplane $dev";
-        }
-        else {
+        } else {
             die "Invalid device $dev\n" unless defined($if);
         }
-    }
-    else {
+    } else {
         $path = $if->path();
     }
 
@@ -122,15 +120,13 @@ sub update {
 
     if ( $cfg->exists("cpu-affinity") ) {
         set_cpu_affinity( $dev, $cfg->returnValue("cpu-affinity") );
-    }
-    elsif ( $cfg->exists("receive-cpu-affinity") ) {
+    } elsif ( $cfg->exists("receive-cpu-affinity") ) {
         my @rx_tx_mask = (
             $cfg->returnValue("receive-cpu-affinity"),
             $cfg->returnValue("transmit-cpu-affinity")
         );
         set_rx_tx_cpu_affinity( $dev, @rx_tx_mask );
-    }
-    else {
+    } else {
         delete_cpu_affinity($dev);
     }
 }
@@ -147,8 +143,7 @@ sub show_affinity_info {
 
     if ( defined $ifname ) {
         get_cpu_affinity($ifname);
-    }
-    else {
+    } else {
         show_affinity_info_rpc();
     }
 }
@@ -163,8 +158,7 @@ sub get_cpu_affinity {
         if ( !is_backplane_intf($ifname) ) {
             die "$ifname is not a backplane interface\n";
         }
-    }
-    else {
+    } else {
         die "$ifname is not a dataplane interface\n"
           if ( $intf->type() ne 'dataplane' );
         $fabric = $intf->dpid();
@@ -197,8 +191,7 @@ sub get_cpu_affinity {
     if ( defined($rxaffinity) ) {
         my $rxcpuset = Vyatta::CPUset->new( '0x' . $rxaffinity );
         $params{'rx-cpu-affinity'} = $rxcpuset->range();
-    }
-    else {
+    } else {
         $params{'rx-cpu-affinity'} = '';
     }
 
@@ -206,8 +199,7 @@ sub get_cpu_affinity {
     if ( defined($txaffinity) ) {
         my $txcpuset = Vyatta::CPUset->new( '0x' . $txaffinity );
         $params{'tx-cpu-affinity'} = $txcpuset->range();
-    }
-    else {
+    } else {
         $params{'tx-cpu-affinity'} = '';
     }
 

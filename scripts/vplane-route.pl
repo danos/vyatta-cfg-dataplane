@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# Copyright (c) 2018-2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2018-2019,2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -262,7 +262,7 @@ sub show_mpls_route {
     show_fec( $route, $fec );
     if ( defined( $route->{nhg_platform_state} ) ) {
         my $pd_state =
-            $sock->format_platform_state( 'route-nhg', encode_json($route) );
+          $sock->format_platform_state( 'route-nhg', encode_json($route) );
 
         # remove newline since this will be added by the separator
         # in show_nexthop
@@ -313,7 +313,9 @@ sub usage {
     if ($vrf_available) {
         $ri_opt_str = " [--routing-instance=<NAME>] ";
     }
-    print "Usage: $0 [--fabric=N]" . $ri_opt_str . "[table=N] [--v6] [--all] \n";
+    print "Usage: $0 [--fabric=N]"
+      . $ri_opt_str
+      . "[table=N] [--v6] [--all] \n";
     print "       $0 --summary" . $ri_opt_str . "[--v6]\n";
     print "       $0 --lookup <ADDR>" . $ri_opt_str . "[--v6]\n";
     print "       $0 --label-table [--with-prefix]\n";
@@ -356,8 +358,8 @@ my $af_cmd = 'route';
 $af_cmd .= '6' if $v6;
 my $cmd;
 
-if ( $labeltable ) {
-    if ( $inlabel) {
+if ($labeltable) {
+    if ($inlabel) {
         $cmd = 'mpls show label ' . $inlabel;
     } else {
         $cmd = 'mpls show tables';

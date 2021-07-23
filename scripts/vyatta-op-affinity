@@ -1,5 +1,5 @@
 #! /usr/bin/perl
-# Copyright (c) 2020, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2020-2021, AT&T Intellectual Property. All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 #
@@ -38,8 +38,7 @@ sub action_show_affinity {
     }
 
     my $client = Vyatta::Configd::Client->new();
-    my $t_info =
-      $client->call_rpc_hash( "vyatta-interfaces-dataplane-rpc-v1",
+    my $t_info = $client->call_rpc_hash( "vyatta-interfaces-dataplane-rpc-v1",
         "affinity-info", { 'name' => $port } );
     my $info_hash = %$t_info{'affinity-info'};
 
@@ -56,7 +55,7 @@ sub action_show_affinity {
     print( "Rx cpu(s):    ", $rx_cpu, "\n" );
 
     my $tx_cpu = %$info_hash{"tx-cpu"};
-    print( "Tx cpu(s):    ", $tx_cpu, "\n" )
+    print( "Tx cpu(s):    ", $tx_cpu, "\n" );
 }
 
 sub call_action_by_name {

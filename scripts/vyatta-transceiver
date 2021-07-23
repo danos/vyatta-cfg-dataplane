@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2019,2021, AT&T Intellectual Property. All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 #
@@ -18,20 +18,20 @@ use File::Basename;
 Readonly my $SCRIPT_NAME => basename($0);
 
 sub transceiver_info_rpc {
-    my $in = do { local $/; <> };
+    my $in    = do { local $/; <> };
     my $input = decode_json($in);
-    my $port = $input->{'name'};
+    my $port  = $input->{'name'};
 
     get_xcvr_info($port);
 }
 
 sub get_xcvr_info {
-    my ( $port ) = @_;
+    my ($port) = @_;
 
-    my $t_info = Vyatta::TransceiverInfo->new($port);
+    my $t_info      = Vyatta::TransceiverInfo->new($port);
     my %t_info_hash = %{$t_info};
 
-    print  encode_json( \%t_info_hash );
+    print encode_json( \%t_info_hash );
 }
 
 sub call_action_by_name {
@@ -54,9 +54,7 @@ sub call_action_by_name {
     return $action->();
 }
 
-my %actions = (
-    "xcvr-info"      => \&transceiver_info_rpc,
-);
+my %actions = ( "xcvr-info" => \&transceiver_info_rpc, );
 
 call_action_by_name( \%actions, $SCRIPT_NAME, "action", "" );
 

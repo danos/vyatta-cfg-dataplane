@@ -18,7 +18,6 @@
 #file=/var/run/vyatta/sfpd-presence
 #url=ipc:///var/run/vyatta/sfp_monitor.socket
 
-
 use strict;
 use warnings;
 use File::Slurp;
@@ -28,20 +27,20 @@ use Vyatta::FeatureConfig qw(get_cfg);
 my $file = "/etc/vyatta/dataplane.conf";
 
 my $rib_section = "Rib";
-my $rib_var = "control";
-my $rib_val = "ipc:///var/run/routing/rib.control";
+my $rib_var     = "control";
+my $rib_val     = "ipc:///var/run/routing/rib.control";
 
-my $xfrm_section = "xfrm_client";
+my $xfrm_section  = "xfrm_client";
 my $xfrm_pull_var = "pull";
 my $xfrm_pull_val = "ipc:///var/run/vyatta/xfrm_pull.ipc";
 my $xfrm_push_var = "push";
 my $xfrm_push_val = "ipc:///var/run/vyatta/xfrm_push.ipc";
 
-my $sfpd_section = "sfpd_update";
+my $sfpd_section  = "sfpd_update";
 my $sfpd_file_var = "file";
 my $sfpd_file_val = "/var/run/vyatta/sfpd-presence";
-my $sfpd_url_var = "url";
-my $sfpd_url_val = "ipc:///var/run/vyatta/sfp_monitor.socket";
+my $sfpd_url_var  = "url";
+my $sfpd_url_val  = "ipc:///var/run/vyatta/sfp_monitor.socket";
 
 # Don't use the version of set_cfg from FeatureConfig as that adds a
 # [Defaults] section which we don't want here.
@@ -66,29 +65,28 @@ sub set_cfg {
     close($fh);
 }
 
-
 # Rib
 
-if (!defined get_cfg($file, $rib_section, $rib_var)) {
-    set_cfg($file, $rib_section, $rib_var, $rib_val);
+if ( !defined get_cfg( $file, $rib_section, $rib_var ) ) {
+    set_cfg( $file, $rib_section, $rib_var, $rib_val );
 }
 
 # xfrm_client
 
-if (!defined get_cfg($file, $xfrm_section, $xfrm_pull_var)) {
-    set_cfg($file, $xfrm_section, $xfrm_pull_var, $xfrm_pull_val);
+if ( !defined get_cfg( $file, $xfrm_section, $xfrm_pull_var ) ) {
+    set_cfg( $file, $xfrm_section, $xfrm_pull_var, $xfrm_pull_val );
 }
 
-if (!defined get_cfg($file, $xfrm_section, $xfrm_push_var)) {
-    set_cfg($file, $xfrm_section, $xfrm_push_var, $xfrm_push_val);
+if ( !defined get_cfg( $file, $xfrm_section, $xfrm_push_var ) ) {
+    set_cfg( $file, $xfrm_section, $xfrm_push_var, $xfrm_push_val );
 }
 
 # sfpd_update
 
-if (!defined get_cfg($file, $sfpd_section, $sfpd_file_var)) {
-    set_cfg($file, $sfpd_section, $sfpd_file_var, $sfpd_file_val );
+if ( !defined get_cfg( $file, $sfpd_section, $sfpd_file_var ) ) {
+    set_cfg( $file, $sfpd_section, $sfpd_file_var, $sfpd_file_val );
 }
 
-if (!defined get_cfg($file, $sfpd_section, $sfpd_url_var)) {
-    set_cfg($file, $sfpd_section, $sfpd_url_var, $sfpd_url_val );
+if ( !defined get_cfg( $file, $sfpd_section, $sfpd_url_var ) ) {
+    set_cfg( $file, $sfpd_section, $sfpd_url_var, $sfpd_url_val );
 }

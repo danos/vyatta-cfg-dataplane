@@ -54,10 +54,9 @@ if (@ARGV) {
 my $func;
 if ( defined $action_hash{$action} ) {
     $func = $action_hash{$action};
-}
-else {
+} else {
     print "Invalid action [$action]\n";
     usage();
 }
 
-&$func(\@intf_list);
+&$func( \@intf_list );

@@ -16,8 +16,10 @@ use lib "/opt/vyatta/share/perl5/";
 use Module::Load::Conditional qw(can_load);
 use Vyatta::Dataplane;
 
-my $vrf_available = can_load( modules => {"Vyatta::VrfManager"=>undef},
-			      autoload => "true" );
+my $vrf_available = can_load(
+    modules  => { "Vyatta::VrfManager" => undef },
+    autoload => "true"
+);
 
 # Output format to match BSD
 sub show_arp {
@@ -26,10 +28,12 @@ sub show_arp {
 
     print "arp:\n";
     if ( defined( $stat->{total_added} ) ) {
-        printf $fmt, $stat->{total_added}, 'Valid dynamic or static ARP entries added';
+        printf $fmt, $stat->{total_added},
+          'Valid dynamic or static ARP entries added';
     }
     if ( defined( $stat->{total_deleted} ) ) {
-        printf $fmt, $stat->{total_deleted}, 'Valid dynamic or static ARP entries deleted';
+        printf $fmt, $stat->{total_deleted},
+          'Valid dynamic or static ARP entries deleted';
     }
     printf $fmt, $stat->{tx_request},   'ARP requests sent';
     printf $fmt, $stat->{tx_reply},     'ARP replies sent';
@@ -39,6 +43,7 @@ sub show_arp {
     printf $fmt, $stat->{dropped},      'packets dropped due to no ARP entry';
     printf $fmt, $stat->{timeout},      'ARP entries timed out';
     printf $fmt, $stat->{duplicate_ip}, 'Duplicate IPs seen';
+
     if ( defined( $stat->{garp_reqs_dropped} ) ) {
         printf $fmt, $stat->{garp_reqs_dropped},
           'Gratuitous ARP requests dropped';
@@ -48,7 +53,7 @@ sub show_arp {
           'Gratuitous ARP replies dropped';
     }
     if ( defined( $stat->{mpool_fail} ) ) {
-        printf $fmt, $stat->{mpool_fail},   'Mbuf pool limit hits';
+        printf $fmt, $stat->{mpool_fail}, 'Mbuf pool limit hits';
     }
     if ( defined( $stat->{mem_fail} ) ) {
         printf $fmt, $stat->{mem_fail}, 'Out of memory hits';
@@ -82,7 +87,7 @@ sub show_ip {
 sub icmp_msg_types {
     my ( $stat, $dir ) = @_;
     my $msg_exists = 0;
-    my %types = (
+    my %types      = (
         'DestUnreachs'  => 'destination unreachable',
         'TimeExcds'     => 'timeout in transit',
         'ParmProbs'     => 'wrong parameters',
@@ -104,8 +109,8 @@ sub icmp_msg_types {
         printf "        %s: %u\n", $types{$key}, $val;
     }
 
-    if (!$msg_exists) {
-        print "        none\n"
+    if ( !$msg_exists ) {
+        print "        none\n";
     }
 }
 
@@ -114,8 +119,8 @@ sub show_icmp {
     my $fmt  = "    %u %s\n";
 
     print "icmp:\n";
-    printf $fmt, $stat->{InMsgs},    "ICMP messages received";
-    printf $fmt, $stat->{InErrors},  "input ICMP message failed";
+    printf $fmt, $stat->{InMsgs},   "ICMP messages received";
+    printf $fmt, $stat->{InErrors}, "input ICMP message failed";
     print "    ICMP received message types:\n";
     icmp_msg_types( $stat, 'In' );
 
@@ -154,7 +159,7 @@ sub show_ip6 {
 sub icmp6_msg_types {
     my ( $stat, $dir ) = @_;
     my $msg_exists = 0;
-    my %types = (
+    my %types      = (
         'DestUnreachs'           => 'destination unreachable',
         'PktTooBigs'             => 'packets too big',
         'TimeExcds'              => 'received ICMPv6 time exceeded',
@@ -180,8 +185,8 @@ sub icmp6_msg_types {
         printf "        %s: %u\n", $types{$key}, $val;
     }
 
-    if (!$msg_exists) {
-        print "        none\n"
+    if ( !$msg_exists ) {
+        print "        none\n";
     }
 }
 
@@ -190,8 +195,8 @@ sub show_icmp6 {
     my $fmt  = "    %u %s\n";
 
     print "icmp6:\n";
-    printf $fmt, $stat->{InMsgs},    "ICMP messages received";
-    printf $fmt, $stat->{InErrors},  "input ICMP message failed";
+    printf $fmt, $stat->{InMsgs},   "ICMP messages received";
+    printf $fmt, $stat->{InErrors}, "input ICMP message failed";
     print "    ICMP received message types:\n";
     icmp6_msg_types( $stat, 'In' );
 
@@ -237,71 +242,72 @@ my %handlers = (
 sub usage {
     my $ri_opt_str = " ";
 
-    if ( $vrf_available ) {
-	$ri_opt_str = " [--routing-instance=<NAME>] ";
+    if ($vrf_available) {
+        $ri_opt_str = " [--routing-instance=<NAME>] ";
     }
 
-    print "Usage: $0 [--fabric=N]".$ri_opt_str." <CMD>\n";
+    print "Usage: $0 [--fabric=N]" . $ri_opt_str . " <CMD>\n";
     print "  CMD := ", join( ' | ', keys %handlers ), "\n";
     exit 1;
 }
 
-my ($fabric, $routing_instance_name);
+my ( $fabric, $routing_instance_name );
 
-if ( $vrf_available ) {
-	GetOptions(
-	    'fabric=s' => \$fabric,
-	    'routing-instance=s'  => \$routing_instance_name,
-	    ) or usage();
+if ($vrf_available) {
+    GetOptions(
+        'fabric=s'           => \$fabric,
+        'routing-instance=s' => \$routing_instance_name,
+    ) or usage();
 } else {
     GetOptions( 'fabric=s' => \$fabric, ) or usage();
 }
 
-my ($dpids,$dpsocks) = Vyatta::Dataplane::setup_fabric_conns($fabric);
+my ( $dpids, $dpsocks ) = Vyatta::Dataplane::setup_fabric_conns($fabric);
 die "Dataplane $fabric is not connected or does not exist\n"
-	unless (scalar(@$dpids) > 0);
+  unless ( scalar(@$dpids) > 0 );
 
 for my $fid (@$dpids) {
 
-	my $response;    
-	my $sock = ${$dpsocks}[$fid];
-	die "Can not connect to dataplane $fid\n"
-		unless defined($sock);
+    my $response;
+    my $sock = ${$dpsocks}[$fid];
+    die "Can not connect to dataplane $fid\n"
+      unless defined($sock);
 
-	if ( $vrf_available and $routing_instance_name ) {
+    if ( $vrf_available and $routing_instance_name ) {
 
-	    my $routing_instance_id =
-		Vyatta::VrfManager::get_vrf_id($routing_instance_name);
-	    # dummy assign to avoid '..VRFID_INVALID used once: ..' warning 
-	    $Vyatta::VrfManager::VRFID_INVALID = $Vyatta::VrfManager::VRFID_INVALID;
-	    if ( $routing_instance_id == $Vyatta::VrfManager::VRFID_INVALID ) {
-		die "$routing_instance_name is not a valid routing-instance\n";
-	    }
-	    $response = $sock->execute("netstat vrf_id $routing_instance_id");
+        my $routing_instance_id =
+          Vyatta::VrfManager::get_vrf_id($routing_instance_name);
 
-	} else {
-	    $response = $sock->execute('netstat');
-	}
+        # dummy assign to avoid '..VRFID_INVALID used once: ..' warning
+        $Vyatta::VrfManager::VRFID_INVALID = $Vyatta::VrfManager::VRFID_INVALID;
+        if ( $routing_instance_id == $Vyatta::VrfManager::VRFID_INVALID ) {
+            die "$routing_instance_name is not a valid routing-instance\n";
+        }
+        $response = $sock->execute("netstat vrf_id $routing_instance_id");
 
-	die "No response from dataplane $fid\n"
-	    unless (defined($response));
-	my $decoded = decode_json($response);
+    } else {
+        $response = $sock->execute('netstat');
+    }
 
-	foreach my $arg (@ARGV) {
-		my $hdl = $handlers{$arg};
-		die "No handler function for $arg\n"
-		unless defined($hdl);
+    die "No response from dataplane $fid\n"
+      unless ( defined($response) );
+    my $decoded = decode_json($response);
 
-		my $stat = $decoded->{$arg};
-		die "No $arg in response\n"
-		  unless $stat;
+    foreach my $arg (@ARGV) {
+        my $hdl = $handlers{$arg};
+        die "No handler function for $arg\n"
+          unless defined($hdl);
 
-		die "Unknown handler for: $arg\n"
-		  unless $hdl;
+        my $stat = $decoded->{$arg};
+        die "No $arg in response\n"
+          unless $stat;
 
-		print "vplane $fid - "
-			unless $fid == 0;
-		$hdl->($stat);
-	}
+        die "Unknown handler for: $arg\n"
+          unless $hdl;
+
+        print "vplane $fid - "
+          unless $fid == 0;
+        $hdl->($stat);
+    }
 }
 Vyatta::Dataplane::close_fabric_conns( $dpids, $dpsocks );
