@@ -2,6 +2,7 @@
 #
 # Wrapper script to issue cmds to one or more vplane instances
 #
+# Copyright (c) 2019-2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2016 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -10,6 +11,7 @@
 use strict;
 use warnings;
 
+use lib "/opt/vyatta/share/perl5/";
 use Getopt::Long;
 use Vyatta::Dataplane;
 
