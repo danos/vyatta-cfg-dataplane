@@ -1,0 +1,2 @@
+yang/vyatta-op-show-monitoring-dataplane-v1.yang usr/share/configd/yang
+scripts/vplane-show-debug opt/vyatta/bin

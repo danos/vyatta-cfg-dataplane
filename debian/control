@@ -432,9 +432,15 @@ Architecture: all
 Depends: ${misc:Depends}, ${yang:Depends}, python3
 Description: Provides YANG modules for retrieving ARP data.
  The YANG modules for retrieving ARP data.
- 
+
 Package: vyatta-op-show-arp-v1-yang
 Architecture: all
 Depends: ${yang:Depends}
 Description: YANG module for ARP show command and its sub commands.
  The YANG module for commands related to show arp.
+
+Package: vyatta-op-show-monitoring-dataplane-v1-yang
+Architecture: all
+Depends: ${yang:Depends}, python3
+Description: YANG module for show monitoring dataplane commands.
+ The YANG module for commands related to show dataplane debug.

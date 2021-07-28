@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+#
+# Copyright (c) 2021, AT&T Intellectual Property. All rights reserved.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+# Output the status of the dataplane module debugging.
+
+
+from argparse import ArgumentParser
+from vplaned import Controller
+
+
+def output_feat(feature: str) -> None:
+    print(feature + " debugging enabled")
+    print()
+
+
+def main():
+    parser = ArgumentParser(description="Output dataplane debugging status.")
+    parser.add_argument("-f", "--feature", dest="feature",
+                        help="Show the debug status of a single feature")
+    args = parser.parse_args()
+
+    with Controller() as controller:
+        for dp in controller.get_dataplanes():
+            with dp:
+                response = dp.json_command("debug")
+                _, features = response['debug'].popitem()
+
+                if (args.feature and args.feature in features):
+                    output_feat(args.feature)
+                else:
+                    for feature in features:
+                        output_feat(feature)
+
+
+if __name__ == '__main__':
+    main()
