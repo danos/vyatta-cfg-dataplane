@@ -1,6 +1,6 @@
 Source: vplane-config
 Section: contrib/net
-Priority: extra
+Priority: optional
 Maintainer: Vyatta Package Maintainers <DL-vyatta-help@att.com>
 Build-Depends:
  autoconf,
@@ -66,6 +66,7 @@ Depends:
  ${misc:Depends},
  ${perl:Depends}
 Description: Backend scripts dealing with configd.
+ Various backend scripts dealing with configd access
 
 Package: vyatta-interfaces-dataplane-v1-yang
 Architecture: all
@@ -203,6 +204,7 @@ Depends:
 Breaks: vplane-config (<< 2.10)
 Replaces: vplane-config(<< 2.10)
 Description: Module for accessing dataplane for status commands.
+ Perl module for accessing the dataplane for status commands.
 
 Package: libvyatta-vplaned-perl
 Architecture: all
@@ -424,13 +426,6 @@ Depends: golang-github-danos-vyatta-dataplane-protobuf-dev,
  ${misc:Depends}
 Description: Provides Go language bindings for the vplaned client API.
  Go bindings for the vplaned client API.
-
-Package: vyatta-interfaces-dataplane-mac-limit-v1-yang
-Architecture: all
-Depends:
- ${misc:Depends}, ${yang:Depends}, python3
-Description: vyatta-interfaces-dataplane-mac-limit-v1 yang package
- MAC Address limit configuration on dataplane interfaces
 
 Package: vyatta-arp-v1-yang
 Architecture: all
