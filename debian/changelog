@@ -4,7 +4,7 @@ vplane-config (2.99) unstable; urgency=medium
   * Added missing help text for the sfp enforcement
 
   [ ck407g ]
-  * Added a revision statement to account for the changes related to show dataplane arp
+  * Added revision statement for the changes related to show dataplane arp
 
   [ Cian O'Sullivan ]
   * Prevent TypeError when no SFP config exists
