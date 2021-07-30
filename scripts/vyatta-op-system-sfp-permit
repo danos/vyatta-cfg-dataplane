@@ -35,9 +35,21 @@ def sfp_mode(obj):
         return "Monitor"
 
 
-# Converts string to sum of ASCII chars
-def ascii_val_total(s):
-    return sum([ord(char) for char in s])
+# Converts string to sum of ASCII chars and digits
+def alphanum_total(s):
+    val = 0
+    digits = ""
+
+    for c in s:
+        if c.isalpha():
+            val += ord(c)
+        else:
+            digits += c
+
+    if digits:
+        val += int(digits)
+
+    return val
 
 
 output_format = "{:20}{:16}{:16}{:10}{:6}{:12}{:10}"
@@ -74,7 +86,7 @@ def show_sfp_permit_status():
             print(output_format.format("Interface", "Part-id", "Vendor",
                                        "OUI", "Rev", "Status", "Action"))
             print()
-            devices = sorted(obj['devices'], key=lambda dev: ascii_val_total(dev['intf_name']))
+            devices = sorted(obj['devices'], key=lambda dev: alphanum_total(dev['intf_name']))
             for device in devices:
                 print_device(device)
 
