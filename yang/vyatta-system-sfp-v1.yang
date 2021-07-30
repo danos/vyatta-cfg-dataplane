@@ -57,9 +57,14 @@ module vyatta-system-sfp-v1 {
 	revision 2021-08-25 {
 		description "Add SFP permit-list configuration";
 	}
+
 	revision 2021-06-20 {
 		description "Initial revision of SFP monitoring
 				and configuration";
+	}
+
+	feature sfp-monitor {
+		description "Enable monitoring of SFP warnings and alarms";
 	}
 
 	feature sfp-permit-list {
@@ -71,6 +76,24 @@ module vyatta-system-sfp-v1 {
 			presence "Enable SFP features";
 			configd:help "SFP monitoring parameters";
 			description "SFP monitoring and permit list configuration and control";
+
+			container monitoring {
+				configd:help "Configure monitoring parameters";
+				description
+					"SFP monitoring parameters";
+
+				leaf interval {
+					configd:help "Interval (in seconds) between consecutive runs of SFP monitoring";
+					configd:update "vyatta-sfp-monitor --cmd update --interval $VAR(@)";
+					configd:delete "vyatta-sfp-monitor --cmd delete --interval $VAR(@)";
+					description
+						"Interval (in seconds) between consecutive runs of SFP monitoring";
+					type uint32 {
+						range 1..10;
+					}
+					units "seconds";
+				}
+			}
 
 			container permit {
 				if-feature sfp-permit-list;
@@ -128,10 +151,10 @@ module vyatta-system-sfp-v1 {
 								pattern '[0-9a-f]{2,2}\.[0-9a-f]{2,2}\.[0-9a-f]{2,2}';
 							}
 							description
-								"The SFP transceiver vendor's organizationally unique identifier 
-								field (vendor OUI) is a 3-byte field that contains the IEEE Company 
-								Identifier for the vendor. A value of all zero in the 3-byte field 
-								indicates that the Vendor OUI is unspecified. It is represented here 
+								"The SFP transceiver vendor's organizationally unique identifier
+								field (vendor OUI) is a 3-byte field that contains the IEEE Company
+								Identifier for the vendor. A value of all zero in the 3-byte field
+								indicates that the Vendor OUI is unspecified. It is represented here
 								as a hexadecimal string with a '.' between consecutive bytes";
 							reference
 								"https://en.wikipedia.org/wiki/Organizationally_unique_identifier
@@ -145,7 +168,7 @@ module vyatta-system-sfp-v1 {
 							configd:help "SFP Vendor-Part ID";
 							description
 								"The SFP transceiver vendor's part number, up to 16 ASCII characters
-								 A wildcard character ('*'), is allowed as the last (right-most) 
+								 A wildcard character ('*'), is allowed as the last (right-most)
 								 character";
 							mandatory true;
 						}

@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2021, AT&T Intellectual Property. All Rights Reserved.
+#
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# This is run if there has been a change under "interfaces" vlan-modify policy
+# or if vlan-modify policy is changed where it looks for vlan-modify policies
+# attached  to interfaces
+#
+
+import argparse
+import logging
+import sys
+
+from vplaned import Controller
+from vyatta.proto import SFPMonitor_pb2
+
+err = logging.error
+
+
+def sfp_monitor_interval(cmd, interval):
+    global client
+
+    key = "system sfp monitoring interval"
+
+    cfg = SFPMonitor_pb2.SfpMonitorCfg()
+
+    if cmd == 'update':
+        cfg.interval = int(interval)
+        controller.store(key, cfg, "ALL", 'SET', cmd_name="vyatta:sfpmonitor")
+    elif cmd == 'delete':
+        cfg.interval = 0
+        controller.store(key, cfg, "ALL", 'DELETE', cmd_name="vyatta:sfpmonitor")
+
+
+if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO,
+                        format='sfp monitor: %(message)s')
+    parser = argparse.ArgumentParser(
+        description='Vyatta sfp monitor command')
+    parser.add_argument('-c', '--cmd', help='sfp monitor command',
+                        choices=['update', 'delete'], dest='cmd',
+                        required=True)
+    parser.add_argument('-i', '--interval',
+                        help='sfp monitoring interval', dest="interval")
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='Enable debug output')
+
+    with Controller() as controller:
+
+        args = parser.parse_args()
+
+        log = logging.getLogger()
+        if args.interval:
+            ret = sfp_monitor_interval(args.cmd, args.interval)
+        else:
+            parser.print_help()
+            ret = 1
+
+    sys.exit(ret)
