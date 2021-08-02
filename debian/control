@@ -62,6 +62,7 @@ Description: vyatta dataplane config
 Package: vplane-config-backend
 Architecture: all
 Depends:
+ vyatta-dataplane (>= 3.13.39),
  libvyatta-vplaned-perl (>= ${source:Version}),
  python3,
  ${misc:Depends},

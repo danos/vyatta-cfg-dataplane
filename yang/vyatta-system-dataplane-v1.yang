@@ -58,7 +58,8 @@ module vyatta-system-dataplane-v1 {
 		 template scripts.";
 
 	revision 2021-08-02 {
-		description "Update organization.";
+		description "Update organization.
+			     Introduced control threads cpu affinity settings.";
 	}
 	revision 2020-07-28 {
 		description "Correctly marking 'system dataplane' node as config:false/state data.";
@@ -153,6 +154,26 @@ module vyatta-system-dataplane-v1 {
 					configd:help "Dataplane CPU affinity";
 					configd:update "vplane-cpumask --set $VAR(@)";
 					configd:delete "vplane-cpumask --delete";
+				}
+
+				container control {
+					configd:help "Dataplane control threads parameters";
+					description "Advanced settings for the control threads.
+						     This excludes dataplane forwarding threads.";
+
+					leaf cpu-affinity {
+						type types:cpu-range;
+
+						must "../../cpu-affinity" {
+							error-message "dataplane cpu-affinity must be also specified";
+						}
+
+						configd:help "Dataplane control threads CPU affinity";
+						configd:update "vplane-cpumask --control --set $VAR(@)";
+						configd:delete "vplane-cpumask --control --delete";
+						configd:validate "vplane-cpumask --control --validate $VAR(../../cpu-affinity/@) $VAR(@)";
+					}
+
 				}
 			}
 		}
