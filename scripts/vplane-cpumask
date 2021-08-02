@@ -101,38 +101,12 @@ sub control_cpus {
     exit 0;
 }
 
-sub isolated_cpuset {
-    my $mask = read_cpumask();
-
-    # if cpu affinity not configured, use all cpus
-    $mask = online_cpus()
-      unless defined($mask);
-
-    my $isolated = Vyatta::CPUset->new($mask);
-
-    # master thread in dataplane can be shared
-    my $master = $isolated->first();
-    $isolated->del_cpu($master);
-
-    # never ban CPU 0
-    $isolated->del_cpu(0);
-    return $isolated;
-}
-
-sub isolated_cpus {
-    my $cpus = isolated_cpuset();
-
-    print $cpus->range(), "\n";
-    exit 0;
-}
-
 my ( $fabric, $cpumask, $delete_mask, $update_irq );
-my ( $show_control, $show_isolated );
+my ( $show_control );
 
 GetOptions(
     'fabric=s' => \$fabric,
     'set=s'    => \$cpumask,
-    'isolated' => \$show_isolated,
     'delete'   => \$delete_mask,
     'update'   => \$update_irq,
     'control'  => \$show_control,
@@ -141,4 +115,3 @@ GetOptions(
 set_cpumask($cpumask)    if defined($cpumask);
 delete_cpumask($cpumask) if $delete_mask;
 control_cpus()           if $show_control;
-isolated_cpus()          if $show_isolated;
