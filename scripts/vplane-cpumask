@@ -1,49 +1,76 @@
-#! /usr/bin/perl
-# Copyright (c) 2015 Brocade Communications Systems, Inc.
+#!/usr/bin/env python3
+
+# Copyright (c) 2021, AT&T Intellectual Property.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 
-use strict;
-use warnings;
+"""This updates the CPU affinity settings for the dataplane."""
 
-use Getopt::Long;
-use Config::Tiny;
+import sys
+import configparser
+from argparse import ArgumentParser
 
-my $DATAPLANE_CFG = '/etc/vyatta/dataplane.conf';
+DP_CONF = '/etc/vyatta/dataplane.conf'
 
-sub set_cpumask {
-    my $mask = shift;
+def _delete_cpumask(dpcfg, key_cpumask='cpumask'):
 
-    my $cfg = Config::Tiny->read($DATAPLANE_CFG);
-    die "Can't read $DATAPLANE_CFG: $!\n"
-      unless defined($cfg);
+    if not dpcfg.has_option('Dataplane', key_cpumask):
+        return
 
-    my $oldmask = $cfg->{Dataplane}->{cpumask};
-    if ( !defined($oldmask) || $mask ne $oldmask ) {
-        $cfg->{Dataplane}->{cpumask} = $mask;
+    with open(DP_CONF, 'w') as dpcfg_fp:
+        del dpcfg['Dataplane'][key_cpumask]
+        dpcfg.write(dpcfg_fp, space_around_delimiters=False)
 
-        die "Can't write $DATAPLANE_CFG: $!\n"
-          unless $cfg->write($DATAPLANE_CFG);
-    }
-}
+def _set_cpumask(dpcfg, cpumask, key_cpumask='cpumask'):
 
-sub delete_cpumask {
-    my $cfg = Config::Tiny->read($DATAPLANE_CFG);
-    die "Can't read $DATAPLANE_CFG: $!\n"
-      unless defined($cfg);
+    if dpcfg['Dataplane'].get(key_cpumask) == cpumask:
+        return
 
-    delete $cfg->{Dataplane}->{cpumask};
-    die "Can't write $DATAPLANE_CFG: $!\n"
-      unless $cfg->write($DATAPLANE_CFG);
-}
+    with open(DP_CONF, 'w') as dpcfg_fp:
+        dpcfg['Dataplane'][key_cpumask] = cpumask
+        dpcfg.write(dpcfg_fp, space_around_delimiters=False)
 
-my ( $cpumask, $delete_mask );
 
-GetOptions(
-    'set=s'    => \$cpumask,
-    'delete'   => \$delete_mask,
-) or die "Unknown option\n";
+def _main():
+    arg_parser = ArgumentParser()
+    arg_parser.add_argument('--set', action='store', metavar='CPUMASK',
+                            help='CPU range', required=False)
+    arg_parser.add_argument('--delete', action='store_true',
+                            help='Delete CPU affinity config', required=False)
+    args = arg_parser.parse_args()
 
-set_cpumask($cpumask)    if defined($cpumask);
-delete_cpumask($cpumask) if $delete_mask;
+    cpumask = args.set
+
+    if not args.delete and not args.set:
+        print('No action specified.')
+        sys.exit(1)
+
+    dpcfg = configparser.ConfigParser()
+    try:
+        dpcfg.read(DP_CONF)
+    except configparser.Error as err:
+        print('Failed to load {}: {}'.format(DP_CONF, err))
+        sys.exit(1)
+
+    if dpcfg.has_section('Dataplane') is False:
+        print('Invalid dataplane config. Aborting.')
+        sys.exit(1)
+
+    if args.delete:
+        try:
+            _delete_cpumask(dpcfg)
+        except (IOError, configparser.Error) as err:
+            print('Failed to delete CPU affinity setting from dataplane configuration: {}'
+                  .format(err))
+            sys.exit(1)
+    else:
+        try:
+            _set_cpumask(dpcfg, cpumask)
+        except (IOError, configparser.Error)  as err:
+            print('Failed to update CPU affinity in dataplane configuration: {}'.format(err))
+            sys.exit(1)
+
+
+if __name__ == '__main__':
+    _main()

@@ -63,6 +63,7 @@ Package: vplane-config-backend
 Architecture: all
 Depends:
  libvyatta-vplaned-perl (>= ${source:Version}),
+ python3,
  ${misc:Depends},
  ${perl:Depends}
 Description: Backend scripts dealing with configd.
