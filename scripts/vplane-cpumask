@@ -57,12 +57,11 @@ sub delete_cpumask {
       unless $cfg->write($DATAPLANE_CFG);
 }
 
-my ( $cpumask, $delete_mask, $update_irq );
+my ( $cpumask, $delete_mask );
 
 GetOptions(
     'set=s'    => \$cpumask,
     'delete'   => \$delete_mask,
-    'update'   => \$update_irq,
 ) or die "Unknown option\n";
 
 set_cpumask($cpumask)    if defined($cpumask);
