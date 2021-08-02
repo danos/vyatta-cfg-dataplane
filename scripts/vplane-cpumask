@@ -12,25 +12,6 @@ use Config::Tiny;
 
 my $DATAPLANE_CFG = '/etc/vyatta/dataplane.conf';
 
-sub read_cpumask {
-    my $cfg = Config::Tiny->read($DATAPLANE_CFG);
-    die "Can't read $DATAPLANE_CFG: $!\n" unless $cfg;
-
-    return $cfg->{Dataplane}->{cpumask};
-}
-
-sub show_cpumask {
-    my $mask = read_cpumask();
-
-    if ( defined($mask) ) {
-        printf "cpus = %s\n", $mask;
-    } else {
-        print "cpumask not set.\n";
-    }
-
-    exit 0;
-}
-
 sub set_cpumask {
     my $mask = shift;
 
