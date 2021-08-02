@@ -32,17 +32,59 @@ def _set_cpumask(dpcfg, cpumask, key_cpumask='cpumask'):
         dpcfg.write(dpcfg_fp, space_around_delimiters=False)
 
 
+def _parse_range(range_str):
+    cpuset = set()
+    for token in range_str.split(','):
+        if '-' in token:
+            start, stop = token.split('-')
+            for cpuid in range(int(start), int(stop)+1):
+                cpuset.add(cpuid)
+        elif token:
+            cpuset.add(int(token))
+
+    return cpuset
+
+def _validate_cpumask(cpumask, control_cpumask):
+    try:
+        cpuset = _parse_range(cpumask)
+        control_cpuset = _parse_range(control_cpumask)
+    except ValueError as err:
+        print("Validation of CPU affinity value failed.")
+        sys.exit(1)
+
+    # limited by CPU_SETSIZE (sched.h) and pthread_setaffinity_np
+    if max(control_cpuset) >= 1024:
+        print("Dataplane Control CPU affinity exceeds number of "
+              "supported CPUs.")
+        sys.exit(1)
+
+    if not control_cpuset.issubset(cpuset):
+        print("Dataplane Control CPU affinity must be a subset of "
+              "the general Dataplane CPU affinity.")
+        sys.exit(1)
+
 def _main():
+    key_cpumask = 'cpumask'
+
     arg_parser = ArgumentParser()
     arg_parser.add_argument('--set', action='store', metavar='CPUMASK',
                             help='CPU range', required=False)
     arg_parser.add_argument('--delete', action='store_true',
                             help='Delete CPU affinity config', required=False)
+    arg_parser.add_argument('--control', action='store_true',
+                            help='Perfrom update of CPU affinity config for control threads',
+                            required=False)
+    arg_parser.add_argument('--validate', nargs='+', action='store',
+                            metavar=('CPUMASK', 'CONTROL_CPUMASK'),
+                            help='Validate CPU affinity settings', required=False)
+
     args = arg_parser.parse_args()
 
     cpumask = args.set
+    if args.control:
+        key_cpumask = 'control_cpumask'
 
-    if not args.delete and not args.set:
+    if not args.delete and not args.set and not args.validate:
         print('No action specified.')
         sys.exit(1)
 
@@ -59,14 +101,24 @@ def _main():
 
     if args.delete:
         try:
-            _delete_cpumask(dpcfg)
+            _delete_cpumask(dpcfg, key_cpumask)
         except (IOError, configparser.Error) as err:
             print('Failed to delete CPU affinity setting from dataplane configuration: {}'
                   .format(err))
             sys.exit(1)
+    elif args.validate:
+        if len(args.validate) != 2:
+            print('Failed to verify dataplane CPU affinity.')
+            sys.exit(1)
+        try:
+            _validate_cpumask(args.validate[0], args.validate[1])
+        except (IOError, configparser.Error) as err:
+            print('Failed to validate CPU affinity settings: {}'
+                  .format(err))
+            sys.exit(1)
     else:
         try:
-            _set_cpumask(dpcfg, cpumask)
+            _set_cpumask(dpcfg, cpumask, key_cpumask)
         except (IOError, configparser.Error)  as err:
             print('Failed to update CPU affinity in dataplane configuration: {}'.format(err))
             sys.exit(1)
