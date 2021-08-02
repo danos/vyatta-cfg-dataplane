@@ -10,7 +10,6 @@ use warnings;
 use Getopt::Long;
 use Config::Tiny;
 
-# TODO support fabric
 my $DATAPLANE_CFG = '/etc/vyatta/dataplane.conf';
 
 sub read_cpumask {
@@ -58,10 +57,9 @@ sub delete_cpumask {
       unless $cfg->write($DATAPLANE_CFG);
 }
 
-my ( $fabric, $cpumask, $delete_mask, $update_irq );
+my ( $cpumask, $delete_mask, $update_irq );
 
 GetOptions(
-    'fabric=s' => \$fabric,
     'set=s'    => \$cpumask,
     'delete'   => \$delete_mask,
     'update'   => \$update_irq,
