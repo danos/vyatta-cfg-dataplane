@@ -54,6 +54,9 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
+	revision 2021-08-02 {
+		description "Rename name field to vendor and constrain name length";
+	}
 	revision 2021-07-19 {
 		description "Add SFP permit-list configuration";
 	}
@@ -92,6 +95,7 @@ module vyatta-system-sfp-v1 {
 
 					leaf name {
 						type types:alpha-numeric {
+							length 1..64;
 							configd:help "Name of the permit list";
 						}
 						description "Name given to the permit list";
@@ -108,7 +112,7 @@ module vyatta-system-sfp-v1 {
 							}
 						}
 
-						leaf name {
+						leaf vendor {
 							configd:help "Full name of SFP transceiver vendor";
 							type string {
 								length 1..16;
