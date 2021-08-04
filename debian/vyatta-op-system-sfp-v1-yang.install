@@ -1,2 +1,3 @@
 yang/vyatta-op-system-sfp-v1.yang usr/share/configd/yang/
+scripts/vyatta-op-sfp-monitor /opt/vyatta/bin
 scripts/vyatta-op-system-sfp-permit /opt/vyatta/bin/
