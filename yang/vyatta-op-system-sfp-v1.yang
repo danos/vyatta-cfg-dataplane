@@ -66,11 +66,12 @@ module vyatta-op-system-sfp-v1 {
 			description
 				"Display information about the SFPs inserted into
 				the system";
+
 			opd:command permit {
-			opd:help "Show system sfp permit information";
+				opd:help "Show system sfp permit information";
 
 				opd:command list {
-				opd:help "Show system sfp permit list";
+					opd:help "Show system sfp permit list";
 
 					opd:command status {
 						opd:on-enter 'vyatta-op-system-sfp-permit --status';
