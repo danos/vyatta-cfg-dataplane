@@ -5,19 +5,32 @@
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 
+import subprocess
+
 from argparse import ArgumentParser
 
-def show_sfp_monitoring_status():
 
-def show_sfp_monitoring_events():
+def show_sfp_monitoring_status():
+    return
+
+
+def show_sfp_monitoring_events(dev=None):
+    if dev is not None:
+        dev_str = f" | grep {dev}"
+    else:
+        dev_str = ""
+    cmd = f"journalctl -u vyatta-dataplane -b0 | grep SFP_MON {dev_str}"
+    subprocess.call(cmd, shell=True)
+
 
 arg_parser = ArgumentParser()
 arg_parser.add_argument("--cmd", help="Get monitoring status/events",
                         choices=['status', 'events'], dest="cmd",
                         required=True)
+arg_parser.add_argument("--dev", help="Interface name", action="store")
 args = arg_parser.parse_args()
 
 if args.cmd == "status":
-    show_sfp_monitoring_status()
+    show_sfp_monitoring_status(args.dev)
 elif args.cmd == "events":
-    show_sfp_monitoring_events()
+    show_sfp_monitoring_events(args.dev)
