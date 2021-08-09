@@ -39,23 +39,12 @@ def sfp_permit_mismatch():
         err("Cannot establish client session: '{}'".format(str(exc).strip()))
         return 1
 
+    key = "sfp permit mismatch-action"
     node = "system sfp permit mismatch-action"
 
-    if client.node_exists(client.AUTO, node):
-        status = client.node_get_status(
-            CONFIG_CANDIDATE, node)
-    else:
-        status = client.DELETED
-
     cfg = SFPMonitor_pb2.SfpPermitConfig()
-    cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
 
-    if status == client.DELETED:
-        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
-        cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
-        cfg.mismatch.delay = DEFAULT_ENFORCEMENT_DELAY
-
-    else:
+    if client.node_exists(client.AUTO, node):
         tree = client.tree_get_dict(node)
         entries = tree['mismatch-action']
 
@@ -72,15 +61,17 @@ def sfp_permit_mismatch():
             cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
 
         cfg.mismatch.delay = enforcement['activation-delay']
+        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
+        controller.store(key, cfg, "ALL", "SET",
+                         cmd_name="vyatta:sfppermitlist")
 
-    key = "sfp permit mismatch-action"
-
-    if status == client.DELETED:
-        ctrl_action = 'DELETE'
     else:
-        ctrl_action = 'SET'
-    controller.store(key, cfg, "ALL", ctrl_action,
-                     cmd_name="vyatta:sfppermitlist")
+        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
+        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
+        cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+        cfg.mismatch.delay = DEFAULT_ENFORCEMENT_DELAY
+        controller.store(key, cfg, "ALL", "DELETE",
+                         cmd_name="vyatta:sfppermitlist")
 
     return 0
 
@@ -93,52 +84,43 @@ def sfp_permit_list(policy):
     except Exception as exc:
         err("Cannot establish client session: '{}'".format(str(exc).strip()))
         return 1
-
+    key = "sfp permit list {}".format(policy)
     node = "system sfp permit list " + policy
 
-    if client.node_exists(client.AUTO, node):
-        status = client.node_get_status(
-            CONFIG_CANDIDATE, node)
-    else:
-        status = client.DELETED
+    cfg = SFPMonitor_pb2.SfpPermitConfig()
 
-    if status == client.DELETED:
-        dbg("Delete list {}".format(policy))
-        cfg = SFPMonitor_pb2.SfpPermitConfig()
-        cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
+    if client.node_exists(client.AUTO, node):
+        dbg("sfp permit {} changed ".format(policy))
+        tree = client.tree_get_dict(node)
+        dbg("sfp permit list {} {} ".format(policy, tree))
+        cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.SET
         cfg.list.name = policy
 
-        key = "sfp permit list {}".format(policy)
+        if 'index' in tree:
+            index_list = tree['index']
+            for index in index_list:
+                sfp_cfg = cfg.list.SFPs.add()
+                if 'index' in index:
+                    sfp_cfg.index = index['index']
+                if 'part' in index:
+                    sfp_cfg.part = index['part']
+                if 'vendor' in index:
+                    sfp_cfg.vendor = index['vendor']
+                if 'oui' in index:
+                    sfp_cfg.oui = index['oui']
+                if 'revision' in index:
+                    sfp_cfg.rev = index['revision']
+                dbg(index)
 
-        controller.store(key, cfg, "ALL", 'DELETE',
+        controller.store(key, cfg, "ALL", "SET",
                          cmd_name="vyatta:sfppermitlist")
-        return 0
 
-    dbg("sfp permit {} changed ".format(policy))
-    tree = client.tree_get_dict(node)
-    dbg("sfp permit list {} {} ".format(policy, tree))
-
-    cfg = SFPMonitor_pb2.SfpPermitConfig()
-    cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.SET
-    cfg.list.name = policy
-
-    if 'index' in tree:
-        index_list = tree['index']
-        for index in index_list:
-            sfp_cfg = cfg.list.SFPs.add()
-            if 'index' in index:
-                sfp_cfg.index = index['index']
-            if 'part' in index:
-                sfp_cfg.part = index['part']
-            if 'vendor' in index:
-                sfp_cfg.vendor = index['vendor']
-            if 'oui' in index:
-                sfp_cfg.oui = index['oui']
-            if 'revision' in index:
-                sfp_cfg.rev = index['revision']
-            dbg(index)
-    key = "sfp permit list {}".format(policy)
-    controller.store(key, cfg, "ALL", 'SET', cmd_name="vyatta:sfppermitlist")
+    else:
+        cfg.list.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
+        cfg.list.name = policy
+        dbg("Delete list {}".format(policy))
+        controller.store(key, cfg, "ALL", "DELETE",
+                         cmd_name="vyatta:sfppermitlist")
 
     return 0
 

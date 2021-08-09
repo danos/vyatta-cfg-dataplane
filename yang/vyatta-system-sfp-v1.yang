@@ -54,10 +54,7 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
-	revision 2021-08-02 {
-		description "Rename name field to vendor and constrain name length";
-	}
-	revision 2021-07-19 {
+	revision 2021-08-09 {
 		description "Add SFP permit-list configuration";
 	}
 	revision 2021-06-20 {
@@ -77,6 +74,7 @@ module vyatta-system-sfp-v1 {
 
 			container permit {
 				if-feature sfp-permit-list;
+				presence "Enable SFP permit";
 				configd:help "Configure allowed SFPs and action taken in case of a mismatch";
 				description
 					"Network platforms can support a wide variety SFP transceiver modules.
@@ -84,6 +82,9 @@ module vyatta-system-sfp-v1 {
 					transceiver modules are installed on certain network platforms. SFP permit
 					lists allow the configuration of lists of SFP transceiver modules that
 					are supported in the system.";
+				must "mismatch-action/enforcement/state = 'disabled' or count(list)>0 or not(mismatch-action/enforcement/state)" {
+					error-message "SFP permit list must not be empty when enforcement is enabled";
+				}
 
 				list list {
 					configd:help "List of allowed SFP transceiver modules";
@@ -194,7 +195,7 @@ module vyatta-system-sfp-v1 {
 									description "Disable SFP enforcement";
 									configd:help "Disable SFP enforcement";
 								}
-								enum "enabled" {
+								enum enabled {
 									description "Enable SFP enforcement";
 									configd:help "Enable SFP enforcement";
 								}
