@@ -63,7 +63,7 @@ module vyatta-interfaces-dataplane-v1 {
 		 Vyatta dataplane interface specific yang file and related
 		 template scripts.";
 
-	revision 2021-07-22 {
+	revision 2021-08-09 {
 		description "Add constraint to disallow MTU less than 1280 on interfaces with any IPv6 configuration";
 	}
 	revision 2021-04-21 {
@@ -423,7 +423,8 @@ module vyatta-interfaces-dataplane-v1 {
 				default "1500";
 				configd:update "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu $VAR(@) --action ${COMMIT_ACTION}";
 				configd:delete "vyatta-interfaces.pl --dev $VAR(../@) --set-dev-mtu 1500 --action ${COMMIT_ACTION}";
-				must "not((current() < 1280) and ((../address[contains(., ':')]) or (../address = 'dhcpv6') or (../ipv6)))" {
+				must "not((current() < 1280) and (((../address[contains(., ':')]) or (../address = 'dhcpv6') or (../ipv6)) or" +
+								"((../vif/address[contains(., ':')]) or (../vif/address = 'dhcpv6') or (../vif/ipv6))))" {
 					error-message "MTU less than 1280 not permitted on interfaces with any IPv6 configuration";
 				}
 			}
