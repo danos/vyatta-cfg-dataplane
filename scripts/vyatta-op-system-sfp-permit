@@ -75,8 +75,8 @@ def show_sfp_permit_status():
             dev_data = dp.json_command("sfp-permit-list dump devices")
             dev_obj = dev_data.get('sfp-permit-list-devices')
 
-            mismatch_data = dp.json_command("sfp-permit-list dump mismatch")
-            mismatch_obj = mismatch_data.get('sfp-permit-list-mismatch')
+            mismatch_data = dp.json_command("sfp-permit-list dump enforcement")
+            mismatch_obj = mismatch_data.get('sfp-permit-list-enforcement')
 
             if dev_obj is None or mismatch_obj is None:
                 return
@@ -84,7 +84,7 @@ def show_sfp_permit_status():
             sec = dev_obj['up-time']
             uptime = time.gmtime(sec)
 
-            delay = mismatch_obj['enforcement delay']
+            delay = mismatch_obj['boot enforcement delay']
             delay_time = time.gmtime(delay)
             activated = uptime >= delay_time
 
