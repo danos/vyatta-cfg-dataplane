@@ -29,8 +29,8 @@ def sfp_enabled(device):
         return "Monitor"
 
 
-def sfp_mode(obj, active):
-    if obj and active:
+def sfp_mode(obj):
+    if obj:
         return "Enforcement"
     else:
         return "Monitor"
@@ -72,25 +72,17 @@ def show_sfp_permit_status():
     """
     for dp in controller.get_dataplanes():
         with dp:
-            dev_data = dp.json_command("sfp-permit-list dump devices")
-            dev_obj = dev_data.get('sfp-permit-list-devices')
+            str_data = dp.json_command("sfp-permit-list dump devices")
+            obj = str_data.get('sfp-permit-list-devices')
 
-            mismatch_data = dp.json_command("sfp-permit-list dump enforcement")
-            mismatch_obj = mismatch_data.get('sfp-permit-list-enforcement')
-
-            if dev_obj is None or mismatch_obj is None:
+            if obj is None:
                 return
 
-            sec = dev_obj['up-time']
+            sec = obj['up-time']
             uptime = time.gmtime(sec)
 
-            delay = mismatch_obj['boot enforcement delay']
-            delay_time = time.gmtime(delay)
-            activated = uptime >= delay_time
-
             print()
-            print("Mode: {}".format(sfp_mode(dev_obj['enforcement-mode'],
-                                             activated)))
+            print("Mode: {}".format(sfp_mode(obj['enforcement-mode'])))
             print("Time since boot: {} days".format(sec // (60 * 60 * 24)),
                   time.strftime("%H:%M:%S", uptime))
             print()
@@ -98,8 +90,7 @@ def show_sfp_permit_status():
                                        "OUI", "Rev", "Status", "Action"))
             print()
             devices = sorted(
-                dev_obj['devices'],
-                key=lambda dev: alphanum_total(dev['intf_name']))
+                obj['devices'], key=lambda dev: alphanum_total(dev['intf_name']))
             for device in devices:
                 print_device(device)
 
