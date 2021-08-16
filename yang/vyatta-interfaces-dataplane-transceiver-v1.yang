@@ -66,6 +66,10 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
          This module defines configuration and operational state data
          for transceivers (i.e., pluggable optics).";
 
+    revision 2021-09-09 {
+        description "Add rpc to query SFP status";
+    }
+
     revision 2020-06-05 {
         description "Fix the length of the vendor-rev to allow for
                      SFF-8472 vendor revisions, which are up to 4
@@ -712,6 +716,47 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
                      Provides information described in SFF8472.";
 
                 uses port-transceiver-state;
+            }
+        }
+    }
+
+    rpc xcvr-status {
+        configd:call-rpc "/opt/vyatta/sbin/vyatta-xcvr --action=xcvr-status";
+
+        description
+	    "Transceiver status on a physical interface.
+            Provides dynamic parts (measured values and alarm/warning status) of
+            the information described in SFF8472.";
+
+        input {
+            leaf name {
+                description "Name of the interface to get transceiver info. Optional.";
+                type port-name;
+            }
+        }
+
+        output {
+            list xcvr-status {
+                key "name";
+                leaf name {
+                    description "Name of the interface";
+                    type port-name;
+                }
+
+                leaf internal-temp {
+                    type opt-types:transceiver-operating-temperature;
+                    description
+                        "Internally measured temperature in degrees Celsius. MSA
+                        valid range is between -40 and +125C. Accuracy shall be
+                        better than +/- 3 degC over the whole temperature range.";
+                }
+
+                leaf voltage {
+                    type opt-types:transceiver-supply-voltage;
+                    description "Supply voltage to the SFP";
+                }
+
+                uses physical-channel-top;
             }
         }
     }
