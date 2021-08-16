@@ -6,12 +6,100 @@
 # SPDX-License-Identifier: LGPL-2.1-only
 
 import subprocess
+import sys
 
 from argparse import ArgumentParser
+from vyatta import configd
 
 
-def show_sfp_monitoring_status():
-    return
+def aw_map_char(key):
+    """
+    Map alarm/warning status to output entry.
+    Return 'H' if high-warning or high-alarm is set and 'L' if low-warning or low-alarm is set
+    """
+    if 'high' in key:
+        return 'H'
+    elif 'low' in key:
+        return 'L'
+    return ' '
+
+
+def aw_map(status, key1, key2):
+    if status[key1] == "ON":
+        return aw_map_char(key1)
+    elif status[key2] == "ON":
+        return aw_map_char(key2)
+    else:
+        return ' '
+
+
+def show_sfp_monitoring_status(dev=None):
+    """
+    Show SFP monitoring status
+    """
+
+    input_arg = {}
+    if dev is not None:
+        input_arg['name'] = dev
+
+    cfg = configd.Client()
+    try:
+        data = cfg.call_rpc_dict("vyatta-interfaces-dataplane-transceiver-v1",
+                                 "xcvr-status", input_arg)
+        intf_list = data["xcvr-status"]
+    except Exception as e:
+        print("Error retrieving SFP monitoring status : {}\n", format(e))
+        sys.exit(1)
+
+    output_format = "{:14}  {:8} {:1} {:1}     {:8} {:1} {:1}    {:1}  {:8} {:1} {:1}     " + \
+                    "{:8} {:1} {:1}     {:8} {:1} {:1}"
+    print("Legend: W: Warning, A: Alarm, L: Low, H: High")
+    print("Interface       Temperature (C)  Voltage (V)    Ch  Rx Pwr (dBm)     "
+          "Tx Pwr (dBm)     Laser Bias (mA)")
+    print(output_format.format(" ", "Value", "W", "A", "Value", "W", "A", " ", "Value", "W", "A",
+                               "Value", "W", "A", "Value", "W", "A"))
+    for intf in intf_list:
+        if dev is not None and intf['name'] != dev:
+            continue
+        warnings = intf['physical-channels']['warning-status']
+        alarms = intf['physical-channels']['alarm-status']
+        channels = intf['physical-channels']['channel']
+        for c in channels:
+            o_warnings = c['warning-status']
+            o_alarms = c['alarm-status']
+            if c['index'] == 0:
+                name = intf['name']
+                temp = intf['internal-temp']
+                tw = aw_map(warnings, 'temperature-low-warning', 'temperature-high-warning')
+                ta = aw_map(alarms, 'temperature-low-alarm', 'temperature-high-alarm')
+                voltage = intf['voltage']
+                vw = aw_map(warnings, 'voltage-low-warning', 'voltage-high-warning')
+                va = aw_map(alarms, 'voltage-low-alarm', 'voltage-high-alarm')
+            else:
+                name = " "
+                temp = " "
+                tw = " "
+                ta = " "
+                voltage = " "
+                vw = " "
+                va = " "
+
+            print(output_format.format(name, temp, tw, ta, voltage, vw, va, c['index'],
+                                       c['input-power'],
+                                       aw_map(o_warnings, 'input-power-low-warning',
+                                              'input-power-high-warning'),
+                                       aw_map(o_alarms, 'input-power-low-alarm',
+                                              'input-power-high-alarm'),
+                                       c['output-power'],
+                                       aw_map(o_warnings, 'output-power-low-warning',
+                                              'output-power-high-warning'),
+                                       aw_map(o_alarms, 'output-power-low-alarm',
+                                              'output-power-high-alarm'),
+                                       c['laser-bias-current'],
+                                       aw_map(o_warnings, 'bias-current-low-warning',
+                                              'bias-current-high-warning'),
+                                       aw_map(o_alarms, 'bias-current-low-alarm',
+                                              'bias-current-high-alarm')))
 
 
 def show_sfp_monitoring_events(dev=None):
@@ -28,6 +116,7 @@ arg_parser.add_argument("--cmd", help="Get monitoring status/events",
                         choices=['status', 'events'], dest="cmd",
                         required=True)
 arg_parser.add_argument("--dev", help="Interface name", action="store")
+
 args = arg_parser.parse_args()
 
 if args.cmd == "status":
