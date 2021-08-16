@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2019-2021, AT&T Intellectual Property. All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
 #
@@ -10,9 +10,12 @@ use warnings;
 use Getopt::Long;
 use Vyatta::Configd;
 use Vyatta::Dataplane;
+use Vyatta::InterfaceStats;
 
-my @rx_stat_vars   = qw/bytes packets errors dropped overruns multicast/;
-my @tx_stat_vars   = qw/bytes packets errors dropped carrier-errors collisions/;
+my @rx_stat_vars =
+  qw/rx_bytes rx_packets rx_errors rx_dropped rx_over_errors multicast/;
+my @tx_stat_vars =
+  qw/tx_bytes tx_packets tx_errors tx_dropped tx_carrier_errors collisions/;
 my @port_stat_vars = qw/name vlan rx_packets rx_bytes tx_packets tx_bytes/;
 
 my $fmt = "%12s %12s %12s %12s %12s %12s\n";
@@ -29,7 +32,7 @@ sub show_backplane_per_port {
             $port_stats{"$key"} = $port->{"$key"};
         }
 
-        $port_stats { 'vlan' } = "" if ( $port_stats { 'vlan' } == 0 );
+        $port_stats{'vlan'} = "" if ( $port_stats{'vlan'} == 0 );
         push( @all_ports, \%port_stats );
     }
 
@@ -57,31 +60,25 @@ sub show_backplane {
     my $backplanes = ( $tree->{'backplane-state'}->{'backplanes'} );
 
     foreach my $bp ( @{$backplanes} ) {
-        my %rx_stats;
-        my %tx_stats;
 
         next if ( $bp->{'name'} ne $dev );
 
-        map { $rx_stats{$_} = 0 } @rx_stat_vars;
-        map { $tx_stats{$_} = 0 } @tx_stat_vars;
+        my %clear = get_clear_stats( $dev, ( @rx_stat_vars, @tx_stat_vars ) );
 
-        foreach my $key ( keys %{ $bp->{'receive-statistics'} } ) {
-            $rx_stats{"$key"} = $bp->{'receive-statistics'}->{"$key"};
-        }
-        foreach my $key ( keys %{ $bp->{'transmit-statistics'} } ) {
-            $tx_stats{"$key"} = $bp->{'transmit-statistics'}->{"$key"};
-        }
+        my %stats = get_intf_stats( $dev, ( @rx_stat_vars, @tx_stat_vars ) );
 
         print "  Link state: $bp->{link_state}\n";
         printf( $fmt,
             "RX:  bytes", "packets", "errors",
             "ignored",    "overrun", "mcast" );
-        printf( $fmt, map { $rx_stats{$_} } @rx_stat_vars );
+        printf( $fmt,
+            map { get_counter_val( $clear{$_}, $stats{$_} ) } @rx_stat_vars );
 
         printf( $fmt,
             "TX:  bytes", "packets", "errors",
             "dropped",    "carrier", "collisions" );
-        printf( $fmt, map { $tx_stats{$_} } @tx_stat_vars );
+        printf( $fmt,
+            map { get_counter_val( $clear{$_}, $stats{$_} ) } @tx_stat_vars );
 
         show_backplane_per_port( $bp->{'port_stats'} ) if $detail;
     }

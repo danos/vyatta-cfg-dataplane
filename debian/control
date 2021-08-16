@@ -317,7 +317,7 @@ Description: Backplane interface YANG deviations for s9500-30xs platform
 
 Package: vyatta-op-interfaces-backplane-v1-yang
 Architecture: all
-Depends: ${misc:Depends}, ${yang:Depends}
+Depends: ${misc:Depends}, ${yang:Depends}, libvyatta-interface-perl
 Description: Backplane management op mode
  Commands to show backplane interfaces
 
