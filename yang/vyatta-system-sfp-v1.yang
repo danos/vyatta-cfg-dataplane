@@ -54,7 +54,7 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
-	revision 2021-08-09 {
+	revision 2021-08-18 {
 		description "Add SFP permit-list configuration";
 	}
 	revision 2021-06-20 {
@@ -209,7 +209,7 @@ module vyatta-system-sfp-v1 {
 								 if they are enabled";
 							configd:help "Activation delay after boot";
 							type uint32 {
-								range 1..32000;
+								range 0..32000;
 							}
 							units "seconds";
 							default 900;
