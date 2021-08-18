@@ -54,8 +54,10 @@ foreach my $rsp (@dprsp) {
         foreach my $value ( @{ $decoded->{'storm_ctl_state'}->{'intfs'} } ) {
             my %intf_info;
             $intf_info{'intf-name'} = $value->{'ifname'};
-            get_storm_ctl_state( $value->{'whole_interface'},
-                \@{ $intf_info{'storm-control-interface-state'} } );
+            if ( exists( $value->{'whole_interface'} ) ) {
+                get_storm_ctl_state( $value->{'whole_interface'},
+                    \@{ $intf_info{'storm-control-interface-state'} } );
+            }
 
             foreach my $vlan_info ( @{ $value->{'vlan_table'} } ) {
                 my %vlan_state;
