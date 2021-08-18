@@ -149,8 +149,10 @@ sub show_storm_ctl_stats {
 
         $vlan = "";
         $vlan = $intf_obj->vlan() if defined $intf_obj;
-        show_storm_ctl_traffic_stats( $ifname, $vlan,
-            \@{ $intf->{'storm-control-interface-state'} } );
+        if ( exists( $intf->{'storm-control-interface-state'} ) ) {
+            show_storm_ctl_traffic_stats( $ifname, $vlan,
+                \@{ $intf->{'storm-control-interface-state'} } );
+        }
 
         foreach my $vlan_state ( @{ $intf->{'vlan-storm-control-state'} } ) {
             $vlan = $vlan_state->{'vlan-id'};
