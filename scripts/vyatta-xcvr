@@ -1,0 +1,190 @@
+#!/usr/bin/python3
+#
+# Copyright (c) 2021, AT&T Intellectual Property. All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+#
+
+import getopt
+import json
+import logging
+import math
+import sys
+from vplaned import Controller
+from systemd.journal import JournalHandler
+
+
+def convert_mW_2_dbm(mW):
+    # If no power, return the lowest value we can represent. See
+    # https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2
+    if mW == 0:
+        return -40.0
+
+    dbm = 10 * math.log10(mW)
+    return dbm
+
+
+def convert_aw_flag(flag):
+    flags = {
+        False: 'OFF',
+        True: 'ON'
+    }
+    return flags[flag]
+
+
+def remap_dp_maw_flags(xcvr_info, a_status, w_status):
+    """
+    Map module alarm/warning flags from dataplane json to data model
+    """
+    a_status['temperature-low-alarm'] = convert_aw_flag(xcvr_info['temp_low_alarm'])
+    a_status['temperature-high-alarm'] = convert_aw_flag(xcvr_info['temp_high_alarm'])
+    a_status['voltage-high-alarm'] = convert_aw_flag(xcvr_info['vcc_high_alarm'])
+    a_status['voltage-low-alarm'] = convert_aw_flag(xcvr_info['vcc_low_alarm'])
+    w_status['temperature-low-warning'] = convert_aw_flag(xcvr_info['temp_low_warn'])
+    w_status['temperature-high-warning'] = convert_aw_flag(xcvr_info['temp_high_warn'])
+    w_status['voltage-high-warning'] = convert_aw_flag(xcvr_info['vcc_high_warn'])
+    w_status['voltage-low-warning'] = convert_aw_flag(xcvr_info['vcc_low_warn'])
+
+
+def remap_dp_ch_oaw_flags(xcvr_info, channel):
+    """
+    Remap optical alarm/warning flags for a single channel
+    """
+    ow_status = {}
+    oa_status = {}
+    ow_status['bias-current-high-warning'] = convert_aw_flag(xcvr_info['tx_bias_high_warn'])
+    ow_status['bias-current-low-warning'] = convert_aw_flag(xcvr_info['tx_bias_low_warn'])
+    ow_status['input-power-high-warning'] = convert_aw_flag(xcvr_info['rx_power_high_warn'])
+    ow_status['input-power-low-warning'] = convert_aw_flag(xcvr_info['rx_power_low_warn'])
+    ow_status['output-power-high-warning'] = convert_aw_flag(xcvr_info['tx_power_high_warn'])
+    ow_status['output-power-low-warning'] = convert_aw_flag(xcvr_info['tx_power_low_warn'])
+    oa_status['bias-current-high-alarm'] = convert_aw_flag(xcvr_info['tx_bias_high_alarm'])
+    oa_status['bias-current-low-alarm'] = convert_aw_flag(xcvr_info['tx_bias_low_alarm'])
+    oa_status['input-power-low-alarm'] = convert_aw_flag(xcvr_info['rx_power_low_alarm'])
+    oa_status['input-power-high-alarm'] = convert_aw_flag(xcvr_info['rx_power_high_alarm'])
+    oa_status['output-power-high-alarm'] = convert_aw_flag(xcvr_info['tx_power_high_alarm'])
+    oa_status['output-power-low-alarm'] = convert_aw_flag(xcvr_info['tx_power_low_alarm'])
+    channel['warning-status'] = ow_status
+    channel['alarm-status'] = oa_status
+
+
+def remap_dp_oaw_flags(xcvr_info, channels):
+    """
+    Map optical alarm/warning flags from dataplane json to data model
+    """
+    if 'alarm_warning' in xcvr_info:
+        for dp_aw_status in xcvr_info['alarm_warning']:
+            channel = channels[dp_aw_status['channel']]
+            remap_dp_ch_oaw_flags(dp_aw_status, channel)
+    elif 'tx_bias_high_warn' in xcvr_info:
+        remap_dp_ch_oaw_flags(xcvr_info, channels['0'])
+
+
+def remap_dp_optical_measures(xcvr_info, channels):
+    """
+    Map measured values from dataplane json to data model
+    """
+    if 'rx_power_mW' in xcvr_info:
+        channel = {}
+        channel['index'] = "0"
+        channel['input-power'] = convert_mW_2_dbm(xcvr_info['rx_power_mW'])
+        channel['laser-bias-current'] = str(xcvr_info['laser_bias'])
+        channel['output-power'] = convert_mW_2_dbm(xcvr_info['tx_power_mW'])
+        channels['0'] = channel
+    elif 'measured_values' in xcvr_info:
+        for value in xcvr_info['measured_values']:
+            channel = {}
+            channel['index'] = value['channel']
+            channel['input-power'] = convert_mW_2_dbm(value['rx_power_mW'])
+            channel['laser-bias-current'] = str(value['laser_bias'])
+            channel['output-power'] = convert_mW_2_dbm(value['tx_power_mW'])
+            channels[value['channel']] = channel
+
+
+def print_xcvr_info(name=None):
+    """
+    Retrieve transceiver information from the dataplane
+    Format it as per the RPC output data model
+    """
+    result = {}
+    xcvr_status = []
+    for dp in controller.get_dataplanes():
+        with dp:
+            try:
+                if name is not None:
+                    cmd = "sfp-monitor show {}".format(name)
+                else:
+                    cmd = "sfp-monitor show"
+                data = dp.json_command(cmd)
+            except Exception as e:
+                logger.error(
+                    "Error with the command '{}' ".format(cmd))
+                logger.error(e)
+                continue
+
+            for intf in data['sfp_status']:
+                intf_status = {}
+                intf_status['physical-channels'] = {}
+                channels = {}
+                w_status = {}
+                a_status = {}
+                if 'xcvr_info' in intf:
+                    xcvr_info = intf['xcvr_info']
+                    intf_status['name'] = intf['name']
+                    if 'temperature_C' in xcvr_info:
+                        intf_status['internal-temp'] = str(xcvr_info['temperature_C'])
+                    else:
+                        continue
+                    if 'voltage_V' in xcvr_info:
+                        intf_status['voltage'] = str(xcvr_info['voltage_V'])
+                    else:
+                        continue
+
+                    # module alarm/warning flags
+                    remap_dp_maw_flags(xcvr_info, a_status, w_status)
+                    intf_status['physical-channels']['alarm-status'] = a_status
+                    intf_status['physical-channels']['warning-status'] = w_status
+
+                    # optical measurements
+                    remap_dp_optical_measures(xcvr_info, channels)
+
+                    # optical alarm/warning flags
+                    remap_dp_oaw_flags(xcvr_info, channels)
+
+                    intf_status['physical-channels']['channel'] = channels
+
+                    xcvr_status.append(intf_status)
+
+    result['xcvr-status'] = xcvr_status
+    print(json.dumps(result))
+
+
+def process_options():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "s", ['xcvr-status'])
+    except getopt.GetoptError as r:
+        logging.error(r)
+        logging.error("usage: {} [-s|--xcvr-status] \n".format(sys.argv[0]))
+        sys.exit(2)
+
+    for opt, arg in opts:
+        if opt in ('-s', '--xcvr-status'):
+            return "xcvr-status"
+
+
+logger = logging.getLogger()
+logging.root.addHandler(
+    JournalHandler(SYSLOG_IDENTIFIER='vyatta-xcvr'))
+
+action = process_options()
+
+line = sys.stdin.read()
+rpc_input = json.loads(line)
+if 'name' in rpc_input:
+    name = rpc_input['name']
+else:
+    name = None
+
+with Controller() as controller:
+    if action == "xcvr-status":
+        print_xcvr_info(name)

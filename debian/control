@@ -331,6 +331,7 @@ Depends:
  vyatta-optical-transport-types-v1-yang,
  vyatta-dataplane-op-ifconfig-2,
  ${misc:Depends},
+ python3,
  ${yang:Depends}
 Description: vyatta-interfaces-dataplane-transceiver-v1 module
  Commands to show dataplane transceiver information

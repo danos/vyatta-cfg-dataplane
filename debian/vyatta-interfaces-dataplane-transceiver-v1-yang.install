@@ -1,4 +1,5 @@
 yang/vyatta-interfaces-dataplane-transceiver-v1.yang usr/share/configd/yang
 lib/Vyatta/TransceiverInfo.pm opt/vyatta/share/perl5/Vyatta
 scripts/vyatta-transceiver opt/vyatta/sbin
+scripts/vyatta-xcvr opt/vyatta/sbin
 scripts/vyatta-op-ethernet opt/vyatta/bin

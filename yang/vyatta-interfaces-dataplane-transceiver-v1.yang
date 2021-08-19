@@ -23,7 +23,7 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
          Web: www.att.com";
 
     description
-        "Copyright (c) 2018-2020, AT&T Intellectual Property.
+        "Copyright (c) 2018-2021, AT&T Intellectual Property.
          All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -721,7 +721,7 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
     }
 
     rpc xcvr-status {
-        configd:call-rpc "/opt/vyatta/sbin/vyatta-xcvr --action=xcvr-status";
+        configd:call-rpc "/opt/vyatta/sbin/vyatta-xcvr --xcvr-status --dev ";
 
         description
 	    "Transceiver status on a physical interface.
