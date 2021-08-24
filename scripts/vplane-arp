@@ -30,7 +30,7 @@ arp_kernel = "control-plane"
 
 def get_interfaces():
     """
-    Returns a list of network interfaces in the system. Excludes hidden 
+    Returns a list of network interfaces in the system. Excludes hidden
     interfaces starting with '.' and vrf interfaces.
     """
 
@@ -46,7 +46,6 @@ def show_arp(intf, addr):
     """
 
     output_format = "{:20} {:10} {:17} {}"
-    intf_cmd = ""
     input_arg = {get_arp_type_key: arp_dp}
 
     if intf is not None:
@@ -89,8 +88,6 @@ def show_arp_all(intf, addr):
     """
     zero_mac = "00:00:00:00:00:00"
     output_format = "{:18} {:17} {:10} {:10} {}"
-    intf_cmd = ""
-    intf_found = False
     input_arg_dp = {get_arp_type_key: arp_dp}
     input_arg_kernel = {get_arp_type_key: arp_kernel}
 
@@ -112,7 +109,7 @@ def show_arp_all(intf, addr):
         data = cfg.call_rpc_dict("vyatta-arp-v1", "get-arp", input_arg_dp)
         arp_list_dp = data["arp-entry-list"]
     except Exception as e:
-        print("show arp failed")
+        print("show arp failed : ", e)
         sys.exit(1)
 
     try:
@@ -120,7 +117,7 @@ def show_arp_all(intf, addr):
             "vyatta-arp-v1", "get-arp", input_arg_kernel)
         arp_list_kernel = data["arp-entry-list"]
     except Exception as e:
-        print("show arp failed")
+        print("show arp failed : ", e)
         sys.exit(1)
 
     arp_dict_kernel = {value["ip"]: value for value in arp_list_kernel}
@@ -141,7 +138,8 @@ def show_arp_all(intf, addr):
 
     for ip in arp_dict_kernel.keys():
         print(output_format.format(
-            ip, arp_dict_kernel[ip]["hwaddr"], "", arp_dict_kernel[ip]["flags"], arp_dict_kernel[ip]["ifname"]))
+            ip, arp_dict_kernel[ip]["hwaddr"], "", arp_dict_kernel[ip]["flags"],
+            arp_dict_kernel[ip]["ifname"]))
 
 
 if args.function_choice == func_arp_all:

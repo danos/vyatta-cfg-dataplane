@@ -3,11 +3,12 @@
 
 from argparse import ArgumentParser
 from vplaned import Controller
-from collections import Counter, defaultdict
+
 try:
     from vrfmanager import VrfManager
 except ImportError:
     pass
+
 
 def print_summary_header():
     print("{:>23} {:>9} {:>9} {:>9} {:>9} {:>9}".format("full",
@@ -16,6 +17,7 @@ def print_summary_header():
                                                         "no-sup",
                                                         "no-need",
                                                         "error"))
+
 
 def find_dps(objects):
     '''Find all the dataplanes that are in this json.
@@ -33,14 +35,16 @@ def find_dps(objects):
                     dps.append(k['dp'])
     return dps
 
+
 def find_feats(objects):
     feats = []
 
     for feat in objects:
         for f in feat:
-            if not f in feats:
+            if f not in feats:
                 feats.append(f)
     return sorted(feats)
+
 
 def print_feat_summary_for_dp(obj, dp, in_feat):
     for feat in obj:
@@ -55,6 +59,8 @@ def print_feat_summary_for_dp(obj, dp, in_feat):
                                                                                k['no_support'],
                                                                                k['not_needed'],
                                                                                k['error']))
+
+
 def print_summary_data(data):
     obj = data['objects']
     dps = find_dps(obj)
@@ -65,6 +71,7 @@ def print_summary_data(data):
         print("{}:".format(dp))
         for feat in feats:
             print_feat_summary_for_dp(obj, dp, feat)
+
 
 def show_route_nexthops(nh):
     if len(nh) > 1:
@@ -86,15 +93,17 @@ def show_route_nexthops(nh):
             sep = ''
         print("{} {} {}{} {}".format(indent, state, gw, sep, ifname))
 
+
 def show_route_prefix(prefix):
-    print ("    {}".format(prefix), end='')
+    print("    {}".format(prefix), end='')
+
 
 def print_route_subset_data(subset, data):
     try:
         vrf_manager = VrfManager()
-    except:
+    except Exception:
         pass
-    header_needed = True;
+    header_needed = True
 
     for val in data:
         for field in data[val]:
@@ -108,7 +117,7 @@ def print_route_subset_data(subset, data):
                 try:
                     vrf_name = vrf_manager.get_vrf_name(field['vrf_id'])
                     vrf_header = "  routing-instance: {}, table: {}".format(vrf_name, table)
-                except:
+                except Exception:
                     vrf_header = "  table: {}".format(table)
 
                 header_needed = True
@@ -120,18 +129,21 @@ def print_route_subset_data(subset, data):
                 show_route_prefix(field['prefix'])
                 show_route_nexthops(field['next_hop'])
 
+
 def show_mroute_field(field):
-    print ("  {}".format(field), end='')
+    print("  {}".format(field), end='')
+
 
 def show_last_mroute_field(field):
-    print ("  {}".format(field))
+    print("  {}".format(field))
+
 
 def print_mroute_subset_data(subset, data):
     try:
         vrf_manager = VrfManager()
-    except:
+    except Exception:
         pass
-    header_needed = True;
+    header_needed = True
 
     for val in data:
         for field in data[val]:
@@ -141,7 +153,7 @@ def print_mroute_subset_data(subset, data):
                 try:
                     vrf_name = vrf_manager.get_vrf_name(field['vrf_id'])
                     vrf_header = "  routing-instance: {}".format(vrf_name)
-                except:
+                except Exception:
                     vrf_header = "  "
 
                 header_needed = True
@@ -155,8 +167,9 @@ def print_mroute_subset_data(subset, data):
                 show_mroute_field(field['ifindex'])
                 show_last_mroute_field(field['ifname'])
 
+
 def print_mpls_route_subset_data(subset, data):
-    header_needed = False;
+    header_needed = False
 
     for table in data['objects']:
         if 'lblspc' not in table or 'mpls_routes' not in table:
@@ -174,6 +187,7 @@ def print_mpls_route_subset_data(subset, data):
             show_route_prefix(route['address'])
             show_route_nexthops(route['next_hop'])
 
+
 def print_subset_data(feat, subset, data):
     if feat == 'route':
         print_route_subset_data(subset, data)
@@ -190,19 +204,20 @@ def print_subset_data(feat, subset, data):
 def main():
     parser = ArgumentParser()
     parser.add_argument("--obj", choices=['route', 'route6', 'mroute', 'mroute6', 'mpls-route'])
-    parser.add_argument("--subset", choices=['no_resource', 'no_support', 'not_needed', 'partial', 'error', 'full'])
+    parser.add_argument("--subset", choices=['no_resource', 'no_support', 'not_needed', 'partial',
+                                             'error', 'full'])
 
     args = parser.parse_args()
 
     if args.obj:
-        obj=args.obj
+        obj = args.obj
     else:
-        obj=""
+        obj = ""
 
     if args.subset:
-        subset=args.subset
+        subset = args.subset
     else:
-        subset=""
+        subset = ""
 
     with Controller() as controller:
         for dp in controller.get_dataplanes():
@@ -213,6 +228,7 @@ def main():
                     print_subset_data(obj, subset, data)
                 else:
                     print_summary_data(data)
+
 
 if __name__ == '__main__':
     main()

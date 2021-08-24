@@ -20,6 +20,7 @@ arg_parser.add_argument('--update', action='store', required=False)
 
 args = arg_parser.parse_args()
 
+
 def config_profile(action, dev, vlan, profile, update):
     cfg = configd.Client()
     value = 0
@@ -39,7 +40,7 @@ def config_profile(action, dev, vlan, profile, update):
         cfg.profile.action = action_id
         cfg.profile.profile = profile
         cfg.profile.limit = value
-        key = "mac-limit profile {} {}".format(profile,update)
+        key = "mac-limit profile {} {}".format(profile, update)
 
     else:
         cfg = MacLimitConfig_pb2.MacLimitConfig()
@@ -47,13 +48,14 @@ def config_profile(action, dev, vlan, profile, update):
         cfg.ifvlan.profile = profile
         cfg.ifvlan.vlan = int(vlan)
         cfg.ifvlan.ifname = dev
-        key="mac-limit profile {} {}".format(dev, vlan)
+        key = "mac-limit profile {} {}".format(dev, vlan)
 
     controller.store(key, cfg, "ALL", action, cmd_name="vyatta:maclimit")
 
+
 with Controller() as controller:
-     if args.cmd == "profile":
-          config_profile(args.action, args.dev, args.vlan, args.profile,
-                         args.update)
-     else:
-          print("invalid command: {}".format(args.cmd))
+    if args.cmd == "profile":
+        config_profile(args.action, args.dev, args.vlan, args.profile,
+                       args.update)
+    else:
+        print("invalid command: {}".format(args.cmd))

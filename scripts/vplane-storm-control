@@ -14,17 +14,19 @@ from vyatta import configd
 #
 # update global config
 #
+
+
 def process_storm_ctl_global_cfg(action, update):
-    ( value, tree) = ( "", "" )
+    (value, tree) = ("", "")
 
     cfg = configd.Client()
 
     if update == 'detection-interval':
-            tree  = cfg.tree_get_dict("security storm-control {}".format(update));
-            value = tree.get(update);
+        tree = cfg.tree_get_dict("security storm-control {}".format(update))
+        value = tree.get(update)
 
     ckey = "storm-ctl {}".format(update)
-    cmd  = "storm-ctl {} {}".format(action, update)
+    cmd = "storm-ctl {} {}".format(action, update)
     if action == 'SET':
         cmd = "{} {}".format(cmd, value)
     with Controller() as controller:
@@ -35,8 +37,10 @@ def process_storm_ctl_global_cfg(action, update):
 #
 # update cstore for all interfaces that use the specified profile
 #
+
+
 def process_storm_ctl_profile_cfg(action, profile, update):
-    ( type, value, tree ) = ( "", "", "" )
+    (type, value, tree) = ("", "", "")
 
     cfg = configd.Client()
 
@@ -64,11 +68,13 @@ def process_storm_ctl_profile_cfg(action, profile, update):
 # update cstore for specified interface
 #
 # cmd format: storm-ctl <SET|DELETE> <ifname> profile <profile>
+
+
 def process_storm_ctl_dev_cfg(action, ifname, profile):
     with Controller() as controller:
         controller.store("storm-ctl {}".format(ifname),
-		         "storm-ctl {} {} profile {}".format(action, ifname, profile),
-		         action=action, interface=ifname)
+                         "storm-ctl {} {} profile {}".format(action, ifname, profile),
+                         action=action, interface=ifname)
 
 
 #
@@ -77,7 +83,7 @@ def process_storm_ctl_dev_cfg(action, ifname, profile):
 # update cstore for all vlans for which config has changed
 #
 def process_storm_ctl_dev_vlan_cfg(ifname):
-    ( key, cmd, profile ) = ( "", "", "" )
+    (key, cmd, profile) = ("", "", "")
 
     CONFIG_CANDIDATE = configd.Client.CANDIDATE
     CONFIG_RUNNING = configd.Client.RUNNING
@@ -87,7 +93,7 @@ def process_storm_ctl_dev_vlan_cfg(ifname):
     with Controller() as controller:
         try:
             vlans = client.tree_get_dict(path, CONFIG_RUNNING)['vlan']
-        except:
+        except BaseException:
             vlans = {}
         for vlan in vlans:
             vlan_id = vlan['vlan-id']
@@ -99,7 +105,7 @@ def process_storm_ctl_dev_vlan_cfg(ifname):
 
         try:
             vlans = client.tree_get_dict(path, CONFIG_CANDIDATE)['vlan']
-        except:
+        except BaseException:
             vlans = {}
         for vlan in vlans:
             vlan_id = vlan['vlan-id']

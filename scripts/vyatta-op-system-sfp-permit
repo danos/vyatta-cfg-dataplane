@@ -7,7 +7,6 @@
 
 from argparse import ArgumentParser
 from vplaned import Controller
-import time
 
 arg_parser = ArgumentParser()
 arg_parser.add_argument("--status", help="Get device status",

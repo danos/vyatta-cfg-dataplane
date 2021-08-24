@@ -11,16 +11,11 @@
 
 import argparse
 import logging
-import subprocess
 import sys
 
-from argparse import ArgumentParser
 from vplaned import Controller
 from vyatta import configd
 from vyatta.proto import SFPMonitor_pb2
-
-from collections import defaultdict
-from vyatta.interfaces.interfaces import getInterfaceConfig as gid
 
 CONFIG_CANDIDATE = configd.Client.CANDIDATE
 CONFIG_RUNNING = configd.Client.RUNNING

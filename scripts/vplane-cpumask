@@ -13,6 +13,7 @@ from argparse import ArgumentParser
 
 DP_CONF = '/etc/vyatta/dataplane.conf'
 
+
 def _delete_cpumask(dpcfg, key_cpumask='cpumask'):
 
     if not dpcfg.has_option('Dataplane', key_cpumask):
@@ -21,6 +22,7 @@ def _delete_cpumask(dpcfg, key_cpumask='cpumask'):
     with open(DP_CONF, 'w') as dpcfg_fp:
         del dpcfg['Dataplane'][key_cpumask]
         dpcfg.write(dpcfg_fp, space_around_delimiters=False)
+
 
 def _set_cpumask(dpcfg, cpumask, key_cpumask='cpumask'):
 
@@ -37,19 +39,20 @@ def _parse_range(range_str):
     for token in range_str.split(','):
         if '-' in token:
             start, stop = token.split('-')
-            for cpuid in range(int(start), int(stop)+1):
+            for cpuid in range(int(start), int(stop) + 1):
                 cpuset.add(cpuid)
         elif token:
             cpuset.add(int(token))
 
     return cpuset
 
+
 def _validate_cpumask(cpumask, control_cpumask):
     try:
         cpuset = _parse_range(cpumask)
         control_cpuset = _parse_range(control_cpumask)
     except ValueError as err:
-        print("Validation of CPU affinity value failed.")
+        print("Validation of CPU affinity value failed : ", err)
         sys.exit(1)
 
     # limited by CPU_SETSIZE (sched.h) and pthread_setaffinity_np
@@ -62,6 +65,7 @@ def _validate_cpumask(cpumask, control_cpumask):
         print("Dataplane Control CPU affinity must be a subset of "
               "the general Dataplane CPU affinity.")
         sys.exit(1)
+
 
 def _main():
     key_cpumask = 'cpumask'
@@ -119,7 +123,7 @@ def _main():
     else:
         try:
             _set_cpumask(dpcfg, cpumask, key_cpumask)
-        except (IOError, configparser.Error)  as err:
+        except (IOError, configparser.Error) as err:
             print('Failed to update CPU affinity in dataplane configuration: {}'.format(err))
             sys.exit(1)
 

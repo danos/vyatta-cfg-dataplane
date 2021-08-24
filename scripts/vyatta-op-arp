@@ -29,7 +29,6 @@ def get_arp_dp(intf, addr):
     Get dataplane ARP entries.
     """
     mac_format = "{}:{}:{}:{}:{}:{}"
-    intf_found = False
     intf_cmd = intf if intf else ""
     arp_entries = []
 
