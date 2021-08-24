@@ -29,15 +29,11 @@ def sfp_enabled(device):
         return "Monitor"
 
 
-def sfp_mode(obj, remaining_delay):
+def sfp_mode(obj):
     if obj:
         return "Enforcement"
     else:
-        if remaining_delay > 0:
-            return "Monitor (Activation delay ending in {}s)". \
-                format(str(remaining_delay))
-        else:
-            return "Monitor"
+        return "Monitor"
 
 
 # Converts string to sum of ASCII chars and digits
@@ -82,8 +78,7 @@ def show_sfp_permit_status():
             if obj is None:
                 return
             print()
-            print("Mode: {}".format(
-                sfp_mode(obj['enforcement-mode'], obj['activation-delay-left'])))
+            print("Mode: {}".format(sfp_mode(obj['enforcement-mode'])))
             print()
             print(output_format.format("Interface", "Part-id", "Vendor",
                                        "OUI", "Rev", "Status", "Action"))

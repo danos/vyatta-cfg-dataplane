@@ -54,7 +54,7 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
-	revision 2021-08-18 {
+	revision 2021-08-25 {
 		description "Add SFP permit-list configuration";
 	}
 	revision 2021-06-20 {
@@ -201,18 +201,6 @@ module vyatta-system-sfp-v1 {
 								}
 							}
 							default "disabled";
-						}
-
-						leaf activation-delay {
-							description
-								"Delay after boot to the activation of the SFP permit lists
-								 if they are enabled";
-							configd:help "Activation delay after boot";
-							type uint32 {
-								range 0..32000;
-							}
-							units "seconds";
-							default 900;
 						}
 					}
 				}

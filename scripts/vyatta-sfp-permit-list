@@ -24,7 +24,6 @@ from vyatta.interfaces.interfaces import getInterfaceConfig as gid
 
 CONFIG_CANDIDATE = configd.Client.CANDIDATE
 CONFIG_RUNNING = configd.Client.RUNNING
-DEFAULT_ENFORCEMENT_DELAY = 900
 client = None
 dbg = logging.debug
 err = logging.error
@@ -60,7 +59,6 @@ def sfp_permit_mismatch():
         else:
             cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
 
-        cfg.mismatch.delay = enforcement['activation-delay']
         cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
         controller.store(key, cfg, "ALL", "SET",
                          cmd_name="vyatta:sfppermitlist")
@@ -69,7 +67,6 @@ def sfp_permit_mismatch():
         cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
         cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
         cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
-        cfg.mismatch.delay = DEFAULT_ENFORCEMENT_DELAY
         controller.store(key, cfg, "ALL", "DELETE",
                          cmd_name="vyatta:sfppermitlist")
 
