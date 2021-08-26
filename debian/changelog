@@ -1,3 +1,76 @@
+vplane-config (2.100) unstable; urgency=medium
+
+  [ Cian O'Sullivan ]
+  * Sort the order of SFPs by interface name
+
+  [ Srinivas Narayan ]
+  * Add Jenkinsfile and associated scripts
+
+  [ ck407g ]
+  * Fix for the delete system sfp exception
+
+  [ Cian O'Sullivan ]
+  * Import dataplane library
+
+  [ ck407g ]
+  * Changes to make vendor optional
+
+  [ Mark Gillott ]
+  * changelog: reduced length of commit message (Fixes: VRVDR-55841)
+  * lintian: update control file in order to resolve some warnings
+    (Fixes: VRVDR-55841)
+
+  [ Cian O'Sullivan ]
+  * Fix SFP permit list being unsorted for double digits
+
+  [ kalaivani vinothkumar ]
+  * Added must to restrict mtu if not default for IPv6
+
+  [ ck407g ]
+  * Code tidy-up changes
+  * Part IDs merge with vendor names
+
+  [ Cian O'Sullivan ]
+  * Revert SFP name field to vendor
+  * Fix enforcement mode being shown despite being in monitor mode
+
+  [ kalaivani vinothkumar ]
+  * Update constraint to not allow ipv6 and mtu
+
+  [ ck407g ]
+  * Remove sfp state after SFP node delete operations
+
+  [ Cian O'Sullivan ]
+  * Show dataplane monitoring debug flags
+  * Use boot enforcement delay for identifying SFP permit list mode
+  * Revert "Fix enforcement mode being shown despite being in monitor mode"
+
+  [ kalaivani vinothkumar ]
+  * Backplane interface counters are not cleared
+
+  [ Thomas Kiely ]
+  * Only generate whole interface stats if present
+  * Only print parent interface stats if present
+
+  [ ck407g ]
+  * Changed activation delay to start after the boot sfpd sweep
+
+  [ Daniel Gollub ]
+  * vplane-cpumask: drop unused show isolated command
+  * vplane-cpumask: drop unused show control cpumask command
+  * vplane-cpumask: drop unused fabric code
+  * vplane-cpumask: remove unused irq update stub
+  * vplane-cpumask: remove unused show cpumask command
+  * vplane-cpumask: rewrite in python3
+  * vplane-cpumask: generate control thread cpumasks
+  * yang: update organization in vyatta-system-dataplane-v1
+  * yang: introduce "system dataplane control" cpu-affinity settings
+
+  [ ck407g ]
+  * Remove activation delay
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Thu, 26 Aug 2021 11:52:04 +0100
+
 vplane-config (2.99) unstable; urgency=medium
 
   [ kalaivani vinothkumar ]
