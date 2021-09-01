@@ -1,3 +1,11 @@
+vplane-config (2.101) unstable; urgency=medium
+
+  * perltidy run on all perl files in the repository
+  * Fix all python warnings detected by flake8
+  * Include style checks in package build
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Wed, 01 Sep 2021 09:28:22 +0100
+
 vplane-config (2.100) unstable; urgency=medium
 
   [ Cian O'Sullivan ]
