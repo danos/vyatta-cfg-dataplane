@@ -50,9 +50,22 @@ def sfp_permit_mismatch():
         enforcement = entries['enforcement']
 
         if enforcement['state'] == 'enabled':
-            cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
+            cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
+            enforce_state = node + " enforcement state"
+            enforce_state_exists = client.node_exists(client.RUNNING,
+                                                      enforce_state)
+            uptime = get_effective_enforcement()
+            if enforce_state_exists:
+                changed = client.node_get_status(client.AUTO, enforce_state)
+
+                if changed == client.CHANGED:
+                    cfg.mismatch.effective_enforcement_time = uptime
+            else:
+                cfg.mismatch.effective_enforcement_time = uptime
+
         else:
-            cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+            cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+            cfg.mismatch.effective_enforcement_time = 0
 
         cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
         controller.store(key, cfg, "ALL", "SET",
@@ -61,11 +74,17 @@ def sfp_permit_mismatch():
     else:
         cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
         cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
-        cfg.mismatch.enforcement = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+        cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.MONITOR
         controller.store(key, cfg, "ALL", "DELETE",
                          cmd_name="vyatta:sfppermitlist")
 
     return 0
+
+
+def get_effective_enforcement():
+    with open('/proc/uptime', 'r') as f:
+        uptime = float(f.readline().split()[0])
+        return int(uptime)
 
 
 def sfp_permit_list(policy):
