@@ -52,6 +52,9 @@ module vyatta-arp-v1 {
 
 		 Retrieves Address Resolution Protocol (ARP) data";
 
+	revision 2021-09-15 {
+		description "Added Neighbor Unreachability Detection state";
+	}
 	revision 2021-06-14 {
 		description "Initial version";
 	}
@@ -79,8 +82,8 @@ module vyatta-arp-v1 {
                 type types:interface-ifname;
             }
             leaf ip {
-                description "IPv4 address"; 
-                type types:ipv4-address;                
+                description "IPv4 address";
+                type types:ipv4-address;
             }
         }
         
@@ -100,16 +103,20 @@ module vyatta-arp-v1 {
                 leaf ifname {
                         mandatory true;
                         type types:interface-ifname;
-                        description "Outgoing interface name";   
+                        description "Outgoing interface name";
                 }               
                 leaf flags {
                     type string;
                     description "Flags indicating the status of the arp entry";
                 }
+                leaf state {
+                    description "ARP Neighbor Unreachability Detection state";
+                    type string;
+                }
                 leaf platform_state {
                     type string;
                     description "Platform state";
-                }      
+                }
             }
         }
     }

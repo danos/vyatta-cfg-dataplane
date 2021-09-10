@@ -45,7 +45,7 @@ def show_arp(intf, addr):
     Show dataplane ARP entries.
     """
 
-    output_format = "{:20} {:10} {:17} {}"
+    output_format = "{:16} {:17} {:18} {}"
     input_arg = {get_arp_type_key: arp_dp}
 
     if intf is not None:
@@ -70,12 +70,14 @@ def show_arp(intf, addr):
         sys.exit(1)
 
     for entry in arp_list:
+        flag_state = entry["flags"] + \
+            (" [" + entry["state"] + "]" if entry["state"] else "")
         if (intf is None) or (addr is None):
             print(output_format.format(
-                entry["ip"], entry["flags"], entry["hwaddr"], entry["ifname"]))
+                entry["ip"], flag_state, entry["hwaddr"], entry["ifname"]))
         else:
             print("{} {}".format(entry["ip"], entry["ifname"]))
-            print("    Flags: {}".format(entry["flags"]))
+            print("    Flags: {}".format(flag_state))
             print("    HW Address: {}".format(entry["hwaddr"]))
             if "platform_state" in entry:
                 print("    Platform state:")
@@ -87,7 +89,7 @@ def show_arp_all(intf, addr):
     Show both kernel and dataplane ARP entries.
     """
     zero_mac = "00:00:00:00:00:00"
-    output_format = "{:18} {:17} {:10} {:10} {}"
+    output_format = "{:16} {:17} {:18} {:18} {}"
     input_arg_dp = {get_arp_type_key: arp_dp}
     input_arg_kernel = {get_arp_type_key: arp_kernel}
 
@@ -128,17 +130,27 @@ def show_arp_all(intf, addr):
     for entry in arp_list_dp:
         kentry = arp_dict_kernel[entry["ip"]
                                  ] if entry["ip"] in arp_dict_kernel.keys() else None
-        if kentry and (kentry["hwaddr"] == entry["hwaddr"] or kentry['hwaddr'] == zero_mac):
+
+        entry_flag_state = entry["flags"] + \
+            (" [" + entry["state"] + "]" if entry["state"] else "")
+
+        if kentry and (kentry["hwaddr"] == entry["hwaddr"] or kentry["hwaddr"] == zero_mac):
+            kentry_flag_state = kentry["flags"] + \
+                (" [" + kentry["state"] + "]" if kentry["state"] else "")
+
             print(output_format.format(
-                entry["ip"], entry["hwaddr"], entry["flags"], kentry["flags"], entry["ifname"]))
+                entry["ip"], entry["hwaddr"], entry_flag_state, kentry_flag_state, entry["ifname"]))
             arp_dict_kernel.pop(entry["ip"])
         else:
             print(output_format.format(
-                entry["ip"], entry["hwaddr"], entry["flags"], "", entry["ifname"]))
+                entry["ip"], entry["hwaddr"], entry_flag_state, "", entry["ifname"]))
 
     for ip in arp_dict_kernel.keys():
+        kentry_flag_state = arp_dict_kernel[ip]["flags"] + \
+            (" [" + arp_dict_kernel[ip]["state"] +
+             "]" if arp_dict_kernel[ip]["state"] else "")
         print(output_format.format(
-            ip, arp_dict_kernel[ip]["hwaddr"], "", arp_dict_kernel[ip]["flags"],
+            ip, arp_dict_kernel[ip]["hwaddr"], "", kentry_flag_state,
             arp_dict_kernel[ip]["ifname"]))
 
 
