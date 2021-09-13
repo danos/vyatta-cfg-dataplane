@@ -1,6 +1,6 @@
 #! /usr/bin/perl
 
-# Copyright (c) 2019, AT&T Intellectual Property. All rights reserved.
+# Copyright (c) 2019-2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
 #
@@ -15,6 +15,7 @@ use JSON qw( decode_json encode_json );
 use lib "/opt/vyatta/share/perl5/";
 use Vyatta::Dataplane;
 use Vyatta::Interface;
+use Vyatta::MAC;
 
 sub show_nd {
     my ( $sock, $data, $intf, $filter_addr ) = @_;
@@ -28,14 +29,15 @@ sub show_nd {
         next if ( defined($intf)        && $entry->{ifname} ne $intf );
         next if ( defined($filter_addr) && $entry->{ip} ne $filter_addr );
 
+        my $mac = Vyatta::MAC->new( 'mac' => $entry->{mac} );
         if ( !defined($intf) || !defined($filter_addr) ) {
-            printf $format, $entry->{ip}, $entry->{mac}, $entry->{flags},
+            printf $format, $entry->{ip}, $mac->as_IEEE(), $entry->{flags},
               $entry->{state}, $entry->{ifname};
         } else {
             printf "%s %s\n", $entry->{ip}, $entry->{ifname};
             printf "    Flags: %s\n",      $entry->{flags};
             printf "    State: %s\n",      $entry->{state};
-            printf "    HW Address: %s\n", $entry->{mac};
+            printf "    HW Address: %s\n", $mac->as_IEEE();
             if ( defined( $entry->{platform_state} ) ) {
                 printf "    Platform state:\n";
                 print $sock->format_platform_state( 'ip-neigh',
@@ -92,7 +94,8 @@ sub show_nd_all {
               : $flags;
             $kernel_entry->[3] = 0;
         }
-        printf $format, $entry->{ip}, $entry->{mac},
+        my $mac = Vyatta::MAC->new( 'mac' => $entry->{mac} );
+        printf $format, $entry->{ip}, $mac->as_IEEE(),
           $entry->{flags} eq "VALID"
           ? "$entry->{flags} [$entry->{state}]"
           : $entry->{flags},
