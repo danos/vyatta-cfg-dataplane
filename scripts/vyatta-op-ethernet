@@ -36,6 +36,7 @@ my $eeprom_diag_fields_fmt = "    %-42s: %s%s\n";
 my $channel_num_fmt        = "    Channel %s\n";
 my $pause_mode             = "Pause Frame Mode: %s\n";
 my $platform_state_hdr     = "Platform state\n";
+my $pl_status_fmt          = "Permit list status: %s\n";
 
 my %id2desc_hash = (
     'form-factor'      => { 'desc' => 'Identifier' },
@@ -320,6 +321,29 @@ sub show_transceiver_diag_bit_flags($\%) {
     return;
 }
 
+sub show_sfp_pl_status_info {
+    my ($status_info) = @_;
+
+    if ( !defined( $status_info->{'sfp-list'} ) ) {
+        return;
+    }
+
+    my $sfp_list_size = scalar @{ $status_info->{'sfp-list'} };
+    if ( $sfp_list_size != 1 ) {
+        return;
+    }
+
+    my $sfp = $status_info->{'sfp-list'}[0];
+
+    if ( $sfp->{'state'} eq 'approved' ) {
+        printf $pl_status_fmt, "Approved";
+    } else {
+        printf $pl_status_fmt, "Unapproved";
+    }
+
+    return;
+}
+
 sub action_get_eth_info {
     my ($port) = @_;
 
@@ -351,6 +375,15 @@ sub process_show_cmd {
             print $line ;
         }
     }
+}
+
+sub show_sfp_pl_info {
+    my $port   = shift;
+    my $client = Vyatta::Configd::Client->new();
+    my $status_info =
+      $client->call_rpc_hash( "vyatta-system-sfp-v1",
+        "get-sfp-permit-list-status", { 'interface-name' => $port } );
+    show_sfp_pl_status_info($status_info);
 }
 
 sub show_transceiver_info {
@@ -512,6 +545,7 @@ sub action_show_ethernet_info {
     process_show_cmd(@cmd);
     system "/sbin/ethtool -i $port";
 
+    show_sfp_pl_info($port);
     show_transceiver_info($port);
     show_platform_state($eth_info);
 
