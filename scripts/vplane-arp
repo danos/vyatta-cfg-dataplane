@@ -128,7 +128,7 @@ def show_arp_all(intf, addr):
     for entry in arp_list_dp:
         kentry = arp_dict_kernel[entry["ip"]
                                  ] if entry["ip"] in arp_dict_kernel.keys() else None
-        if kentry and (kentry["hwaddr"] == entry["hwaddr"] or kentry[1] == zero_mac):
+        if kentry and (kentry["hwaddr"] == entry["hwaddr"] or kentry['hwaddr'] == zero_mac):
             print(output_format.format(
                 entry["ip"], entry["hwaddr"], entry["flags"], kentry["flags"], entry["ifname"]))
             arp_dict_kernel.pop(entry["ip"])
