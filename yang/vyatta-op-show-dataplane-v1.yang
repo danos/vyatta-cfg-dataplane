@@ -54,7 +54,7 @@ module vyatta-op-show-dataplane-v1 {
 
 		Defines the top 'dataplane' level under 'show' for operational CLI";
 
-	revision 2021-08-23 {
+	revision 2021-09-24 {
 		description "Add show dataplane route next-hop statistics.";
 	}
 
@@ -162,7 +162,7 @@ module vyatta-op-show-dataplane-v1 {
 				opd:option routing-instance {
 					opd:help "Show dataplane routing-instance information";
 					opd:allowed 'getvrflist --name-only';
-					opd:on-enter "";
+					opd:on-enter "vplane-route.pl --routing-instance $5";
 					type string;
 					uses route-nexthop-group {
 						refine next-hop/address {
@@ -179,7 +179,7 @@ module vyatta-op-show-dataplane-v1 {
 				opd:option routing-instance {
 					opd:help "Show dataplane routing-instance information";
 					opd:allowed 'getvrflist --name-only';
-					opd:on-enter "";
+					opd:on-enter "vplane-route.pl --v6 --routing-instance $5";
 					type string;
 					uses route6-nexthop-group {
 						refine next-hop/address {
