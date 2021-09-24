@@ -1,3 +1,13 @@
+vplane-config (2.101.1) unstable; urgency=medium
+
+  [ kalaivani vinothkumar ]
+  * FlowMon: MAC Address format not in uniform format
+
+  [ Thomas Kiely ]
+  * Fix keyError in show_arp_all
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Fri, 24 Sep 2021 09:55:40 +0100
+
 vplane-config (2.101) unstable; urgency=medium
 
   * perltidy run on all perl files in the repository
