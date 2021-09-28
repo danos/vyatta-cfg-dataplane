@@ -66,7 +66,7 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
          This module defines configuration and operational state data
          for transceivers (i.e., pluggable optics).";
 
-    revision 2021-09-09 {
+    revision 2021-09-28 {
         description "Add rpc to query SFP status";
     }
 
@@ -721,7 +721,7 @@ module vyatta-interfaces-dataplane-transceiver-v1 {
     }
 
     rpc xcvr-status {
-        configd:call-rpc "/opt/vyatta/sbin/vyatta-xcvr --xcvr-status --dev ";
+        configd:call-rpc "/opt/vyatta/sbin/vyatta-xcvr --xcvr-status";
 
         description
 	    "Transceiver status on a physical interface.
