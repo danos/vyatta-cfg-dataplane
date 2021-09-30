@@ -53,6 +53,10 @@ module vyatta-system-sfp-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 Package management configuration";
+	
+	revision 2021-09-30 {
+		description "Add SFP monitoring interval";
+	}
 
 	revision 2021-08-25 {
 		description "Add SFP permit-list configuration";
