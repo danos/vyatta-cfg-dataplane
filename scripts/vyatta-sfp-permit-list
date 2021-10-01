@@ -33,8 +33,10 @@ def sfp_permit_mismatch():
         err("Cannot establish client session: '{}'".format(str(exc).strip()))
         return 1
 
-    key = "sfp permit mismatch-action"
+    key = "sfp permit mismatch-"
     node = "system sfp permit mismatch-action"
+    enforce_state = node + " enforcement state"
+    logging_state = node + " logging"
 
     cfg = SFPMonitor_pb2.SfpPermitConfig()
 
@@ -42,43 +44,58 @@ def sfp_permit_mismatch():
         tree = client.tree_get_dict(node)
         entries = tree['mismatch-action']
 
-        if entries['logging'] == 'enabled':
-            cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.ENABLE
-        else:
-            cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
+        status = client.node_get_status(client.AUTO, logging_state)
 
-        enforcement = entries['enforcement']
+        if status in (client.CHANGED, client.ADDED):
+            logging_msg(key, cfg, "SET", entries['logging'] == "enabled")
+        elif status == client.DELETED:
+            logging_msg(key, cfg, "DELETE")
 
-        if enforcement['state'] == 'enabled':
-            cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
-            enforce_state = node + " enforcement state"
-            enforce_state_exists = client.node_exists(client.RUNNING,
-                                                      enforce_state)
-            uptime = get_effective_enforcement()
-            if enforce_state_exists:
-                changed = client.node_get_status(client.AUTO, enforce_state)
+        status = client.node_get_status(client.AUTO, enforce_state)
 
-                if changed == client.CHANGED:
-                    cfg.mismatch.effective_enforcement_time = uptime
-            else:
-                cfg.mismatch.effective_enforcement_time = uptime
-
-        else:
-            cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.MONITOR
-            cfg.mismatch.effective_enforcement_time = 0
-
-        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
-        controller.store(key, cfg, "ALL", "SET",
-                         cmd_name="vyatta:sfppermitlist")
-
+        if status in (client.CHANGED, client.ADDED):
+            enforcement_msg(key, cfg, "SET",
+                            entries['enforcement']['state'] == "enabled")
+        elif status == client.DELETED:
+            enforcement_msg(key, cfg, "DELETE")
     else:
-        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
-        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
-        cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.MONITOR
-        controller.store(key, cfg, "ALL", "DELETE",
-                         cmd_name="vyatta:sfppermitlist")
+        dbg("Delete sfp permit list mismatch config")
+        enforcement_msg(key, cfg, "DELETE")
+        logging_msg(key, cfg, "DELETE")
 
     return 0
+
+
+def enforcement_msg(key, cfg, action, enabled=False):
+    if action == "DELETE":
+        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
+    else:
+        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
+
+    if enabled:
+        cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.ENFORCE
+        cfg.mismatch.effective_enforcement_time = get_effective_enforcement()
+    else:
+        cfg.mismatch.mode = SFPMonitor_pb2.SfpPermitConfig.MONITOR
+        cfg.mismatch.effective_enforcement_time = 0
+
+    controller.store(key + "enforcement", cfg, "ALL", action,
+                     cmd_name="vyatta:sfppermitlist")
+
+
+def logging_msg(key, cfg, action, enabled=False):
+    if action == "DELETE":
+        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.DELETE
+    else:
+        cfg.mismatch.action = SFPMonitor_pb2.SfpPermitConfig.SET
+
+    if enabled:
+        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.ENABLE
+    else:
+        cfg.mismatch.logging = SFPMonitor_pb2.SfpPermitConfig.DISABLE
+
+    controller.store(key + "logging", cfg, "ALL", action,
+                     cmd_name="vyatta:sfppermitlist")
 
 
 def get_effective_enforcement():
