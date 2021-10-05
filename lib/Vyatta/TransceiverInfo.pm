@@ -218,77 +218,79 @@ sub get_transceiver_info {
         my @channels = ();
 
         if ( $identifier eq "QSFP+" || $identifier eq "QSFP28" ) {
-            my @measured_val = @{ $xcvr_info->{'measured_values'} };
-            my @alarm_warn   = @{ $xcvr_info->{'alarm_warning'} };
-
-            for ( my $ch = 0 ; $ch < QSFP_CHANNELS ; $ch++ ) {
-
-                #Measured Values
-                my $output_power =
-                  convert_mW_2_dbm( $measured_val[$ch]->{'tx_power_mW'} )
-                  if defined( $measured_val[$ch]->{'tx_power_mW'} );
-                my $input_power =
-                  convert_mW_2_dbm( $measured_val[$ch]->{'rx_power_mW'} )
-                  if defined( $measured_val[$ch]->{'rx_power_mW'} );
-                my $laser_bias = $measured_val[$ch]->{'laser_bias'}
-                  if defined( $measured_val[$ch]->{'laser_bias'} );
-
-                #Channel Alarm flags
-                my $bias_high = $alarm_warn[$ch]->{'tx_bias_high_alarm'}
-                  if defined( $alarm_warn[$ch]->{'tx_bias_high_alarm'} );
-                my $bias_low = $alarm_warn[$ch]->{'tx_bias_low_alarm'}
-                  if defined( $alarm_warn[$ch]->{'tx_bias_low_alarm'} );
-                my $op_pow_high = $alarm_warn[$ch]->{'tx_power_high_alarm'}
-                  if defined( $alarm_warn[$ch]->{'tx_power_high_alarm'} );
-                my $op_pow_low = $alarm_warn[$ch]->{'tx_power_low_alarm'}
-                  if defined( $alarm_warn[$ch]->{'tx_power_low_alarm'} );
-                my $ip_pow_high = $alarm_warn[$ch]->{'rx_power_high_alarm'}
-                  if defined( $alarm_warn[$ch]->{'rx_power_high_alarm'} );
-                my $ip_pow_low = $alarm_warn[$ch]->{'rx_power_low_alarm'}
-                  if defined( $alarm_warn[$ch]->{'rx_power_low_alarm'} );
-
-                #Channel Warning flags
-                my $bias_high_warn = $alarm_warn[$ch]->{'tx_bias_high_warn'}
-                  if defined( $alarm_warn[$ch]->{'tx_bias_high_warn'} );
-                my $bias_low_warn = $alarm_warn[$ch]->{'tx_bias_low_warn'}
-                  if defined( $alarm_warn[$ch]->{'tx_bias_low_warn'} );
-                my $op_pow_high_warn = $alarm_warn[$ch]->{'tx_power_high_warn'}
-                  if defined( $alarm_warn[$ch]->{'tx_power_high_warn'} );
-                my $op_pow_low_warn = $alarm_warn[$ch]->{'tx_power_low_warn'}
-                  if defined( $alarm_warn[$ch]->{'tx_power_low_warn'} );
-                my $ip_pow_high_warn = $alarm_warn[$ch]->{'rx_power_high_warn'}
-                  if defined( $alarm_warn[$ch]->{'rx_power_high_warn'} );
-                my $ip_pow_low_warn = $alarm_warn[$ch]->{'rx_power_low_warn'}
-                  if defined( $alarm_warn[$ch]->{'rx_power_low_warn'} );
-
-                my $alm_status = {
-                    'bias-current-high-alarm' => $bias_high,
-                    'bias-current-low-alarm'  => $bias_low,
-                    'output-power-high-alarm' => $op_pow_high,
-                    'output-power-low-alarm'  => $op_pow_low,
-                    'input-power-high-alarm'  => $ip_pow_high,
-                    'input-power-low-alarm'   => $ip_pow_low,
-                };
-
-                my $warn_status = {
-                    'bias-current-high-warning' => $bias_high_warn,
-                    'bias-current-low-warning'  => $bias_low_warn,
-                    'output-power-high-warning' => $op_pow_high_warn,
-                    'output-power-low-warning'  => $op_pow_low_warn,
-                    'input-power-high-warning'  => $ip_pow_high_warn,
-                    'input-power-low-warning'   => $ip_pow_low_warn,
-                };
-
-                my $index = {
-                    'index'              => $ch,
-                    'output-power'       => $output_power,
-                    'input-power'        => $input_power,
-                    'laser-bias-current' => $laser_bias,
-                    'alarm-status'       => $alm_status,
-                    'warning-status'     => $warn_status,
-                };
-
-                push( @channels, $index );
+            if ( defined( $xcvr_info->{'measured_values'}) ) {
+                my @measured_val = @{ $xcvr_info->{'measured_values'} };
+                my @alarm_warn   = @{ $xcvr_info->{'alarm_warning'} };
+    
+                for ( my $ch = 0 ; $ch < QSFP_CHANNELS ; $ch++ ) {
+    
+                    #Measured Values
+                    my $output_power =
+                      convert_mW_2_dbm( $measured_val[$ch]->{'tx_power_mW'} )
+                      if defined( $measured_val[$ch]->{'tx_power_mW'} );
+                    my $input_power =
+                      convert_mW_2_dbm( $measured_val[$ch]->{'rx_power_mW'} )
+                      if defined( $measured_val[$ch]->{'rx_power_mW'} );
+                    my $laser_bias = $measured_val[$ch]->{'laser_bias'}
+                      if defined( $measured_val[$ch]->{'laser_bias'} );
+    
+                    #Channel Alarm flags
+                    my $bias_high = $alarm_warn[$ch]->{'tx_bias_high_alarm'}
+                      if defined( $alarm_warn[$ch]->{'tx_bias_high_alarm'} );
+                    my $bias_low = $alarm_warn[$ch]->{'tx_bias_low_alarm'}
+                      if defined( $alarm_warn[$ch]->{'tx_bias_low_alarm'} );
+                    my $op_pow_high = $alarm_warn[$ch]->{'tx_power_high_alarm'}
+                      if defined( $alarm_warn[$ch]->{'tx_power_high_alarm'} );
+                    my $op_pow_low = $alarm_warn[$ch]->{'tx_power_low_alarm'}
+                      if defined( $alarm_warn[$ch]->{'tx_power_low_alarm'} );
+                    my $ip_pow_high = $alarm_warn[$ch]->{'rx_power_high_alarm'}
+                      if defined( $alarm_warn[$ch]->{'rx_power_high_alarm'} );
+                    my $ip_pow_low = $alarm_warn[$ch]->{'rx_power_low_alarm'}
+                      if defined( $alarm_warn[$ch]->{'rx_power_low_alarm'} );
+    
+                    #Channel Warning flags
+                    my $bias_high_warn = $alarm_warn[$ch]->{'tx_bias_high_warn'}
+                      if defined( $alarm_warn[$ch]->{'tx_bias_high_warn'} );
+                    my $bias_low_warn = $alarm_warn[$ch]->{'tx_bias_low_warn'}
+                      if defined( $alarm_warn[$ch]->{'tx_bias_low_warn'} );
+                    my $op_pow_high_warn = $alarm_warn[$ch]->{'tx_power_high_warn'}
+                      if defined( $alarm_warn[$ch]->{'tx_power_high_warn'} );
+                    my $op_pow_low_warn = $alarm_warn[$ch]->{'tx_power_low_warn'}
+                      if defined( $alarm_warn[$ch]->{'tx_power_low_warn'} );
+                    my $ip_pow_high_warn = $alarm_warn[$ch]->{'rx_power_high_warn'}
+                      if defined( $alarm_warn[$ch]->{'rx_power_high_warn'} );
+                    my $ip_pow_low_warn = $alarm_warn[$ch]->{'rx_power_low_warn'}
+                      if defined( $alarm_warn[$ch]->{'rx_power_low_warn'} );
+    
+                    my $alm_status = {
+                        'bias-current-high-alarm' => $bias_high,
+                        'bias-current-low-alarm'  => $bias_low,
+                        'output-power-high-alarm' => $op_pow_high,
+                        'output-power-low-alarm'  => $op_pow_low,
+                        'input-power-high-alarm'  => $ip_pow_high,
+                        'input-power-low-alarm'   => $ip_pow_low,
+                    };
+    
+                    my $warn_status = {
+                        'bias-current-high-warning' => $bias_high_warn,
+                        'bias-current-low-warning'  => $bias_low_warn,
+                        'output-power-high-warning' => $op_pow_high_warn,
+                        'output-power-low-warning'  => $op_pow_low_warn,
+                        'input-power-high-warning'  => $ip_pow_high_warn,
+                        'input-power-low-warning'   => $ip_pow_low_warn,
+                    };
+    
+                    my $index = {
+                        'index'              => $ch,
+                        'output-power'       => $output_power,
+                        'input-power'        => $input_power,
+                        'laser-bias-current' => $laser_bias,
+                        'alarm-status'       => $alm_status,
+                        'warning-status'     => $warn_status,
+                    };
+    
+                    push( @channels, $index );
+                }
             }
         } else {
 
