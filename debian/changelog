@@ -1,3 +1,10 @@
+vplane-config (2.101.3) unstable; urgency=medium
+
+  [ Cian O'Sullivan ]
+  * Fix sfp permit list config message handling
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Wed, 06 Oct 2021 10:10:54 +0100
+
 vplane-config (2.101.2) unstable; urgency=medium
 
   [ Cian O'Sullivan ]
