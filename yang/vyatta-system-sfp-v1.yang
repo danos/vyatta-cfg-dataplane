@@ -53,8 +53,8 @@ module vyatta-system-sfp-v1 {
 		 SPDX-License-Identifier: BSD-3-Clause
 
 		 Package management configuration";
-	
-	revision 2021-09-30 {
+
+	revision 2021-10-11 {
 		description "Add SFP monitoring interval";
 	}
 
@@ -93,7 +93,7 @@ module vyatta-system-sfp-v1 {
 					description
 						"Interval (in seconds) between consecutive runs of SFP monitoring";
 					type uint32 {
-						range 1..10;
+						range 1..3600;
 					}
 					units "seconds";
 				}
