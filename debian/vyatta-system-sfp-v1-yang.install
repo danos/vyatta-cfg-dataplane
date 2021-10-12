@@ -2,3 +2,4 @@ yang/vyatta-system-sfp-v1.yang usr/share/configd/yang/
 scripts/vyatta-sfp-monitor /opt/vyatta/sbin/
 scripts/vyatta-sfp-permit-list /opt/vyatta/sbin/
 platform/vyatta-sfp-permit-list.platform lib/vyatta-platform/platforms
+platform/vyatta-sfp-monitor.platform lib/vyatta-platform/platforms

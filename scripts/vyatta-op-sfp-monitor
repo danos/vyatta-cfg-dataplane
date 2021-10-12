@@ -69,7 +69,7 @@ def show_sfp_monitoring_status(dev=None):
             o_warnings = c['warning-status']
             o_alarms = c['alarm-status']
             # The only channel of a SFP has the index 0.
-            # QSFP channels have indices from 1-4. Following check is added so that 
+            # QSFP channels have indices from 1-4. Following check is added so that
             # module information is printed only once for QSFPs and SFPs.
             if c['index'] == 0 or c['index'] == 1:
                 name = intf['name']
