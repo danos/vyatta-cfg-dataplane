@@ -343,7 +343,11 @@ sub process_show_cmd {
     }
 
     foreach my $line (@output) {
-        if ( not( $line =~ /(Advertised|Supported) pause frame use:/ ) ) {
+        if (
+            not(   $line =~ /(Advertised|Supported) pause frame use:/
+                || $line =~ /Link detected:/ )
+          )
+        {
             print $line ;
         }
     }
