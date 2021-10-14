@@ -21,6 +21,7 @@ def convert_mW_2_dbm(mW):
         return -40.0
 
     dbm = 10 * math.log10(mW)
+    dbm = round(dbm, 2)
     return dbm
 
 
@@ -87,17 +88,17 @@ def remap_dp_optical_measures(xcvr_info, channels):
     if 'rx_power_mW' in xcvr_info:
         channel = {}
         channel['index'] = "0"
-        channel['input-power'] = convert_mW_2_dbm(xcvr_info['rx_power_mW'])
+        channel['input-power'] = str(convert_mW_2_dbm(xcvr_info['rx_power_mW']))
         channel['laser-bias-current'] = str(xcvr_info['laser_bias'])
-        channel['output-power'] = convert_mW_2_dbm(xcvr_info['tx_power_mW'])
+        channel['output-power'] = str(convert_mW_2_dbm(xcvr_info['tx_power_mW']))
         channels['0'] = channel
     elif 'measured_values' in xcvr_info:
         for value in xcvr_info['measured_values']:
             channel = {}
             channel['index'] = value['channel']
-            channel['input-power'] = convert_mW_2_dbm(value['rx_power_mW'])
+            channel['input-power'] = str(convert_mW_2_dbm(value['rx_power_mW']))
             channel['laser-bias-current'] = str(value['laser_bias'])
-            channel['output-power'] = convert_mW_2_dbm(value['tx_power_mW'])
+            channel['output-power'] = str(convert_mW_2_dbm(value['tx_power_mW']))
             channels[value['channel']] = channel
 
 
