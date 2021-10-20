@@ -1,3 +1,52 @@
+vplane-config (2.102) unstable; urgency=medium
+
+  [ Srinivas Narayan ]
+  * Add editorconfig file
+  * sfp-monitor: Add configuration command to set monitoring interval
+  * Fix whitespace issues in yang file
+  * sfp-monitor: Add show command skeleton
+  * sfp-monitor: Add support for displaying SFP events
+  * sfp-monitor: Add YANG RPC for querying SFP monitoring status
+  * sfp-monitor: Add front-end script for invoking RPC
+  * sfp-monitor: Add backend script for emitting transceiver info
+
+  [ kalaivani vinothkumar ]
+  * FlowMon: MAC Address format not in uniform format
+
+  [ Dewi Morgan ]
+  * scripts: vplane route show next-hop statistics
+  * yang: vyatta op dataplane show route next-hop
+
+  [ Thomas Kiely ]
+  * Fix keyError in show_arp_all
+
+  [ Cian O'Sullivan ]
+  * sfp-permit-list: Enforcement rework
+
+  [ Dewi Morgan ]
+  * yang: show dataplane routing-instance
+
+  [ ck407g ]
+  * sfp-monitor: Fixed arguments passed in the xcvr-status rpc
+  * Updated the revision statement in vyatta-system-sfp-v1.yang
+
+  [ Cian O'Sullivan ]
+  * Fix sfp permit list config message handling
+
+  [ ck407g ]
+  * Removed diagnostic data for copper QSFPs
+  * sfp monitor: Fixed QSFP data display issues
+  * sfp monitor: Increased the SFP monitoring interval
+  * sfp monitor: SFP monitor feature toggle
+  * sfp monitor: Fixed the issue of power values printed as integers
+  * Added NUD state for ARP output
+
+  [ Gavin Shearer ]
+  * Fix issue of pause-frame info not filtered out
+  * Don't show the "Link detected" line output by ethtool
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Wed, 20 Oct 2021 11:00:27 +0100
+
 vplane-config (2.101) unstable; urgency=medium
 
   * perltidy run on all perl files in the repository
