@@ -1,3 +1,9 @@
+vplane-config (2.103) unstable; urgency=medium
+
+  * Change precision of emitted float values to match data model
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Fri, 22 Oct 2021 15:22:47 +0100
+
 vplane-config (2.102) unstable; urgency=medium
 
   [ Srinivas Narayan ]
