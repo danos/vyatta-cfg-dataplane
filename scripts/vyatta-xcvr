@@ -89,7 +89,7 @@ def remap_dp_optical_measures(xcvr_info, channels):
         channel = {}
         channel['index'] = "0"
         channel['input-power'] = str(convert_mW_2_dbm(xcvr_info['rx_power_mW']))
-        channel['laser-bias-current'] = str(xcvr_info['laser_bias'])
+        channel['laser-bias-current'] = str(round(xcvr_info['laser_bias'], 2))
         channel['output-power'] = str(convert_mW_2_dbm(xcvr_info['tx_power_mW']))
         channels['0'] = channel
     elif 'measured_values' in xcvr_info:
@@ -97,7 +97,7 @@ def remap_dp_optical_measures(xcvr_info, channels):
             channel = {}
             channel['index'] = value['channel']
             channel['input-power'] = str(convert_mW_2_dbm(value['rx_power_mW']))
-            channel['laser-bias-current'] = str(value['laser_bias'])
+            channel['laser-bias-current'] = str(round(value['laser_bias'], 2))
             channel['output-power'] = str(convert_mW_2_dbm(value['tx_power_mW']))
             channels[value['channel']] = channel
 
@@ -133,11 +133,11 @@ def print_xcvr_info(name=None):
                     xcvr_info = intf['xcvr_info']
                     intf_status['name'] = intf['name']
                     if 'temperature_C' in xcvr_info:
-                        intf_status['internal-temp'] = str(xcvr_info['temperature_C'])
+                        intf_status['internal-temp'] = str(round(xcvr_info['temperature_C'], 2))
                     else:
                         continue
                     if 'voltage_V' in xcvr_info:
-                        intf_status['voltage'] = str(xcvr_info['voltage_V'])
+                        intf_status['voltage'] = str(round(xcvr_info['voltage_V'], 2))
                     else:
                         continue
 

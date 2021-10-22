@@ -1,7 +1,7 @@
 #
 # Module: Vyatta::TransceiverInfo.pm
 #
-# Copyright (c) 2018-2020, AT&T Intellectual Property.
+# Copyright (c) 2018-2021, AT&T Intellectual Property.
 # All rights reserved.
 #
 # SPDX-License-Identifier: LGPL-2.1-only
@@ -27,7 +27,7 @@ sub convert_mW_2_dbm {
     }
 
     my $dbm = 10 * log10($mW);
-    $dbm = sprintf( "%.4f", $dbm );
+    $dbm = sprintf( "%.2f", $dbm );
     return $dbm;
 }
 
