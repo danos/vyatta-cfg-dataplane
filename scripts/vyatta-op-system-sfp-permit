@@ -6,7 +6,8 @@
 # SPDX-License-Identifier: LGPL-2.1-only
 
 from argparse import ArgumentParser
-from vplaned import Controller
+from vyatta import configd
+import sys
 
 arg_parser = ArgumentParser()
 arg_parser.add_argument("--status", help="Get device status",
@@ -15,21 +16,21 @@ args = arg_parser.parse_args()
 
 
 def sfp_approved(device):
-    if device['approved']:
+    if device['state'] == 'approved':
         return "Approved"
     else:
         return "Unapproved"
 
 
 def sfp_enabled(device):
-    if device['disabled']:
+    if device['action'] == 'disabled':
         return "Disabled"
     else:
         return "Monitor"
 
 
 def sfp_mode(obj):
-    if obj:
+    if obj == 'enabled':
         return "Enforcement"
     else:
         return "Monitor"
@@ -56,11 +57,11 @@ output_format = "{:20}{:17}{:17}{:10}{:6}{:12}{:10}"
 
 
 def print_device(device):
-    print(output_format.format(device['intf_name'],
-                               device['part_id'],
-                               device['vendor_name'],
-                               device['vendor_oui'],
-                               device['vendor_rev'],
+    print(output_format.format(device['interface-name'],
+                               device['part'],
+                               device['vendor'],
+                               device['oui'],
+                               device['revision'],
                                sfp_approved(device),
                                sfp_enabled(device)))
 
@@ -69,24 +70,28 @@ def show_sfp_permit_status():
     """
     Show sfp permit-list status.
     """
-    for dp in controller.get_dataplanes():
-        with dp:
-            str_data = dp.json_command("sfp-permit-list dump devices")
-            obj = str_data.get('sfp-permit-list-devices')
+    cfg = configd.Client()
+    try:
+        obj = cfg.call_rpc_dict("vyatta-system-sfp-v1",
+                                "get-sfp-permit-list-status", {})
+    except Exception as e:
+        print("Error retrieving SFP permit list status : {}\n", format(e))
+        sys.exit(1)
 
-            if obj is None:
-                return
-            print()
-            print("Mode: {}".format(sfp_mode(obj['enforcement-mode'])))
-            print()
-            print(output_format.format("Interface", "Part-id", "Vendor",
-                                       "OUI", "Rev", "Status", "Action"))
-            print()
-            devices = sorted(
-                obj['devices'], key=lambda dev: alphanum_total(dev['intf_name']))
-            for device in devices:
-                print_device(device)
+    if not obj:
+        return
+
+    print()
+    print("Mode: {}".format(sfp_mode(obj['enforcement-mode'])))
+    print()
+    print(output_format.format("Interface", "Part-id", "Vendor",
+                               "OUI", "Rev", "Status", "Action"))
+    print()
+    devices = sorted(obj['sfp-list'],
+                     key=lambda dev: alphanum_total(dev['interface-name']))
+    for device in devices:
+        print_device(device)
 
 
-with Controller() as controller:
+if args.status:
     show_sfp_permit_status()

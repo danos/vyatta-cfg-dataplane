@@ -54,6 +54,10 @@ module vyatta-system-sfp-v1 {
 
 		 Package management configuration";
 
+	revision 2021-09-28 {
+		description "Added an RPC for retrieving SFP permit list status info";
+	}
+
 	revision 2021-08-25 {
 		description "Add SFP permit-list configuration";
 	}
@@ -64,6 +68,94 @@ module vyatta-system-sfp-v1 {
 
 	feature sfp-permit-list {
 		description "Enable SFP permit lists of inserted transceiver modules";
+	}
+
+	grouping sfp-properties {
+		description
+			"SFP transceiver properties";
+
+		leaf vendor {
+			type string {
+				length 1..16;
+			}
+			description
+				"The full name of the SFP transceiver vendor, up to 16 ASCII characters";
+		}
+
+		leaf oui {
+			type string {
+				pattern '[0-9a-f]{2,2}\.[0-9a-f]{2,2}\.[0-9a-f]{2,2}';
+			}
+			description
+				"The SFP transceiver vendor's organizationally unique identifier
+				field (vendor OUI) is a 3-byte field that contains the IEEE Company
+				Identifier for the vendor. A value of all zero in the 3-byte field
+				indicates that the Vendor OUI is unspecified. It is represented here
+				as a hexadecimal string with a '.' between consecutive bytes";
+			reference
+				"https://en.wikipedia.org/wiki/Organizationally_unique_identifier
+				http://standards-oui.ieee.org/oui/oui.txt";
+		}
+
+		leaf part {
+			type string {
+				pattern '[0-9a-zA-Z_\-]{1,15}[0-9a-zA-Z_\-\*]{0,1}';
+			}
+			description
+				"The SFP transceiver vendor's part number, up to 16 ASCII characters";
+		}
+
+		leaf revision {
+			type string {
+				length 1..4;
+			}
+			description
+				"The SFP transceiver vendor's revision number, up to 4 ASCII characters";
+		}
+	}
+
+	grouping sfp-status {
+		description
+			"Permit list status information for a SFP transceiver";
+
+		leaf interface-name {
+			description "Name of the SFP transceiver interface";
+			type types:interface-ifname;
+		}
+
+		leaf detection-time {
+			type string {
+				length 1..20;
+			}
+			description
+				"SFP transceiver time of detection in seconds since boot";
+		}
+
+		leaf state {
+			description "SFP transceiver permit list approval";
+			type enumeration {
+				enum approved {
+					description "SFP transceiver in the permit list";
+				}
+				enum unapproved {
+					description "SFP transceiver not in the permit list";
+				}
+			}
+		}
+
+		leaf action {
+			description "Action performed on the SFP transceiver";
+			type enumeration {
+				enum disabled {
+					description "SFP transceiver disabled";
+				}
+				enum enabled {
+					description "SFP transceiver enabled";
+				}
+			}
+		}
+
+		uses sfp-properties;
 	}
 
 	augment /system:system {
@@ -113,50 +205,28 @@ module vyatta-system-sfp-v1 {
 							}
 						}
 
-						leaf vendor {
-							configd:help "Full name of SFP transceiver vendor";
-							type string {
-								length 1..16;
-							}
-							description
-								"The full name of the SFP transceiver vendor, up to 16 ASCII characters";
-						}
+						uses sfp-properties {
 
-						leaf oui {
-							configd:help "Vendor organizationally unique identifier field (vendor OUI)";
-							type string {
-								pattern '[0-9a-f]{2,2}\.[0-9a-f]{2,2}\.[0-9a-f]{2,2}';
+							refine vendor {
+								configd:help "Full name of SFP transceiver vendor";
 							}
-							description
-								"The SFP transceiver vendor's organizationally unique identifier 
-								field (vendor OUI) is a 3-byte field that contains the IEEE Company 
-								Identifier for the vendor. A value of all zero in the 3-byte field 
-								indicates that the Vendor OUI is unspecified. It is represented here 
-								as a hexadecimal string with a '.' between consecutive bytes";
-							reference
-								"https://en.wikipedia.org/wiki/Organizationally_unique_identifier
-								http://standards-oui.ieee.org/oui/oui.txt";
-						}
 
-						leaf part {
-							type string {
-								pattern '[0-9a-zA-Z_\-]{1,15}[0-9a-zA-Z_\-\*]{0,1}';
+							refine oui {
+								configd:help "Vendor organizationally unique identifier field (vendor OUI)";
 							}
-							configd:help "SFP Vendor-Part ID";
-							description
-								"The SFP transceiver vendor's part number, up to 16 ASCII characters
-								 A wildcard character ('*'), is allowed as the last (right-most) 
-								 character";
-							mandatory true;
-						}
 
-						leaf revision {
-							configd:help "SFP Transceiver vendor's revision number";
-							type string {
-								length 1..4;
+							refine part {
+								configd:help "SFP Vendor-Part ID";
+								description
+									"The SFP transceiver vendor's part number, up to 16 ASCII characters
+									 A wildcard character ('*'), is allowed as the last (right-most)
+									 character";
+								mandatory true;
 							}
-							description
-								"The SFP transceiver vendor's revision number, up to 4 ASCII characters";
+
+							refine revision {
+								configd:help "SFP Transceiver vendor's revision number";
+							}
 						}
 					}
 				}
@@ -204,6 +274,39 @@ module vyatta-system-sfp-v1 {
 						}
 					}
 				}
+			}
+		}
+	}
+
+	rpc get-sfp-permit-list-status {
+		configd:call-rpc "/opt/vyatta/bin/vplane-sfp-permit-list --status";
+
+		description "Retrieves SFP permit list status information";
+
+		input {
+			leaf interface-name {
+				description "Name of the SFP transceiver interface";
+				type types:interface-ifname;
+			}
+		}
+
+		output {
+			leaf enforcement-mode {
+				description "SFP permit list enforcement mode";
+				type enumeration {
+					enum disabled {
+						description "SFP permit list enforcement disabled";
+					}
+					enum enabled {
+						description "SFP permit list enforcement enabled";
+					}
+				}
+			}
+
+			list sfp-list {
+				key "interface-name";
+				description "Permit list status information for a list of SFPs";
+				uses sfp-status;
 			}
 		}
 	}
