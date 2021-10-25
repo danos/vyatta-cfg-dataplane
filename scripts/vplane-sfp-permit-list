@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2021, AT&T Intellectual Property.
+# All rights reserved.
+#
+# SPDX-License-Identifier: LGPL-2.1-only
+
+from vplaned import Controller
+import logging
+from systemd.journal import JournalHandler
+import getopt
+import sys
+import json
+
+
+def get_sfp_status(device):
+    sfp = {}
+    sfp["interface-name"] = device['intf_name']
+    sfp["part"] = device['part_id']
+    sfp["vendor"] = device['vendor_name']
+    sfp["oui"] = device['vendor_oui']
+    sfp["revision"] = device['vendor_rev']
+    sfp["state"] =\
+        "approved" if device["approved"] else "unapproved"
+    sfp["action"] =\
+        "disabled" if device["disabled"] else "enabled"
+
+    return sfp
+
+
+def get_sfp_pl_status(intf=None):
+    """
+    Show SFP permit-list status.
+    """
+    for dp in controller.get_dataplanes():
+        with dp:
+            if intf is not None:
+                cmd = "sfp-permit-list dump devices {}".format(intf)
+            else:
+                cmd = "sfp-permit-list dump devices"
+
+            str_data = dp.json_command(cmd)
+            obj = str_data.get('sfp-permit-list-devices')
+
+            sfp_pl_status = {}
+
+            if obj is None:
+                return sfp_pl_status
+
+            sfp_pl_status["enforcement-mode"] =\
+                "enabled" if obj['enforcement-mode'] else "disabled"
+
+            sfp_list = []
+            for device in obj["devices"]:
+                sfp = get_sfp_status(device)
+                sfp_list.append(sfp)
+            sfp_pl_status["sfp-list"] = sfp_list
+
+            return sfp_pl_status
+
+
+def process_options():
+    """
+    Process input options.
+    """
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "s", ["status"])
+    except getopt.GetoptError as r:
+        logging.error(r)
+        logging.error("usage: {} [-s|--status] \n".format(sys.argv[0]))
+        sys.exit(1)
+
+    for opt, arg in opts:
+        if opt in ("-s", "--status"):
+            return "status"
+
+
+def get_rpc_input():
+    """
+    Retrieves the input parameters from RPC.
+    """
+    try:
+        rpc_input = json.load(sys.stdin)
+    except (ValueError, Exception) as e:
+        logger.error("Error parsing input. \n {}".format(e))
+        sys.exit(1)
+
+    return rpc_input
+
+
+if __name__ == "__main__":
+    logger = logging.getLogger()
+    logging.root.addHandler(
+        JournalHandler(SYSLOG_IDENTIFIER='vyatta-sfp-pl'))
+
+    action = process_options()
+
+    with Controller() as controller:
+        if action == "status":
+            rpc_input = get_rpc_input()
+
+            if 'interface-name' in rpc_input:
+                intf = rpc_input['interface-name']
+            else:
+                intf = None
+
+            print(json.dumps(get_sfp_pl_status(intf)))
