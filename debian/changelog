@@ -1,3 +1,11 @@
+vplane-config (2.101.4) unstable; urgency=medium
+
+  [ Gavin Shearer ]
+  * Fix issue of pause-frame info not filtered out
+  * Don't show the "Link detected" line output by ethtool
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Tue, 26 Oct 2021 12:00:49 +0100
+
 vplane-config (2.101.3) unstable; urgency=medium
 
   [ Cian O'Sullivan ]
