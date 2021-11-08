@@ -108,7 +108,7 @@ def show_sfp_monitoring_status(dev=None):
 
 def show_sfp_monitoring_events(dev=None):
     if dev is not None:
-        dev_str = f" | grep {dev}"
+        dev_str = f" | grep -w {dev}"
     else:
         dev_str = ""
     cmd = f"journalctl -u vyatta-dataplane -b0 | grep SFP_MON {dev_str}"
