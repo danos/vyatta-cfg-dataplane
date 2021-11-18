@@ -2,15 +2,19 @@ module vyatta-optical-transport-types-v1 {
     namespace "urn:vyatta.com:mgmt:vyatta-optical-transport-types:1";
     prefix "vyatta-optical-transport-types-v1";
 
-    organization "AT&T Inc.";
+    organization "Ciena Corporation";
     contact
-        "AT&T
-         Postal: 208 S. Akard Street
-         Dallas, TX 25202
-         Web: www.att.com";
+        "Web URL: http://www.ciena.com/
+         Postal:  7035 Ridge Road
+                  Hanover, Maryland 21076
+                  U.S.A.
+         Phone:   +1 800-921-1144
+         Fax:     +1 410-694-5750";
 
     description
-        "Copyright (c) 2018, AT&T Intellectual Property.
+        "Copyright (c) 2021, Ciena Corporation. All rights reserved.
+
+         Copyright (c) 2018, AT&T Intellectual Property.
          All rights reserved.
 
 		 Redistribution and use in source and binary forms, with or
@@ -50,6 +54,12 @@ module vyatta-optical-transport-types-v1 {
 
          This module contains general type definitions for optical
          transport models.";
+
+    revision 2021-11-23 {
+        description "Expand ranges of types transceiver-operating-temperature
+                     and transceiver-laser-bias-current to ensure returned
+                     values are within the range.";
+    }
 
     revision 2018-10-28 {
         description "Initial version";
@@ -388,7 +398,7 @@ module vyatta-optical-transport-types-v1 {
         reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2";
         type decimal64 {
             fraction-digits 2;
-            range "-127.99..127.99";
+            range "-128..128";
         }
         units "C";
     }
@@ -408,7 +418,7 @@ module vyatta-optical-transport-types-v1 {
         reference "https://doc.xdevs.com/doc/Seagate/SFF-8472.PDF - Section 9.2";
         type decimal64 {
             fraction-digits 2;
-            range "0..131.00";
+            range "0..131.07";
         }
         units "mA";
     }
