@@ -1,3 +1,11 @@
+vplane-config (2.101.5) unstable; urgency=medium
+
+  [ ck407g ]
+  * Operational state data model for SFP permit list
+  * Added 'Permit list status' field
+
+ -- Srinivas Narayan <narayan@vyatta.att-mail.com>  Mon, 22 Nov 2021 09:39:16 +0000
+
 vplane-config (2.101.4) unstable; urgency=medium
 
   [ Gavin Shearer ]
