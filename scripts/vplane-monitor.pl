@@ -1,5 +1,6 @@
 #! /usr/bin/perl
 
+# Copyright (c) 2021, Ciena Corporation. All rights reserved.
 # Copyright (c) 2017,2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
@@ -150,7 +151,7 @@ sub show_repeated {
         print " > the interface is using directpath forwarding.\n";
         print " - not applicable.\n\n";
         STDOUT->flush();
-        last if ( defined($count) && --$count == 0 );
+        last            if ( defined($count) && --$count == 0 );
         sleep($refresh) if defined($refresh);
     }
 }

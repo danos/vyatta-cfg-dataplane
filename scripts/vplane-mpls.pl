@@ -59,7 +59,7 @@ sub show_mpls_global {
 
     printf "MPLS Configuration\n";
     printf "\tIP TTL Propagate: %s, ", $config->{ipttlpropagate} ? "yes" : "no";
-    printf "IP Ingress TTL: %d\n", $config->{defaultttl};
+    printf "IP Ingress TTL: %d\n",     $config->{defaultttl};
 }
 
 sub show_mpls_interfaces {

@@ -1,5 +1,6 @@
 #! /usr/bin/perl
 
+# Copyright (c) 2021, Ciena Corporation. All rights reserved.
 # Copyright (c) 2018-2021, AT&T Intellectual Property. All rights reserved.
 # Copyright (c) 2013-2015 Brocade Communications Systems, Inc.
 # All rights reserved.
@@ -225,6 +226,7 @@ sub show_nd6 {
     printf $fmt, 'NUD failures',         $stat->{nud_fail};
     printf $fmt, 'Resolution throttles', $stat->{res_throttle};
     printf $fmt, 'Cache limit hits',     $stat->{cache_limit};
+
     if ( defined( $stat->{mpool_fail} ) ) {
         printf $fmt, 'Mbuf pool limit hits', $stat->{mpool_fail};
     }
